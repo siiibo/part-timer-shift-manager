@@ -1,0 +1,537 @@
+import { GasWebClient as SlackClient } from "@hi-se/web-api";
+import { format } from "date-fns";
+
+import { getConfig } from "./config";
+import { EventInfo, shiftChanger } from "./shift-changer-api";
+
+type SheetType = "registration" | "modificationAndDeletion";
+type OperationType = "registration" | "modificationAndDeletion" | "showEvents";
+
+export const doPost = (e: GoogleAppsScript.Events.DoPost): GoogleAppsScript.Content.TextOutput => {
+  if (e.parameter.apiId === "shift-changer") {
+    const response = shiftChanger(e) ?? "";
+    return ContentService.createTextOutput(response).setMimeType(ContentService.MimeType.JSON);
+  }
+  return ContentService.createTextOutput("undefined");
+};
+
+export const onOpen = () => {
+  const ui = SpreadsheetApp.getUi();
+
+  ui.createAddonMenu()
+    .addSubMenu(
+      ui
+        .createMenu("登録")
+        .addItem("シートの追加", insertRegistrationSheet.name)
+        .addSeparator()
+        .addItem("提出", callRegistration.name)
+    )
+    .addSubMenu(
+      ui
+        .createMenu("変更・削除")
+        .addItem("シートの追加", insertModificationAndDeletionSheet.name)
+        .addSeparator()
+        .addItem("予定を表示", callShowEvents.name)
+        .addItem("提出", callModificationAndDeletion.name)
+    )
+    .addToUi();
+};
+
+export const insertRegistrationSheet = () => {
+  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  const today = format(new Date(), "yyyy-MM-dd");
+  const sheet = spreadsheet.insertSheet(`${today}-登録`, 0);
+  sheet.addDeveloperMetadata(`${today}-registration`);
+
+  const header = ["日付", "開始時刻", "終了時刻", "休憩開始時刻", "休憩終了時刻", "勤務形態"];
+  sheet.getRange(1, 1, 1, header.length).setValues([header]).setFontWeight("bold");
+
+  const workingStyleCells = sheet.getRange("F2:F1000");
+  const workingStyleRule = SpreadsheetApp.newDataValidation()
+    .requireValueInList(["リモート", "出社"], true)
+    .setAllowInvalid(false)
+    .setHelpText("リモート/出社 を選択してください。")
+    .build();
+  workingStyleCells.setDataValidation(workingStyleRule);
+  const dateCells = sheet.getRange("A2:A1000");
+  const dateRule = SpreadsheetApp.newDataValidation()
+    .requireDateOnOrAfter(new Date())
+    .setAllowInvalid(false)
+    .setHelpText("本日以降の日付を入力してください。")
+    .build();
+  dateCells.setDataValidation(dateRule);
+  const timeCells = sheet.getRange("B2:E1000");
+  const timeRule = SpreadsheetApp.newDataValidation()
+    .requireFormulaSatisfied("=ISDATE(B2)")
+    .setHelpText('時刻を"◯◯:◯◯"の形式で入力してください。')
+    .build();
+  timeCells.setDataValidation(timeRule);
+};
+
+export const insertModificationAndDeletionSheet = () => {
+  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  const today = format(new Date(), "yyyy-MM-dd");
+  const sheet = spreadsheet.insertSheet(`${today}-変更・削除`, 0);
+  sheet.addDeveloperMetadata(`${today}-modificationAndDeletion`);
+
+  const description1 = "本日以降の日付を入力してください。指定した日付から一週間後までの予定が表示されます。";
+  const description2 = "【予定一覧】";
+  const description3 = "【変更】変更後の予定を記入してください ";
+  const description4 = "【削除】削除したい予定を選択してください";
+
+  const header = [
+    "イベント名",
+    "日付",
+    "開始時刻",
+    "終了時刻",
+    "日付",
+    "開始時刻",
+    "終了時刻",
+    "休憩開始時刻",
+    "休憩終了時刻",
+    "勤務形態",
+    "削除対象",
+  ];
+  sheet.getRange("A1").setValue(description1).setFontWeight("bold");
+  sheet.getRange("A4").setValue(description2).setFontWeight("bold");
+  sheet.getRange("E4").setValue(description3).setFontWeight("bold");
+  sheet.getRange("K4").setValue(description4).setFontWeight("bold");
+  sheet.getRange(5, 1, 1, header.length).setValues([header]).setFontWeight("bold");
+
+  const dateCell = sheet.getRange("A2");
+  const dateCells = sheet.getRange("E6:E1000");
+  const dateRule = SpreadsheetApp.newDataValidation()
+    .requireDateOnOrAfter(new Date())
+    .setAllowInvalid(false)
+    .setHelpText("本日以降の日付を入力してください。")
+    .build();
+  dateCell.setDataValidation(dateRule);
+  dateCells.setDataValidation(dateRule);
+  const timeCells = sheet.getRange("F6:I1000");
+  const timeRule = SpreadsheetApp.newDataValidation()
+    .requireFormulaSatisfied("=ISDATE(F6)")
+    .setAllowInvalid(false)
+    .setHelpText('時刻を"◯◯:◯◯"の形式で入力してください。\n【例】 9:00')
+    .build();
+  timeCells.setDataValidation(timeRule);
+  const workingStyleCells = sheet.getRange("J6:J1000");
+  const workingStyleRule = SpreadsheetApp.newDataValidation()
+    .requireValueInList(["リモート", "出社"], true)
+    .setAllowInvalid(false)
+    .setHelpText("リモート/出社 を選択してください。")
+    .build();
+  workingStyleCells.setDataValidation(workingStyleRule);
+  const checkboxCells = sheet.getRange("K6:K1000");
+  const checkboxRule = SpreadsheetApp.newDataValidation()
+    .requireCheckbox()
+    .setAllowInvalid(false)
+    .setHelpText("チェックボックス以外の入力形式は認められません。")
+    .build();
+  checkboxCells.setDataValidation(checkboxRule);
+
+  sheet.setColumnWidth(1, 370);
+};
+export const callRegistration = () => {
+  const userEmail = Session.getActiveUser().getEmail();
+  const spreadsheetUrl = SpreadsheetApp.getActiveSpreadsheet().getUrl();
+  const { SLACK_ACCESS_TOKEN } = getConfig();
+  const client = getSlackClient(SLACK_ACCESS_TOKEN);
+  const slackMemberProfiles = getSlackMemberProfiles(client);
+
+  const sheetType: SheetType = "registration";
+  const sheet = getSheet(sheetType, spreadsheetUrl);
+  const operationType: OperationType = "registration";
+  const registrationInfos = getRegistrationInfos(sheet, userEmail, slackMemberProfiles);
+
+  const payload = {
+    apiId: "shift-changer",
+    operationType: operationType,
+    userEmail: userEmail,
+    registrationInfos: JSON.stringify(registrationInfos),
+  };
+  const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
+    method: "post",
+    payload: payload,
+  };
+  const { API_URL, SLACK_CHANNEL_TO_POST } = getConfig();
+  UrlFetchApp.fetch(API_URL, options);
+  const messageToNotify = createRegistrationMessage(registrationInfos);
+  postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, messageToNotify);
+};
+
+const getModificationAndDeletionSheetValues = (
+  sheet: GoogleAppsScript.Spreadsheet.Sheet
+): {
+  title: string;
+  date: Date;
+  startTime: Date;
+  endTime: Date;
+  newDate: Date;
+  newStartTime: Date;
+  newEndTime: Date;
+  newRestStartTime: Date | string;
+  newRestEndTime: Date | string;
+  newWorkingStyle: string;
+  deletionFlag: boolean;
+}[] => {
+  const sheetValues = sheet
+    .getRange(6, 1, sheet.getLastRow() - 5, sheet.getLastColumn())
+    .getValues()
+    .map((row) => {
+      if (row[7] === "" || row[8] === "") {
+        return {
+          title: row[0] as string,
+          date: row[1] as Date,
+          startTime: row[2] as Date,
+          endTime: row[3] as Date,
+          newDate: row[4] as Date,
+          newStartTime: row[5] as Date,
+          newEndTime: row[6] as Date,
+          newRestStartTime: row[7] as string,
+          newRestEndTime: row[8] as string,
+          newWorkingStyle: row[9] as string,
+          deletionFlag: row[10] as boolean,
+        };
+      } else {
+        return {
+          title: row[0] as string,
+          date: row[1] as Date,
+          startTime: row[2] as Date,
+          endTime: row[3] as Date,
+          newDate: row[4] as Date,
+          newStartTime: row[5] as Date,
+          newEndTime: row[6] as Date,
+          newRestStartTime: row[7] as Date,
+          newRestEndTime: row[8] as Date,
+          newWorkingStyle: row[9] as string,
+          deletionFlag: row[10] as boolean,
+        };
+      }
+    });
+
+  return sheetValues;
+};
+
+const getModificationInfos = (
+  sheetValues: {
+    title: string;
+    date: Date;
+    startTime: Date;
+    endTime: Date;
+    newDate: Date;
+    newStartTime: Date;
+    newEndTime: Date;
+    newRestStartTime: Date | string;
+    newRestEndTime: Date | string;
+    newWorkingStyle: string;
+    deletionFlag: boolean;
+  }[],
+  userEmail: string,
+  slackMemberProfiles: {
+    name: string;
+    email: string;
+  }[]
+): {
+  previousEventInfo: EventInfo;
+  newEventInfo: EventInfo;
+}[] => {
+  const modificationInfos = sheetValues
+    .filter((row) => !row.deletionFlag)
+    .map((row) => {
+      const title = row.title;
+      const date = format(row.date, "yyyy-MM-dd");
+      const startTime = format(row.startTime, "HH:mm");
+      const endTime = format(row.endTime, "HH:mm");
+      const newDate = format(row.newDate, "yyyy-MM-dd");
+      const newStartTime = format(row.newStartTime, "HH:mm");
+      const newEndTime = format(row.newEndTime, "HH:mm");
+      if (row.newRestStartTime === "" || row.newRestEndTime === "") {
+        const newRestStartTime = row.newRestStartTime as string;
+        const newRestEndTime = row.newRestEndTime as string;
+        const newWorkingStyle = row.newWorkingStyle;
+        const newTitle = createTitleFromEventInfo(
+          { restStartTime: newRestStartTime, restEndTime: newRestEndTime, workingStyle: newWorkingStyle },
+          userEmail,
+          slackMemberProfiles
+        );
+        return {
+          previousEventInfo: { title, date, startTime, endTime },
+          newEventInfo: { title: newTitle, date: newDate, startTime: newStartTime, endTime: newEndTime },
+        };
+      } else {
+        const newRestStartTime = format(row.newRestStartTime as Date, "HH:mm");
+        const newRestEndTime = format(row.newRestEndTime as Date, "HH:mm");
+        const newWorkingStyle = row.newWorkingStyle;
+        const newTitle = createTitleFromEventInfo(
+          { restStartTime: newRestStartTime, restEndTime: newRestEndTime, workingStyle: newWorkingStyle },
+          userEmail,
+          slackMemberProfiles
+        );
+        return {
+          previousEventInfo: { title, date, startTime, endTime },
+          newEventInfo: { title: newTitle, date: newDate, startTime: newStartTime, endTime: newEndTime },
+        };
+      }
+    });
+
+  return modificationInfos;
+};
+
+const getDeletionInfos = (
+  sheetValues: {
+    title: string;
+    date: Date;
+    startTime: Date;
+    endTime: Date;
+    newDate: Date;
+    newStartTime: Date;
+    newEndTime: Date;
+    newRestStartTime: Date | string;
+    newRestEndTime: Date | string;
+    newWorkingStyle: string;
+    deletionFlag: boolean;
+  }[]
+): EventInfo[] => {
+  const deletionInfos = sheetValues
+    .filter((row) => row.deletionFlag)
+    .map((row) => {
+      const title = row.title;
+      const date = format(row.date, "yyyy-MM-dd");
+      const startTime = format(row.startTime, "HH:mm");
+      const endTime = format(row.endTime, "HH:mm");
+      return { title, date, startTime, endTime };
+    });
+
+  return deletionInfos;
+};
+export const callModificationAndDeletion = () => {
+  const userEmail = Session.getActiveUser().getEmail();
+  const spreadsheetUrl = SpreadsheetApp.getActiveSpreadsheet().getUrl();
+  const { SLACK_ACCESS_TOKEN } = getConfig();
+  const client = getSlackClient(SLACK_ACCESS_TOKEN);
+  const slackMemberProfiles = getSlackMemberProfiles(client);
+  const sheetType: SheetType = "modificationAndDeletion";
+  const sheet = getSheet(sheetType, spreadsheetUrl);
+  const operationType: OperationType = "modificationAndDeletion";
+  const sheetValues = getModificationAndDeletionSheetValues(sheet);
+  const valuesForOperation = sheetValues.filter((row) => row.deletionFlag || row.newDate);
+  const modificationInfos = getModificationInfos(valuesForOperation, userEmail, slackMemberProfiles);
+  const deletionInfos = getDeletionInfos(valuesForOperation);
+
+  const payload = {
+    apiId: "shift-changer",
+    operationType: operationType,
+    userEmail: userEmail,
+    modificationInfos: JSON.stringify(modificationInfos),
+    deletionInfos: JSON.stringify(deletionInfos),
+  };
+  const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
+    method: "post",
+    payload: payload,
+  };
+  const { API_URL, SLACK_CHANNEL_TO_POST } = getConfig();
+  UrlFetchApp.fetch(API_URL, options);
+
+  const modificationMessageToNotify = createModificationMessage(modificationInfos);
+  if (modificationMessageToNotify)
+    postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, modificationMessageToNotify);
+
+  const deletionMessageToNotify = createDeletionMessage(deletionInfos);
+  if (deletionMessageToNotify) postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, deletionMessageToNotify);
+};
+
+export const callShowEvents = () => {
+  const userEmail = Session.getActiveUser().getEmail();
+  const spreadsheetUrl = SpreadsheetApp.getActiveSpreadsheet().getUrl();
+  const sheetType: SheetType = "modificationAndDeletion";
+  const sheet = getSheet(sheetType, spreadsheetUrl);
+  const operationType: OperationType = "showEvents";
+  const startDate: Date = sheet.getRange("A2").getValue();
+
+  sheet.getRange(6, 1, sheet.getLastRow() - 5, sheet.getLastColumn()).clearContent();
+
+  const payload = {
+    apiId: "shift-changer",
+    operationType: operationType,
+    userEmail: userEmail,
+    startDate: startDate,
+  };
+  const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
+    method: "post",
+    payload: payload,
+  };
+  const { API_URL } = getConfig();
+  const response = UrlFetchApp.fetch(API_URL, options);
+  if (!response.getContentText()) return;
+
+  const eventInfos: EventInfo[] = JSON.parse(response.getContentText());
+  const moldedEventInfos = eventInfos.map(({ title, date, startTime, endTime }) => {
+    return [title, date, startTime, endTime];
+  });
+
+  sheet.getRange(6, 1, moldedEventInfos.length, moldedEventInfos[0].length).setValues(moldedEventInfos);
+};
+
+const getSheet = (sheetType: SheetType, spreadsheetUrl: string): GoogleAppsScript.Spreadsheet.Sheet => {
+  const today = format(new Date(), "yyyy-MM-dd");
+  const sheet = SpreadsheetApp.openByUrl(spreadsheetUrl)
+    .getSheets()
+    .find((sheet) => sheet.getDeveloperMetadata()[0].getKey() === `${today}-${sheetType}`);
+
+  if (!sheet) throw new Error("SHEET is not defined");
+
+  return sheet;
+};
+
+const getRegistrationInfos = (
+  sheet: GoogleAppsScript.Spreadsheet.Sheet,
+  userEmail: string,
+  slackMemberProfiles: { name: string; email: string }[]
+): EventInfo[] => {
+  const registrationInfos = sheet
+    .getRange(2, 1, sheet.getLastRow() - 1, sheet.getLastColumn())
+    .getValues()
+    .map((eventInfo) => {
+      const date = format(eventInfo[0] as Date, "yyyy-MM-dd");
+      const startTime = format(eventInfo[1] as Date, "HH:mm");
+      const endTime = format(eventInfo[2] as Date, "HH:mm");
+      const workingStyle = eventInfo[5] as string;
+      if (eventInfo[3] === "" || eventInfo[4] === "") {
+        const restStartTime = eventInfo[3] as string;
+        const restEndTime = eventInfo[4] as string;
+        const title = createTitleFromEventInfo(
+          { restStartTime, restEndTime, workingStyle },
+          userEmail,
+          slackMemberProfiles
+        );
+        return { title, date, startTime, endTime };
+      } else {
+        const restStartTime = format(eventInfo[3] as Date, "HH:mm");
+        const restEndTime = format(eventInfo[4] as Date, "HH:mm");
+        const title = createTitleFromEventInfo(
+          { restStartTime, restEndTime, workingStyle },
+          userEmail,
+          slackMemberProfiles
+        );
+        return { title, date, startTime, endTime };
+      }
+    });
+  return registrationInfos;
+};
+
+const createTitleFromEventInfo = (
+  eventInfo: {
+    restStartTime: string;
+    restEndTime: string;
+    workingStyle: string;
+  },
+  userEmail: string,
+  slackMemberProfiles: {
+    name: string;
+    email: string;
+  }[]
+): string => {
+  const name = getNameFromEmail(userEmail, slackMemberProfiles);
+  const job = getJob(name);
+
+  const restStartTime = eventInfo.restStartTime;
+  const restEndTime = eventInfo.restEndTime;
+  const workingStyle = eventInfo.workingStyle;
+
+  if (restStartTime === "" || restEndTime === "") {
+    const title = `【${workingStyle}】${job}: ${name}さん`;
+    return title;
+  } else {
+    const title = `【${workingStyle}】${job}: ${name}さん (休憩: ${restStartTime}~${restEndTime})`;
+    return title;
+  }
+};
+
+const getNameFromEmail = (email: string, slackMemberProfiles: { name: string; email: string }[]): string => {
+  const slackMember = slackMemberProfiles.find((slackMemberProfile) => slackMemberProfile.email === email);
+  if (!slackMember) throw new Error("The email is non-slack member");
+  return slackMember.name;
+};
+
+const getSlackMemberProfiles = (client: SlackClient): { name: string; email: string }[] => {
+  const slackMembers = client.users.list().members ?? [];
+
+  const siiiboSlackMembers = slackMembers.filter(
+    (slackMember) =>
+      !slackMember.deleted &&
+      !slackMember.is_bot &&
+      slackMember.id !== "USLACKBOT" &&
+      slackMember.profile?.email?.includes("siiibo.com")
+  );
+
+  const slackMemberProfiles = siiiboSlackMembers
+    .map((slackMember) => {
+      return {
+        name: slackMember.profile?.real_name,
+        email: slackMember.profile?.email,
+      };
+    })
+    .filter((s): s is { name: string; email: string } => s.name !== "" || s.email !== "");
+  return slackMemberProfiles;
+};
+
+const getSlackClient = (slackToken: string): SlackClient => {
+  return new SlackClient(slackToken);
+};
+
+const getJob = (nameToCheck: string): string | undefined => {
+  const nameRegex = new RegExp(nameToCheck.replace(/ |\u3000/g, "( |\u3000|)?"));
+  const { JOB_SHEET_URL } = getConfig();
+  const sheet = SpreadsheetApp.openByUrl(JOB_SHEET_URL).getSheetByName("シート1");
+  if (!sheet) throw new Error("SHEET is not defined");
+  const jobInfos = sheet.getRange(1, 1, sheet.getLastRow(), 2).getValues();
+  const jobInfo = jobInfos.find((jobInfo) => {
+    const name = jobInfo[1] as string;
+    return name.match(nameRegex);
+  });
+  if (jobInfo === undefined) return;
+
+  const job = jobInfo[0] as string;
+  return job;
+};
+
+const createMessageFromEventInfo = (eventInfo: EventInfo) => {
+  const formattedDate = format(new Date(eventInfo.date), "MM/dd");
+  return `${eventInfo.title}: ${formattedDate} ${eventInfo.startTime}~${eventInfo.endTime}`;
+};
+
+const createRegistrationMessage = (registrationInfos: EventInfo[]): string => {
+  const messages = registrationInfos.map(createMessageFromEventInfo);
+  const messageTitle = "以下の予定が追加されました。";
+  return `${messageTitle}\n${messages.join("\n")}`;
+};
+
+const createDeletionMessage = (deletionInfos: EventInfo[]): string | undefined => {
+  const messages = deletionInfos.map(createMessageFromEventInfo);
+  if (messages.length == 0) return;
+  const messageTitle = "以下の予定が削除されました。";
+  return `${messageTitle}\n${messages.join("\n")}`;
+};
+
+const createModificationMessage = (
+  modificationInfos: {
+    previousEventInfo: EventInfo;
+    newEventInfo: EventInfo;
+  }[]
+): string | undefined => {
+  const messages = modificationInfos.map(({ previousEventInfo, newEventInfo }) => {
+    return `${createMessageFromEventInfo(previousEventInfo)}\n\
+    → ${createMessageFromEventInfo(newEventInfo)}`;
+  });
+  if (messages.length == 0) return;
+  const messageTitle = "以下の予定が変更されました。";
+  return `${messageTitle}\n${messages.join("\n")}`;
+};
+
+const postMessageToSlackChannel = (client: SlackClient, slackChannelToPost: string, messageToNotify: string) => {
+  const { MEMBER_ID } = getConfig();
+  client.chat.postMessage({
+    channel: slackChannelToPost,
+    text: `<@${MEMBER_ID}>\n${messageToNotify}`,
+  });
+};

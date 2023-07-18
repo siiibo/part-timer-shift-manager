@@ -432,7 +432,7 @@ const createTitleFromEventInfo = (
   }[]
 ): string => {
   const name = getNameFromEmail(userEmail, slackMemberProfiles);
-  const job = getJob(name);
+  const job = getJob(userEmail);
 
   const restStartTime = eventInfo.restStartTime;
   const restEndTime = eventInfo.restEndTime;
@@ -479,19 +479,18 @@ const getSlackClient = (slackToken: string): SlackClient => {
   return new SlackClient(slackToken);
 };
 
-const getJob = (nameToCheck: string): string | undefined => {
-  const nameRegex = new RegExp(nameToCheck.replace(/ |\u3000/g, "( |\u3000|)?"));
+const getJob = (userEmail: string): string => {
   const { JOB_SHEET_URL } = getConfig();
   const sheet = SpreadsheetApp.openByUrl(JOB_SHEET_URL).getSheetByName("シート1");
   if (!sheet) throw new Error("SHEET is not defined");
-  const jobInfos = sheet.getRange(1, 1, sheet.getLastRow(), 2).getValues();
-  const jobInfo = jobInfos.find((jobInfo) => {
-    const name = jobInfo[1] as string;
-    return name.match(nameRegex);
+  const partTimerInfos = sheet.getRange(1, 1, sheet.getLastRow(), sheet.getLastColumn()).getValues();
+  const partTimerInfo = partTimerInfos.find((partTimerInfo) => {
+    const email = partTimerInfo[2] as string;
+    return email === userEmail;
   });
-  if (jobInfo === undefined) return;
+  if (partTimerInfo === undefined) throw new Error("no part timer information for the email");
 
-  const job = jobInfo[0] as string;
+  const job = partTimerInfo[0] as string;
   return job;
 };
 

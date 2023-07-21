@@ -156,7 +156,7 @@ export const callRegistration = () => {
   const { API_URL, SLACK_CHANNEL_TO_POST } = getConfig();
   UrlFetchApp.fetch(API_URL, options);
   const messageToNotify = createRegistrationMessage(registrationInfos);
-  postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, messageToNotify);
+  postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, messageToNotify, userEmail);
 };
 
 const getModificationAndDeletionSheetValues = (
@@ -334,10 +334,11 @@ export const callModificationAndDeletion = () => {
 
   const modificationMessageToNotify = createModificationMessage(modificationInfos);
   if (modificationMessageToNotify)
-    postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, modificationMessageToNotify);
+    postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, modificationMessageToNotify, userEmail);
 
   const deletionMessageToNotify = createDeletionMessage(deletionInfos);
-  if (deletionMessageToNotify) postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, deletionMessageToNotify);
+  if (deletionMessageToNotify)
+    postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, deletionMessageToNotify, userEmail);
 };
 
 export const callShowEvents = () => {
@@ -527,10 +528,51 @@ const createModificationMessage = (
   return `${messageTitle}\n${messages.join("\n")}`;
 };
 
-const postMessageToSlackChannel = (client: SlackClient, slackChannelToPost: string, messageToNotify: string) => {
-  const { MEMBER_ID } = getConfig();
+const getManagerEmails = (userEmail: string): string[] => {
+  const { JOB_SHEET_URL } = getConfig();
+  const sheet = SpreadsheetApp.openByUrl(JOB_SHEET_URL).getSheetByName("シート1");
+  if (!sheet) throw new Error("SHEET is not defined");
+  const partTimerInfos = sheet.getRange(1, 1, sheet.getLastRow(), sheet.getLastColumn()).getValues();
+  const partTimerInfo = partTimerInfos.find((partTimerInfo) => {
+    const email = partTimerInfo[2] as string;
+    return email === userEmail;
+  });
+  if (partTimerInfo === undefined) throw new Error("no part timer information for the email");
+  const managerEmail = partTimerInfo[3] as string;
+  const managerEmails = managerEmail.replaceAll(/\s/, "").split(",");
+  return managerEmails;
+};
+
+const getManagerSlackIds = (managerEmails: string[], client: SlackClient): string[] => {
+  const slackMembers = client.users.list().members ?? [];
+
+  const managerSlackIds = managerEmails
+    .map((email) => {
+      const member = slackMembers.find((slackMember) => {
+        return slackMember.profile?.email === email;
+      });
+      if (member === undefined) throw new Error("The email is not in the slack members");
+      return member.id;
+    })
+    .filter((id): id is string => id !== undefined);
+
+  return managerSlackIds;
+};
+
+const slackIdToMention = (slackId: string) => `<@${slackId}>`;
+
+const postMessageToSlackChannel = (
+  client: SlackClient,
+  slackChannelToPost: string,
+  messageToNotify: string,
+  userEmail: string
+) => {
+  const { HR_MANAGER_SLACK_ID } = getConfig();
+  const managerEmails = getManagerEmails(userEmail);
+  const managerSlackIds = getManagerSlackIds(managerEmails, client);
+  const mentionMessageToManagers = [HR_MANAGER_SLACK_ID, ...managerSlackIds].map(slackIdToMention).join(" ");
   client.chat.postMessage({
     channel: slackChannelToPost,
-    text: `<@${MEMBER_ID}>\n${messageToNotify}`,
+    text: `${mentionMessageToManagers}\n${messageToNotify}`,
   });
 };

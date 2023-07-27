@@ -43,26 +43,31 @@ export const insertRegistrationSheet = () => {
   const sheet = spreadsheet.insertSheet(`${today}-登録`, 0);
   sheet.addDeveloperMetadata(`${today}-registration`);
 
-  const header = ["日付", "開始時刻", "終了時刻", "休憩開始時刻", "休憩終了時刻", "勤務形態"];
-  sheet.getRange(1, 1, 1, header.length).setValues([header]).setFontWeight("bold");
+  const description1 = "コメント欄 (下の色付きセルに記入してください)";
+  sheet.getRange("A1").setValue(description1).setFontWeight("bold");
+  const commentCell = sheet.getRange("A2");
+  commentCell.setBackground("#f0f8ff");
 
-  const workingStyleCells = sheet.getRange("F2:F1000");
+  const header = ["日付", "開始時刻", "終了時刻", "休憩開始時刻", "休憩終了時刻", "勤務形態"];
+  sheet.getRange(4, 1, 1, header.length).setValues([header]).setFontWeight("bold");
+
+  const workingStyleCells = sheet.getRange("F5:F1000");
   const workingStyleRule = SpreadsheetApp.newDataValidation()
     .requireValueInList(["リモート", "出社"], true)
     .setAllowInvalid(false)
     .setHelpText("リモート/出社 を選択してください。")
     .build();
   workingStyleCells.setDataValidation(workingStyleRule);
-  const dateCells = sheet.getRange("A2:A1000");
+  const dateCells = sheet.getRange("A5:A1000");
   const dateRule = SpreadsheetApp.newDataValidation()
     .requireDateOnOrAfter(new Date())
     .setAllowInvalid(false)
     .setHelpText("本日以降の日付を入力してください。")
     .build();
   dateCells.setDataValidation(dateRule);
-  const timeCells = sheet.getRange("B2:E1000");
+  const timeCells = sheet.getRange("B5:E1000");
   const timeRule = SpreadsheetApp.newDataValidation()
-    .requireFormulaSatisfied("=ISDATE(B2)")
+    .requireFormulaSatisfied("=ISDATE(B5)")
     .setHelpText('時刻を"◯◯:◯◯"の形式で入力してください。')
     .build();
   timeCells.setDataValidation(timeRule);
@@ -74,10 +79,22 @@ export const insertModificationAndDeletionSheet = () => {
   const sheet = spreadsheet.insertSheet(`${today}-変更・削除`, 0);
   sheet.addDeveloperMetadata(`${today}-modificationAndDeletion`);
 
-  const description1 = "本日以降の日付を入力してください。指定した日付から一週間後までの予定が表示されます。";
-  const description2 = "【予定一覧】";
-  const description3 = "【変更】変更後の予定を記入してください ";
-  const description4 = "【削除】削除したい予定を選択してください";
+  const description1 = "コメント欄 (下の色付きセルに記入してください)";
+  sheet.getRange("A1").setValue(description1).setFontWeight("bold");
+  const commentCell = sheet.getRange("A2");
+  commentCell.setBackground("#f0f8ff");
+
+  const description2 = "本日以降の日付を入力してください。指定した日付から一週間後までの予定が表示されます。";
+  sheet.getRange("A4").setValue(description2).setFontWeight("bold");
+
+  const description3 = "【予定一覧】";
+  sheet.getRange("A7").setValue(description3).setFontWeight("bold");
+
+  const description4 = "【変更】変更後の予定を記入してください ";
+  sheet.getRange("E7").setValue(description4).setFontWeight("bold");
+
+  const description5 = "【削除】削除したい予定を選択してください";
+  sheet.getRange("K7").setValue(description5).setFontWeight("bold");
 
   const header = [
     "イベント名",
@@ -92,14 +109,10 @@ export const insertModificationAndDeletionSheet = () => {
     "勤務形態",
     "削除対象",
   ];
-  sheet.getRange("A1").setValue(description1).setFontWeight("bold");
-  sheet.getRange("A4").setValue(description2).setFontWeight("bold");
-  sheet.getRange("E4").setValue(description3).setFontWeight("bold");
-  sheet.getRange("K4").setValue(description4).setFontWeight("bold");
-  sheet.getRange(5, 1, 1, header.length).setValues([header]).setFontWeight("bold");
+  sheet.getRange(8, 1, 1, header.length).setValues([header]).setFontWeight("bold");
 
-  const dateCell = sheet.getRange("A2");
-  const dateCells = sheet.getRange("E6:E1000");
+  const dateCell = sheet.getRange("A5");
+  const dateCells = sheet.getRange("E9:E1000");
   const dateRule = SpreadsheetApp.newDataValidation()
     .requireDateOnOrAfter(new Date())
     .setAllowInvalid(false)
@@ -107,21 +120,21 @@ export const insertModificationAndDeletionSheet = () => {
     .build();
   dateCell.setDataValidation(dateRule);
   dateCells.setDataValidation(dateRule);
-  const timeCells = sheet.getRange("F6:I1000");
+  const timeCells = sheet.getRange("F9:I1000");
   const timeRule = SpreadsheetApp.newDataValidation()
-    .requireFormulaSatisfied("=ISDATE(F6)")
+    .requireFormulaSatisfied("=ISDATE(F9)")
     .setAllowInvalid(false)
     .setHelpText('時刻を"◯◯:◯◯"の形式で入力してください。\n【例】 9:00')
     .build();
   timeCells.setDataValidation(timeRule);
-  const workingStyleCells = sheet.getRange("J6:J1000");
+  const workingStyleCells = sheet.getRange("J9:J1000");
   const workingStyleRule = SpreadsheetApp.newDataValidation()
     .requireValueInList(["リモート", "出社"], true)
     .setAllowInvalid(false)
     .setHelpText("リモート/出社 を選択してください。")
     .build();
   workingStyleCells.setDataValidation(workingStyleRule);
-  const checkboxCells = sheet.getRange("K6:K1000");
+  const checkboxCells = sheet.getRange("K9:K1000");
   const checkboxRule = SpreadsheetApp.newDataValidation()
     .requireCheckbox()
     .setAllowInvalid(false)
@@ -141,6 +154,7 @@ export const callRegistration = () => {
   const sheetType: SheetType = "registration";
   const sheet = getSheet(sheetType, spreadsheetUrl);
   const operationType: OperationType = "registration";
+  const comment = sheet.getRange("A2").getValue();
   const registrationInfos = getRegistrationInfos(sheet, userEmail, slackMemberProfiles);
 
   const payload = {
@@ -155,7 +169,7 @@ export const callRegistration = () => {
   };
   const { API_URL, SLACK_CHANNEL_TO_POST } = getConfig();
   UrlFetchApp.fetch(API_URL, options);
-  const messageToNotify = createRegistrationMessage(registrationInfos);
+  const messageToNotify = createRegistrationMessage(registrationInfos, comment);
   postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, messageToNotify, userEmail);
 };
 
@@ -175,7 +189,7 @@ const getModificationAndDeletionSheetValues = (
   deletionFlag: boolean;
 }[] => {
   const sheetValues = sheet
-    .getRange(6, 1, sheet.getLastRow() - 5, sheet.getLastColumn())
+    .getRange(9, 1, sheet.getLastRow() - 8, sheet.getLastColumn())
     .getValues()
     .map((row) => {
       if (row[7] === "" || row[8] === "") {
@@ -312,6 +326,7 @@ export const callModificationAndDeletion = () => {
   const slackMemberProfiles = getSlackMemberProfiles(client);
   const sheetType: SheetType = "modificationAndDeletion";
   const sheet = getSheet(sheetType, spreadsheetUrl);
+  const comment = sheet.getRange("A2").getValue();
   const operationType: OperationType = "modificationAndDeletion";
   const sheetValues = getModificationAndDeletionSheetValues(sheet);
   const valuesForOperation = sheetValues.filter((row) => row.deletionFlag || row.newDate);
@@ -332,11 +347,11 @@ export const callModificationAndDeletion = () => {
   const { API_URL, SLACK_CHANNEL_TO_POST } = getConfig();
   UrlFetchApp.fetch(API_URL, options);
 
-  const modificationMessageToNotify = createModificationMessage(modificationInfos);
+  const modificationMessageToNotify = createModificationMessage(modificationInfos, comment);
   if (modificationMessageToNotify)
     postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, modificationMessageToNotify, userEmail);
 
-  const deletionMessageToNotify = createDeletionMessage(deletionInfos);
+  const deletionMessageToNotify = createDeletionMessage(deletionInfos, comment);
   if (deletionMessageToNotify)
     postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, deletionMessageToNotify, userEmail);
 };
@@ -347,9 +362,9 @@ export const callShowEvents = () => {
   const sheetType: SheetType = "modificationAndDeletion";
   const sheet = getSheet(sheetType, spreadsheetUrl);
   const operationType: OperationType = "showEvents";
-  const startDate: Date = sheet.getRange("A2").getValue();
+  const startDate: Date = sheet.getRange("A5").getValue();
 
-  sheet.getRange(6, 1, sheet.getLastRow() - 5, sheet.getLastColumn()).clearContent();
+  sheet.getRange(9, 1, sheet.getLastRow() - 8, sheet.getLastColumn()).clearContent();
 
   const payload = {
     apiId: "shift-changer",
@@ -366,11 +381,13 @@ export const callShowEvents = () => {
   if (!response.getContentText()) return;
 
   const eventInfos: EventInfo[] = JSON.parse(response.getContentText());
+  if (eventInfos.length === 0) throw new Error("no events");
+
   const moldedEventInfos = eventInfos.map(({ title, date, startTime, endTime }) => {
     return [title, date, startTime, endTime];
   });
 
-  sheet.getRange(6, 1, moldedEventInfos.length, moldedEventInfos[0].length).setValues(moldedEventInfos);
+  sheet.getRange(9, 1, moldedEventInfos.length, moldedEventInfos[0].length).setValues(moldedEventInfos);
 };
 
 const getSheet = (sheetType: SheetType, spreadsheetUrl: string): GoogleAppsScript.Spreadsheet.Sheet => {
@@ -390,7 +407,7 @@ const getRegistrationInfos = (
   slackMemberProfiles: { name: string; email: string }[]
 ): EventInfo[] => {
   const registrationInfos = sheet
-    .getRange(2, 1, sheet.getLastRow() - 1, sheet.getLastColumn())
+    .getRange(5, 1, sheet.getLastRow() - 4, sheet.getLastColumn())
     .getValues()
     .map((eventInfo) => {
       const date = format(eventInfo[0] as Date, "yyyy-MM-dd");
@@ -500,24 +517,29 @@ const createMessageFromEventInfo = (eventInfo: EventInfo) => {
   return `${eventInfo.title}: ${formattedDate} ${eventInfo.startTime}~${eventInfo.endTime}`;
 };
 
-const createRegistrationMessage = (registrationInfos: EventInfo[]): string => {
+const createRegistrationMessage = (registrationInfos: EventInfo[], comment: string): string => {
   const messages = registrationInfos.map(createMessageFromEventInfo);
   const messageTitle = "以下の予定が追加されました。";
-  return `${messageTitle}\n${messages.join("\n")}`;
+  return comment
+    ? `${messageTitle}\n${messages.join("\n")}\n\nコメント: ${comment}`
+    : `${messageTitle}\n${messages.join("\n")}`;
 };
 
-const createDeletionMessage = (deletionInfos: EventInfo[]): string | undefined => {
+const createDeletionMessage = (deletionInfos: EventInfo[], comment: string): string | undefined => {
   const messages = deletionInfos.map(createMessageFromEventInfo);
   if (messages.length == 0) return;
   const messageTitle = "以下の予定が削除されました。";
-  return `${messageTitle}\n${messages.join("\n")}`;
+  return comment
+    ? `${messageTitle}\n${messages.join("\n")}\n\nコメント: ${comment}`
+    : `${messageTitle}\n${messages.join("\n")}`;
 };
 
 const createModificationMessage = (
   modificationInfos: {
     previousEventInfo: EventInfo;
     newEventInfo: EventInfo;
-  }[]
+  }[],
+  comment: string
 ): string | undefined => {
   const messages = modificationInfos.map(({ previousEventInfo, newEventInfo }) => {
     return `${createMessageFromEventInfo(previousEventInfo)}\n\
@@ -525,7 +547,9 @@ const createModificationMessage = (
   });
   if (messages.length == 0) return;
   const messageTitle = "以下の予定が変更されました。";
-  return `${messageTitle}\n${messages.join("\n")}`;
+  return comment
+    ? `${messageTitle}\n${messages.join("\n")}\n\nコメント: ${comment}`
+    : `${messageTitle}\n${messages.join("\n")}`;
 };
 
 const getManagerEmails = (userEmail: string): string[] => {

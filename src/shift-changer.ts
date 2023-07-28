@@ -263,6 +263,7 @@ const getModificationInfos = (
         const newRestStartTime = row.newRestStartTime as string;
         const newRestEndTime = row.newRestEndTime as string;
         const newWorkingStyle = row.newWorkingStyle;
+        if (newWorkingStyle === "") throw new Error("new working style is not defined");
         const newTitle = createTitleFromEventInfo(
           { restStartTime: newRestStartTime, restEndTime: newRestEndTime, workingStyle: newWorkingStyle },
           userEmail,
@@ -414,6 +415,7 @@ const getRegistrationInfos = (
       const startTime = format(eventInfo[1] as Date, "HH:mm");
       const endTime = format(eventInfo[2] as Date, "HH:mm");
       const workingStyle = eventInfo[5] as string;
+      if (workingStyle === "") throw new Error("working style is not defined");
       if (eventInfo[3] === "" || eventInfo[4] === "") {
         const restStartTime = eventInfo[3] as string;
         const restEndTime = eventInfo[4] as string;

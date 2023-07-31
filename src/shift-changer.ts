@@ -149,13 +149,12 @@ export const callRegistration = () => {
   const spreadsheetUrl = SpreadsheetApp.getActiveSpreadsheet().getUrl();
   const { SLACK_ACCESS_TOKEN } = getConfig();
   const client = getSlackClient(SLACK_ACCESS_TOKEN);
-  const slackMemberProfiles = getSlackMemberProfiles(client);
 
   const sheetType: SheetType = "registration";
   const sheet = getSheet(sheetType, spreadsheetUrl);
   const operationType: OperationType = "registration";
   const comment = sheet.getRange("A2").getValue();
-  const registrationInfos = getRegistrationInfos(sheet, userEmail, slackMemberProfiles);
+  const registrationInfos = getRegistrationInfos(sheet, userEmail);
 
   const payload = {
     apiId: "shift-changer",
@@ -240,11 +239,7 @@ const getModificationInfos = (
     newWorkingStyle: string;
     deletionFlag: boolean;
   }[],
-  userEmail: string,
-  slackMemberProfiles: {
-    name: string;
-    email: string;
-  }[]
+  userEmail: string
 ): {
   previousEventInfo: EventInfo;
   newEventInfo: EventInfo;
@@ -266,8 +261,7 @@ const getModificationInfos = (
         if (newWorkingStyle === "") throw new Error("new working style is not defined");
         const newTitle = createTitleFromEventInfo(
           { restStartTime: newRestStartTime, restEndTime: newRestEndTime, workingStyle: newWorkingStyle },
-          userEmail,
-          slackMemberProfiles
+          userEmail
         );
         return {
           previousEventInfo: { title, date, startTime, endTime },
@@ -279,8 +273,7 @@ const getModificationInfos = (
         const newWorkingStyle = row.newWorkingStyle;
         const newTitle = createTitleFromEventInfo(
           { restStartTime: newRestStartTime, restEndTime: newRestEndTime, workingStyle: newWorkingStyle },
-          userEmail,
-          slackMemberProfiles
+          userEmail
         );
         return {
           previousEventInfo: { title, date, startTime, endTime },
@@ -324,14 +317,13 @@ export const callModificationAndDeletion = () => {
   const spreadsheetUrl = SpreadsheetApp.getActiveSpreadsheet().getUrl();
   const { SLACK_ACCESS_TOKEN } = getConfig();
   const client = getSlackClient(SLACK_ACCESS_TOKEN);
-  const slackMemberProfiles = getSlackMemberProfiles(client);
   const sheetType: SheetType = "modificationAndDeletion";
   const sheet = getSheet(sheetType, spreadsheetUrl);
   const comment = sheet.getRange("A2").getValue();
   const operationType: OperationType = "modificationAndDeletion";
   const sheetValues = getModificationAndDeletionSheetValues(sheet);
   const valuesForOperation = sheetValues.filter((row) => row.deletionFlag || row.newDate);
-  const modificationInfos = getModificationInfos(valuesForOperation, userEmail, slackMemberProfiles);
+  const modificationInfos = getModificationInfos(valuesForOperation, userEmail);
   const deletionInfos = getDeletionInfos(valuesForOperation);
 
   const payload = {
@@ -402,11 +394,7 @@ const getSheet = (sheetType: SheetType, spreadsheetUrl: string): GoogleAppsScrip
   return sheet;
 };
 
-const getRegistrationInfos = (
-  sheet: GoogleAppsScript.Spreadsheet.Sheet,
-  userEmail: string,
-  slackMemberProfiles: { name: string; email: string }[]
-): EventInfo[] => {
+const getRegistrationInfos = (sheet: GoogleAppsScript.Spreadsheet.Sheet, userEmail: string): EventInfo[] => {
   const registrationInfos = sheet
     .getRange(5, 1, sheet.getLastRow() - 4, sheet.getLastColumn())
     .getValues()
@@ -419,20 +407,12 @@ const getRegistrationInfos = (
       if (eventInfo[3] === "" || eventInfo[4] === "") {
         const restStartTime = eventInfo[3] as string;
         const restEndTime = eventInfo[4] as string;
-        const title = createTitleFromEventInfo(
-          { restStartTime, restEndTime, workingStyle },
-          userEmail,
-          slackMemberProfiles
-        );
+        const title = createTitleFromEventInfo({ restStartTime, restEndTime, workingStyle }, userEmail);
         return { title, date, startTime, endTime };
       } else {
         const restStartTime = format(eventInfo[3] as Date, "HH:mm");
         const restEndTime = format(eventInfo[4] as Date, "HH:mm");
-        const title = createTitleFromEventInfo(
-          { restStartTime, restEndTime, workingStyle },
-          userEmail,
-          slackMemberProfiles
-        );
+        const title = createTitleFromEventInfo({ restStartTime, restEndTime, workingStyle }, userEmail);
         return { title, date, startTime, endTime };
       }
     });
@@ -445,14 +425,9 @@ const createTitleFromEventInfo = (
     restEndTime: string;
     workingStyle: string;
   },
-  userEmail: string,
-  slackMemberProfiles: {
-    name: string;
-    email: string;
-  }[]
+  userEmail: string
 ): string => {
-  const name = getNameFromEmail(userEmail, slackMemberProfiles);
-  const job = getJob(userEmail);
+  const { job, name } = getPartTimerProfile(userEmail);
 
   const restStartTime = eventInfo.restStartTime;
   const restEndTime = eventInfo.restEndTime;
@@ -467,51 +442,37 @@ const createTitleFromEventInfo = (
   }
 };
 
-const getNameFromEmail = (email: string, slackMemberProfiles: { name: string; email: string }[]): string => {
-  const slackMember = slackMemberProfiles.find((slackMemberProfile) => slackMemberProfile.email === email);
-  if (!slackMember) throw new Error("The email is non-slack member");
-  return slackMember.name;
-};
-
-const getSlackMemberProfiles = (client: SlackClient): { name: string; email: string }[] => {
-  const slackMembers = client.users.list().members ?? [];
-
-  const siiiboSlackMembers = slackMembers.filter(
-    (slackMember) =>
-      !slackMember.deleted &&
-      !slackMember.is_bot &&
-      slackMember.id !== "USLACKBOT" &&
-      slackMember.profile?.email?.includes("siiibo.com")
-  );
-
-  const slackMemberProfiles = siiiboSlackMembers
-    .map((slackMember) => {
-      return {
-        name: slackMember.profile?.real_name,
-        email: slackMember.profile?.email,
-      };
-    })
-    .filter((s): s is { name: string; email: string } => s.name !== "" || s.email !== "");
-  return slackMemberProfiles;
-};
-
 const getSlackClient = (slackToken: string): SlackClient => {
   return new SlackClient(slackToken);
 };
 
-const getJob = (userEmail: string): string => {
+const getPartTimerProfile = (
+  userEmail: string
+): {
+  job: string;
+  name: string;
+  email: string;
+  managerEmails: string[];
+} => {
   const { JOB_SHEET_URL } = getConfig();
   const sheet = SpreadsheetApp.openByUrl(JOB_SHEET_URL).getSheetByName("シート1");
   if (!sheet) throw new Error("SHEET is not defined");
-  const partTimerInfos = sheet.getRange(1, 1, sheet.getLastRow(), sheet.getLastColumn()).getValues();
-  const partTimerInfo = partTimerInfos.find((partTimerInfo) => {
-    const email = partTimerInfo[2] as string;
+  const partTimerProfiles = sheet
+    .getRange(1, 1, sheet.getLastRow(), sheet.getLastColumn())
+    .getValues()
+    .map((row) => ({
+      job: row[0] as string,
+      name: row[1] as string,
+      email: row[2] as string,
+      managerEmails: (row[3] as string).replaceAll(/\s/g, "").split(","),
+    }));
+
+  const partTimerProfile = partTimerProfiles.find(({ email }) => {
     return email === userEmail;
   });
-  if (partTimerInfo === undefined) throw new Error("no part timer information for the email");
+  if (partTimerProfile === undefined) throw new Error("no part timer information for the email");
 
-  const job = partTimerInfo[0] as string;
-  return job;
+  return partTimerProfile;
 };
 
 const createMessageFromEventInfo = (eventInfo: EventInfo) => {
@@ -554,21 +515,6 @@ const createModificationMessage = (
     : `${messageTitle}\n${messages.join("\n")}`;
 };
 
-const getManagerEmails = (userEmail: string): string[] => {
-  const { JOB_SHEET_URL } = getConfig();
-  const sheet = SpreadsheetApp.openByUrl(JOB_SHEET_URL).getSheetByName("シート1");
-  if (!sheet) throw new Error("SHEET is not defined");
-  const partTimerInfos = sheet.getRange(1, 1, sheet.getLastRow(), sheet.getLastColumn()).getValues();
-  const partTimerInfo = partTimerInfos.find((partTimerInfo) => {
-    const email = partTimerInfo[2] as string;
-    return email === userEmail;
-  });
-  if (partTimerInfo === undefined) throw new Error("no part timer information for the email");
-  const managerEmail = partTimerInfo[3] as string;
-  const managerEmails = managerEmail.replaceAll(/\s/g, "").split(",");
-  return managerEmails;
-};
-
 const getManagerSlackIds = (managerEmails: string[], client: SlackClient): string[] => {
   const slackMembers = client.users.list().members ?? [];
 
@@ -594,7 +540,7 @@ const postMessageToSlackChannel = (
   userEmail: string
 ) => {
   const { HR_MANAGER_SLACK_ID } = getConfig();
-  const managerEmails = getManagerEmails(userEmail);
+  const { managerEmails } = getPartTimerProfile(userEmail);
   const managerSlackIds = getManagerSlackIds(managerEmails, client);
   const mentionMessageToManagers = [HR_MANAGER_SLACK_ID, ...managerSlackIds].map(slackIdToMention).join(" ");
   client.chat.postMessage({

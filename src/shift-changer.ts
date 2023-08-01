@@ -464,7 +464,7 @@ const getPartTimerProfile = (
       job: row[0] as string,
       name: row[1] as string,
       email: row[2] as string,
-      managerEmails: (row[3] as string).replaceAll(/\s/g, "").split(","),
+      managerEmails: row[3] === "" ? [] : (row[3] as string).replaceAll(/\s/g, "").split(","),
     }));
 
   const partTimerProfile = partTimerProfiles.find(({ email }) => {
@@ -523,7 +523,7 @@ const getManagerSlackIds = (managerEmails: string[], client: SlackClient): strin
       const member = slackMembers.find((slackMember) => {
         return slackMember.profile?.email === email;
       });
-      if (member === undefined) throw new Error("The email is not in the slack members");
+      if (member === undefined) throw new Error("The manager email is not in the slack members");
       return member.id;
     })
     .filter((id): id is string => id !== undefined);

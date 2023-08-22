@@ -84,8 +84,11 @@ export const insertModificationAndDeletionSheet = () => {
   const commentCell = sheet.getRange("A2");
   commentCell.setBackground("#f0f8ff");
 
-  const description2 = "本日以降の日付を入力してください。指定した日付から一週間後までの予定が表示されます。";
+  const description2 = "本日以降の日付を下の色付きセルに記入してください。一週間後までの予定が表示されます。";
   sheet.getRange("A4").setValue(description2).setFontWeight("bold");
+  const dateCell = sheet.getRange("A5");
+  dateCell.setValue(today);
+  dateCell.setBackground("#f0f8ff");
 
   const description3 = "【予定一覧】";
   sheet.getRange("A7").setValue(description3).setFontWeight("bold");
@@ -111,7 +114,6 @@ export const insertModificationAndDeletionSheet = () => {
   ];
   sheet.getRange(8, 1, 1, header.length).setValues([header]).setFontWeight("bold");
 
-  const dateCell = sheet.getRange("A5");
   const dateCells = sheet.getRange("E9:E1000");
   const dateRule = SpreadsheetApp.newDataValidation()
     .requireDateOnOrAfter(new Date())
@@ -356,6 +358,7 @@ export const callShowEvents = () => {
   const sheet = getSheet(sheetType, spreadsheetUrl);
   const operationType: OperationType = "showEvents";
   const startDate: Date = sheet.getRange("A5").getValue();
+  if (!startDate) throw new Error("日付を指定してください。");
 
   const payload = {
     apiId: "shift-changer",

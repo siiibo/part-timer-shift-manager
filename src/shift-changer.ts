@@ -349,13 +349,15 @@ export const callModificationAndDeletion = () => {
   const { API_URL, SLACK_CHANNEL_TO_POST } = getConfig();
   UrlFetchApp.fetch(API_URL, options);
 
-  const modificationMessageToNotify = createModificationMessage(modificationInfos, comment, partTimerProfile);
-  if (modificationMessageToNotify)
-    postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, modificationMessageToNotify, partTimerProfile);
+  const modificationAndDeletionMessageToNotify = [
+    createModificationMessage(modificationInfos, partTimerProfile),
+    createDeletionMessage(deletionInfos, partTimerProfile),
+    comment ? `コメント: ${comment}` : undefined,
+  ]
+    .filter(Boolean)
+    .join("\n---\n");
 
-  const deletionMessageToNotify = createDeletionMessage(deletionInfos, comment, partTimerProfile);
-  if (deletionMessageToNotify)
-    postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, deletionMessageToNotify, partTimerProfile);
+  postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, modificationAndDeletionMessageToNotify, partTimerProfile);
 };
 
 export const callShowEvents = () => {
@@ -506,18 +508,12 @@ const createRegistrationMessage = (
     : `${messageTitle}\n${messages.join("\n")}`;
 };
 
-const createDeletionMessage = (
-  deletionInfos: EventInfo[],
-  comment: string,
-  partTimerProfile: PartTimerProfile
-): string | undefined => {
+const createDeletionMessage = (deletionInfos: EventInfo[], partTimerProfile: PartTimerProfile): string | undefined => {
   const messages = deletionInfos.map(createMessageFromEventInfo);
   if (messages.length == 0) return;
   const { job, lastName } = partTimerProfile;
   const messageTitle = `${job}${lastName}さんの以下の予定が削除されました。`;
-  return comment
-    ? `${messageTitle}\n${messages.join("\n")}\n\nコメント: ${comment}`
-    : `${messageTitle}\n${messages.join("\n")}`;
+  return `${messageTitle}\n${messages.join("\n")}`;
 };
 
 const createModificationMessage = (
@@ -525,21 +521,15 @@ const createModificationMessage = (
     previousEventInfo: EventInfo;
     newEventInfo: EventInfo;
   }[],
-  comment: string,
   partTimerProfile: PartTimerProfile
 ): string | undefined => {
   const messages = modificationInfos.map(({ previousEventInfo, newEventInfo }) => {
-    return `---
-    ${createMessageFromEventInfo(previousEventInfo)}\n
-    ↓\n
-    ${createMessageFromEventInfo(newEventInfo)}`;
+    return `${createMessageFromEventInfo(previousEventInfo)}\n↓\n${createMessageFromEventInfo(newEventInfo)}`;
   });
   if (messages.length == 0) return;
   const { job, lastName } = partTimerProfile;
   const messageTitle = `${job}${lastName}さんの以下の予定が変更されました。`;
-  return comment
-    ? `${messageTitle}\n${messages.join("\n")}\n\nコメント: ${comment}`
-    : `${messageTitle}\n${messages.join("\n")}`;
+  return `${messageTitle}\n${messages.join("\n\n")}`;
 };
 
 const getManagerSlackIds = (managerEmails: string[], client: SlackClient): string[] => {

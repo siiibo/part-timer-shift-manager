@@ -7,6 +7,7 @@ const ConfigSchema = z.object({
   SLACK_CHANNEL_TO_POST: z.string(),
   JOB_SHEET_URL: z.string(),
   HR_MANAGER_SLACK_ID: z.string(),
+  DEV_SPREADSHEET_URL: z.string(),
 });
 
 export type Config = z.infer<typeof ConfigSchema>;

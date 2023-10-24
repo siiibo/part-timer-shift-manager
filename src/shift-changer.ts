@@ -21,26 +21,10 @@ export const doPost = (e: GoogleAppsScript.Events.DoPost): GoogleAppsScript.Cont
   return ContentService.createTextOutput("undefined");
 };
 
-export const init = () => {
-  const { DEV_SPREADSHEET_URL } = getConfig();
-  ScriptApp.newTrigger(onOpenForDev.name)
-    .forSpreadsheet(SpreadsheetApp.openByUrl(DEV_SPREADSHEET_URL))
-    .onOpen()
-    .create();
-};
-
 export const onOpen = () => {
   const ui = SpreadsheetApp.getUi();
-  createMenu(ui, ui.createAddonMenu());
-};
 
-export const onOpenForDev = () => {
-  const ui = SpreadsheetApp.getUi();
-  createMenu(ui, ui.createMenu("[dev] シフト変更ツール"));
-};
-
-const createMenu = (ui: GoogleAppsScript.Base.Ui, menu: GoogleAppsScript.Base.Menu) => {
-  return menu
+  ui.createAddonMenu()
     .addSubMenu(
       ui
         .createMenu("登録")
@@ -61,9 +45,8 @@ const createMenu = (ui: GoogleAppsScript.Base.Ui, menu: GoogleAppsScript.Base.Me
 
 export const insertRegistrationSheet = () => {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-  const today = format(new Date(), "yyyy-MM-dd");
-  const sheet = spreadsheet.insertSheet(`${today}-登録`, 0);
-  sheet.addDeveloperMetadata(`${today}-registration`);
+  const sheet = spreadsheet.insertSheet(`登録`, 0);
+  sheet.addDeveloperMetadata(`today-registration`);
 
   const description1 = "コメント欄 (下の色付きセルに記入してください)";
   sheet.getRange("A1").setValue(description1).setFontWeight("bold");
@@ -97,9 +80,8 @@ export const insertRegistrationSheet = () => {
 
 export const insertModificationAndDeletionSheet = () => {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-  const today = format(new Date(), "yyyy-MM-dd");
-  const sheet = spreadsheet.insertSheet(`${today}-変更・削除`, 0);
-  sheet.addDeveloperMetadata(`${today}-modificationAndDeletion`);
+  const sheet = spreadsheet.insertSheet(`変更・削除`, 0);
+  sheet.addDeveloperMetadata(`today-modificationAndDeletion`);
 
   const description1 = "コメント欄 (下の色付きセルに記入してください)";
   sheet.getRange("A1").setValue(description1).setFontWeight("bold");
@@ -109,7 +91,6 @@ export const insertModificationAndDeletionSheet = () => {
   const description2 = "本日以降の日付を下の色付きセルに記入してください。一週間後までの予定が表示されます。";
   sheet.getRange("A4").setValue(description2).setFontWeight("bold");
   const dateCell = sheet.getRange("A5");
-  dateCell.setValue(today);
   dateCell.setBackground("#f0f8ff");
 
   const description3 = "【予定一覧】";
@@ -414,10 +395,9 @@ export const callShowEvents = () => {
 };
 
 const getSheet = (sheetType: SheetType, spreadsheetUrl: string): GoogleAppsScript.Spreadsheet.Sheet => {
-  const today = format(new Date(), "yyyy-MM-dd");
   const sheet = SpreadsheetApp.openByUrl(spreadsheetUrl)
     .getSheets()
-    .find((sheet) => sheet.getDeveloperMetadata().some((metaData) => metaData.getKey() === `${today}-${sheetType}`));
+    .find((sheet) => sheet.getDeveloperMetadata().some((metaData) => metaData.getKey() === `today-${sheetType}`));
 
   if (!sheet) throw new Error("SHEET is not defined");
 

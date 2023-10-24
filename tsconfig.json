@@ -1,0 +1,20 @@
+{
+  "include": [
+    "src"
+  ],
+  "compilerOptions": {
+    "outDir": "build",
+    "target": "ES6",
+    "lib": [
+      "esNext",
+    ],
+    "moduleResolution": "Node",
+    "strict": true,
+    "importHelpers": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true,
+    "experimentalDecorators": true,
+    "exactOptionalPropertyTypes": true,
+  }
+}

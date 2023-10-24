@@ -21,10 +21,26 @@ export const doPost = (e: GoogleAppsScript.Events.DoPost): GoogleAppsScript.Cont
   return ContentService.createTextOutput("undefined");
 };
 
+export const init = () => {
+  const { DEV_SPREADSHEET_URL } = getConfig();
+  ScriptApp.newTrigger(onOpenForDev.name)
+    .forSpreadsheet(SpreadsheetApp.openByUrl(DEV_SPREADSHEET_URL))
+    .onOpen()
+    .create();
+};
+
 export const onOpen = () => {
   const ui = SpreadsheetApp.getUi();
+  createMenu(ui, ui.createAddonMenu());
+};
 
-  ui.createAddonMenu()
+export const onOpenForDev = () => {
+  const ui = SpreadsheetApp.getUi();
+  createMenu(ui, ui.createMenu("[dev] シフト変更ツール"));
+};
+
+const createMenu = (ui: GoogleAppsScript.Base.Ui, menu: GoogleAppsScript.Base.Menu) => {
+  return menu
     .addSubMenu(
       ui
         .createMenu("登録")

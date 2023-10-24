@@ -3,9 +3,11 @@ import {
   callRegistration,
   callShowEvents,
   doPost,
+  init,
   insertModificationAndDeletionSheet,
   insertRegistrationSheet,
   onOpen,
+  onOpenForDev,
 } from "./shift-changer";
 
 /**
@@ -14,8 +16,10 @@ import {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const global: any;
+global.init = init;
 global.doPost = doPost;
 global.onOpen = onOpen;
+global.onOpenForDev = onOpenForDev;
 global.callRegistration = callRegistration;
 global.callShowEvents = callShowEvents;
 global.callModificationAndDeletion = callModificationAndDeletion;

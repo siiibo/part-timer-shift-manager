@@ -62,7 +62,7 @@ const createMenu = (ui: GoogleAppsScript.Base.Ui, menu: GoogleAppsScript.Base.Me
 export const insertRegistrationSheet = () => {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = spreadsheet.insertSheet(`登録`, 0);
-  sheet.addDeveloperMetadata(`today-registration`);
+  sheet.addDeveloperMetadata(`part-timer-shift-manager-registration`);
 
   const description1 = "コメント欄 (下の色付きセルに記入してください)";
   sheet.getRange("A1").setValue(description1).setFontWeight("bold");
@@ -97,7 +97,7 @@ export const insertRegistrationSheet = () => {
 export const insertModificationAndDeletionSheet = () => {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = spreadsheet.insertSheet(`変更・削除`, 0);
-  sheet.addDeveloperMetadata(`today-modificationAndDeletion`);
+  sheet.addDeveloperMetadata(`part-timer-shift-manager-modificationAndDeletion`);
 
   const description1 = "コメント欄 (下の色付きセルに記入してください)";
   sheet.getRange("A1").setValue(description1).setFontWeight("bold");
@@ -413,7 +413,7 @@ export const callShowEvents = () => {
 const getSheet = (sheetType: SheetType, spreadsheetUrl: string): GoogleAppsScript.Spreadsheet.Sheet => {
   const sheet = SpreadsheetApp.openByUrl(spreadsheetUrl)
     .getSheets()
-    .find((sheet) => sheet.getDeveloperMetadata().some((metaData) => metaData.getKey() === `today-${sheetType}`));
+    .find((sheet) => sheet.getDeveloperMetadata().some((metaData) => metaData.getKey() === `part-timer-shift-manager-${sheetType}`));
 
   if (!sheet) throw new Error("SHEET is not defined");
 

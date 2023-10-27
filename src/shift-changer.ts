@@ -61,7 +61,7 @@ const createMenu = (ui: GoogleAppsScript.Base.Ui, menu: GoogleAppsScript.Base.Me
 
 export const insertRegistrationSheet = () => {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = spreadsheet.insertSheet(`today-登録`, 0);
+  const sheet = spreadsheet.insertSheet(`登録`, 0);
   sheet.addDeveloperMetadata(`today-registration`);
 
   const description1 = "コメント欄 (下の色付きセルに記入してください)";
@@ -96,7 +96,7 @@ export const insertRegistrationSheet = () => {
 
 export const insertModificationAndDeletionSheet = () => {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = spreadsheet.insertSheet(`today-変更・削除`, 0);
+  const sheet = spreadsheet.insertSheet(`変更・削除`, 0);
   sheet.addDeveloperMetadata(`today-modificationAndDeletion`);
 
   const description1 = "コメント欄 (下の色付きセルに記入してください)";
@@ -411,7 +411,6 @@ export const callShowEvents = () => {
 };
 
 const getSheet = (sheetType: SheetType, spreadsheetUrl: string): GoogleAppsScript.Spreadsheet.Sheet => {
-  const today = format(new Date(), "yyyy-MM-dd");
   const sheet = SpreadsheetApp.openByUrl(spreadsheetUrl)
     .getSheets()
     .find((sheet) => sheet.getDeveloperMetadata().some((metaData) => metaData.getKey() === `today-${sheetType}`));

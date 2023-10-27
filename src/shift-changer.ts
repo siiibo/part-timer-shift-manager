@@ -61,7 +61,7 @@ const createMenu = (ui: GoogleAppsScript.Base.Ui, menu: GoogleAppsScript.Base.Me
 
 export const insertRegistrationSheet = () => {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = spreadsheet.insertSheet(`登録`, 0);
+  const sheet = spreadsheet.insertSheet(`登録1`, 0);
   sheet.addDeveloperMetadata(`today-registration`);
 
   const description1 = "コメント欄 (下の色付きセルに記入してください)";
@@ -92,11 +92,15 @@ export const insertRegistrationSheet = () => {
     .setHelpText('時刻を"◯◯:◯◯"の形式で入力してください。')
     .build();
   timeCells.setDataValidation(timeRule);
+  const delsheet= spreadsheet.getSheetByName("登録");
+  if(delsheet!=null && spreadsheet.getNumSheets()!=1)spreadsheet.deleteSheet(delsheet);
+  sheet.setName("登録");
 };
 
 export const insertModificationAndDeletionSheet = () => {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = spreadsheet.insertSheet(`変更・削除`, 0);
+
+  const sheet = spreadsheet.insertSheet(`変更・削除1`, 0);
   sheet.addDeveloperMetadata(`today-modificationAndDeletion`);
 
   const description1 = "コメント欄 (下の色付きセルに記入してください)";
@@ -164,6 +168,9 @@ export const insertModificationAndDeletionSheet = () => {
   checkboxCells.setDataValidation(checkboxRule);
 
   sheet.setColumnWidth(1, 370);
+  const delsheet= spreadsheet.getSheetByName("変更・削除");
+  if(delsheet!=null && spreadsheet.getNumSheets()!=1)spreadsheet.deleteSheet(delsheet);
+  sheet.setName("変更・削除");
 };
 export const callRegistration = () => {
   const userEmail = Session.getActiveUser().getEmail();

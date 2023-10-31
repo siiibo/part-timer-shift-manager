@@ -1,0 +1,57 @@
+name: deploy
+
+on:
+  push:
+    branches:
+      - "main"
+    paths-ignore:
+      - "**.md"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          key: v1-${{ hashFiles('yarn.lock') }}-${{ github.sha }}
+          path: |
+            node_modules
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - run: yarn
+      - name: Create ~/.clasprc.json
+        run: |
+          cat <<-EOS > ~/.clasprc.json
+          {
+            "token": {
+              "access_token": "${{ secrets.ACCESS_TOKEN }}",
+              "scope": "https://www.googleapis.com/auth/script.deployments https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/drive.file openid https://www.googleapis.com/auth/service.management https://www.googleapis.com/auth/script.projects https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/drive.metadata.readonly https://www.googleapis.com/auth/logging.read https://www.googleapis.com/auth/cloud-platform https://www.googleapis.com/auth/script.webapp.deploy",
+              "token_type": "Bearer",
+              "id_token": "${{ secrets.ID_TOKEN }}",
+              "refresh_token": "${{ secrets.REFRESH_TOKEN }}"
+            },
+            "oauth2ClientSettings": {
+              "clientId": "${{ secrets.CLIENT_ID }}",
+              "clientSecret": "${{ secrets.CLIENT_SECRET }}",
+              "redirectUri": "http://localhost"
+            },
+            "isLocalCreds": false
+          }
+          EOS
+      - name: Create .clasp.prod.json
+        run: |
+          cat <<-EOS > $GITHUB_WORKSPACE/.clasp.prod.json
+          {
+            "scriptId": "${{ secrets.SCRIPT_ID }}",
+            "rootDir": "build"
+          }
+          EOS
+      - name: Build & Push
+        run: yarn run buildpush:prod
+      - name: Deploy
+        run: |
+          FIRST_LINE=$(echo "${{ github.event.head_commit.message }}" | awk 'NR==1{print $0}')
+          yarn clasp deploy -i ${{ secrets.DEPLOYMENT_ID }} --description "$FIRST_LINE"

@@ -281,7 +281,7 @@ const getModificationInfos = (
       const newEndTime = format(row.newEndTime, "HH:mm");
       const newWorkingStyle = row.newWorkingStyle;
       if (newWorkingStyle === "") throw new Error("new working style is not defined");
-      if (row.newRestStartTime === "ptional property" || row.newRestEndTime === "ptional property") {
+      if (row.newRestStartTime === "optional property" || row.newRestEndTime === "optional property") {
         const newRestStartTime = row.newRestStartTime as string;
         const newRestEndTime = row.newRestEndTime as string;
         const newTitle = createTitleFromEventInfo(
@@ -437,7 +437,7 @@ const getRegistrationInfos = (
       const endTime = format(eventInfo[2] as Date, "HH:mm");
       const workingStyle = eventInfo[5] as string;
       if (workingStyle === "") throw new Error("working style is not defined");
-      if (eventInfo[3] === "ptional property" || eventInfo[4] === "ptional property") {
+      if (eventInfo[3] === "optional property" || eventInfo[4] === "optional property") {
         const restStartTime = eventInfo[3] as string;
         const restEndTime = eventInfo[4] as string;
         const title = createTitleFromEventInfo({ restStartTime, restEndTime, workingStyle }, partTimerProfile);
@@ -466,7 +466,7 @@ const createTitleFromEventInfo = (
   const restEndTime = eventInfo.restEndTime;
   const workingStyle = eventInfo.workingStyle;
 
-  if (restStartTime === "ptional property" || restEndTime === "ptional property") {
+  if (restStartTime === "optional property" || restEndTime === "optional property") {
     const title = `【${workingStyle}】${job}${lastName}さん`;
     return title;
   } else {
@@ -505,7 +505,7 @@ const getPartTimerProfile = (userEmail: string): PartTimerProfile => {
 const createMessageFromEventInfo = (eventInfo: EventInfo) => {
   const date = format(new Date(eventInfo.date), "MM/dd");
   const { workingStyle, restStartTime, restEndTime } = getEventInfoFromTitle(eventInfo.title);
-  if (restStartTime === "ptional property" || restEndTime === "ptional property")
+  if (restStartTime === "optional property" || restEndTime === "optional property")
     return `【${workingStyle}】 ${date} ${eventInfo.startTime}~${eventInfo.endTime}`;
   else
     return `【${workingStyle}】 ${date} ${eventInfo.startTime}~${eventInfo.endTime} (休憩: ${restStartTime}~${restEndTime})`;

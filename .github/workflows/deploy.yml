@@ -11,6 +11,8 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      clasp_config_project: $GITHUB_WORKSPACE/.clasp.prod.json
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v3
@@ -43,7 +45,7 @@ jobs:
           EOS
       - name: Create .clasp.prod.json
         run: |
-          cat <<-EOS > $GITHUB_WORKSPACE/.clasp.prod.json
+          cat <<-EOS > $clasp_config_project
           {
             "scriptId": "${{ secrets.SCRIPT_ID }}",
             "rootDir": "build"

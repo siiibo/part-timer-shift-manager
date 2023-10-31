@@ -571,7 +571,7 @@ const getEventInfoFromTitle = (title: string): { workingStyle: string; restStart
 
   const restTimeRegex = /\d{2}:\d{2}~\d{2}:\d{2}/;
   const restTimeResult = title.match(restTimeRegex)?.[0];
-  const [restStartTime, restEndTime] = restTimeResult ? restTimeResult.split("~") : ["", ""];
+  const [restStartTime, restEndTime] = restTimeResult ? restTimeResult.split("~") : ["optional property", "optional property"];
   return { workingStyle, restStartTime, restEndTime };
 };
 const slackIdToMention = (slackId: string) => `<@${slackId}>`;

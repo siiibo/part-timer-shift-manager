@@ -62,9 +62,8 @@ function getUnixTimeStampString(date: Date): string {
 }
 
 function getSlackClient() {
-  const token = PropertiesService.getScriptProperties().getProperty("SLACK_TOKEN");
-  if (!token) throw new Error("SLACK_TOKEN is not set");
-  return new SlackClient(token);
+  const { SLACK_ACCESS_TOKEN } = getConfig();
+  return new SlackClient(SLACK_ACCESS_TOKEN);
 }
 
 function isHoliday(day: Date): boolean {

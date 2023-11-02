@@ -21,7 +21,7 @@ export const doPost = (e: GoogleAppsScript.Events.DoPost): GoogleAppsScript.Cont
   return ContentService.createTextOutput("undefined");
 };
 
-export const init = () => {
+export const initShiftChanger = () => {
   const { DEV_SPREADSHEET_URL } = getConfig();
   ScriptApp.newTrigger(onOpenForDev.name)
     .forSpreadsheet(SpreadsheetApp.openByUrl(DEV_SPREADSHEET_URL))
@@ -413,7 +413,9 @@ export const callShowEvents = () => {
 const getSheet = (sheetType: SheetType, spreadsheetUrl: string): GoogleAppsScript.Spreadsheet.Sheet => {
   const sheet = SpreadsheetApp.openByUrl(spreadsheetUrl)
     .getSheets()
-    .find((sheet) => sheet.getDeveloperMetadata().some((metaData) => metaData.getKey() === `part-timer-shift-manager-${sheetType}`));
+    .find((sheet) =>
+      sheet.getDeveloperMetadata().some((metaData) => metaData.getKey() === `part-timer-shift-manager-${sheetType}`)
+    );
 
   if (!sheet) throw new Error("SHEET is not defined");
 

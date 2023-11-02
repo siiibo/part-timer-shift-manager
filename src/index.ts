@@ -1,9 +1,10 @@
+import { initNotifyDailyShift } from "./notify-daily-shift";
 import {
   callModificationAndDeletion,
   callRegistration,
   callShowEvents,
   doPost,
-  init,
+  initShiftChanger,
   insertModificationAndDeletionSheet,
   insertRegistrationSheet,
   onOpen,
@@ -16,7 +17,8 @@ import {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const global: any;
-global.init = init;
+global.initShiftChanger = initShiftChanger;
+global.initNotifyDailyShift = initNotifyDailyShift;
 global.doPost = doPost;
 global.onOpen = onOpen;
 global.onOpenForDev = onOpenForDev;

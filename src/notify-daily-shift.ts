@@ -6,15 +6,11 @@ import { getConfig } from "./config";
 const ANNOUNCE_HOUR = 9;
 
 export function initNotifyDailyShift() {
-  const targetFunction = notifyDailyShift;
+  ScriptApp.getProjectTriggers()
+    .filter((trigger) => trigger.getHandlerFunction() === notifyDailyShift.name)
+    .forEach(ScriptApp.deleteTrigger);
 
-  ScriptApp.getProjectTriggers().forEach((trigger) => {
-    if (trigger.getHandlerFunction() === targetFunction.name) {
-      ScriptApp.deleteTrigger(trigger);
-    }
-  });
-
-  ScriptApp.newTrigger(targetFunction.name)
+  ScriptApp.newTrigger(notifyDailyShift.name)
     .timeBased()
     .atHour(ANNOUNCE_HOUR - 1)
     .everyDays(1)

@@ -562,14 +562,14 @@ const getManagerSlackIds = (managerEmails: string[], client: SlackClient): strin
   return managerSlackIds;
 };
 
-const getEventInfoFromTitle = (title: string): { workingStyle: string; restStartTime: string; restEndTime: string } => {
+const getEventInfoFromTitle = (title: string): { workingStyle?: string; restStartTime?: string; restEndTime?: string } => {
   const workingStyleRegex = /【(.*?)】/;
   const matchResult = title.match(workingStyleRegex)?.[1];
   const workingStyle = matchResult ?? "未設定";
 
   const restTimeRegex = /\d{2}:\d{2}~\d{2}:\d{2}/;
   const restTimeResult = title.match(restTimeRegex)?.[0];
-  const [restStartTime, restEndTime] = restTimeResult ? restTimeResult.split("~") : ["", ""];
+  const [restStartTime, restEndTime] = restTimeResult ? restTimeResult.split("~") : [];
   return { workingStyle, restStartTime, restEndTime };
 };
 const slackIdToMention = (slackId: string) => `<@${slackId}>`;

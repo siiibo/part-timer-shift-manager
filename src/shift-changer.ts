@@ -256,8 +256,8 @@ const getModificationInfos = (
     newDate: Date;
     newStartTime: Date;
     newEndTime: Date;
-    newRestStartTime: Date | string;
-    newRestEndTime: Date | string;
+    newRestStartTime?: Date | string;
+    newRestEndTime?: Date | string;
     newWorkingStyle: string;
     deletionFlag: boolean;
   }[],
@@ -452,8 +452,8 @@ const getRegistrationInfos = (
 
 const createTitleFromEventInfo = (
   eventInfo: {
-    restStartTime: string;
-    restEndTime: string;
+    restStartTime?: string;
+    restEndTime?: string;
     workingStyle: string;
   },
   partTimerProfile: PartTimerProfile
@@ -464,7 +464,7 @@ const createTitleFromEventInfo = (
   const restEndTime = eventInfo.restEndTime;
   const workingStyle = eventInfo.workingStyle;
 
-  if (restStartTime === "" || restEndTime === "") {
+  if (restStartTime === undefined || restEndTime === undefined) {
     const title = `【${workingStyle}】${job}${lastName}さん`;
     return title;
   } else {
@@ -503,7 +503,7 @@ const getPartTimerProfile = (userEmail: string): PartTimerProfile => {
 const createMessageFromEventInfo = (eventInfo: EventInfo) => {
   const date = format(new Date(eventInfo.date), "MM/dd");
   const { workingStyle, restStartTime, restEndTime } = getEventInfoFromTitle(eventInfo.title);
-  if (restStartTime === "" || restEndTime === "")
+  if (restStartTime === undefined || restEndTime === undefined)
     return `【${workingStyle}】 ${date} ${eventInfo.startTime}~${eventInfo.endTime}`;
   else
     return `【${workingStyle}】 ${date} ${eventInfo.startTime}~${eventInfo.endTime} (休憩: ${restStartTime}~${restEndTime})`;

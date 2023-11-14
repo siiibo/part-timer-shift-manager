@@ -210,39 +210,25 @@ const getModificationAndDeletionSheetValues = (
   deletionFlag: boolean;
 }[] => {
   const sheetValues = sheet
-    .getRange(9, 1, sheet.getLastRow() - 8, sheet.getLastColumn())
-    .getValues()
-    .map((row) => {
-      if (row[7] === "" || row[8] === "") {
-        return {
-          title: row[0] as string,
-          date: row[1] as Date,
-          startTime: row[2] as Date,
-          endTime: row[3] as Date,
-          newDate: row[4] as Date,
-          newStartTime: row[5] as Date,
-          newEndTime: row[6] as Date,
-          newWorkingStyle: row[9] as string,
-          deletionFlag: row[10] as boolean,
-        };
-      } else {
-        return {
-          title: row[0] as string,
-          date: row[1] as Date,
-          startTime: row[2] as Date,
-          endTime: row[3] as Date,
-          newDate: row[4] as Date,
-          newStartTime: row[5] as Date,
-          newEndTime: row[6] as Date,
-          newRestStartTime: row[7] as Date,
-          newRestEndTime: row[8] as Date,
-          newWorkingStyle: row[9] as string,
-          deletionFlag: row[10] as boolean,
-        };
-      }
-    });
+  .getRange(9, 1, sheet.getLastRow() - 8, sheet.getLastColumn())
+  .getValues()
+  .map((row) => {
+    return {
+      title: row[0] as string,
+      date: row[1] as Date,
+      startTime: row[2] as Date,
+      endTime: row[3] as Date,
+      newDate: row[4] as Date,
+      newStartTime: row[5] as Date,
+      newEndTime: row[6] as Date,
+      newRestStartTime: row[7] === "" ? undefined : row[7],
+      newRestEndTime: row[8] === "" ? undefined : row[8],
+      newWorkingStyle: row[9] as string,
+      deletionFlag: row[10] as boolean,
+    };
+  });
 
-  return sheetValues;
+return sheetValues;
 };
 
 const getModificationInfos = (

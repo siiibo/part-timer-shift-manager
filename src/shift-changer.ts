@@ -204,8 +204,8 @@ const getModificationAndDeletionSheetValues = (
   newDate: Date;
   newStartTime: Date;
   newEndTime: Date;
-  newRestStartTime: Date | string;
-  newRestEndTime: Date | string;
+  newRestStartTime?: Date;
+  newRestEndTime?: Date;
   newWorkingStyle: string;
   deletionFlag: boolean;
 }[] => {
@@ -222,8 +222,6 @@ const getModificationAndDeletionSheetValues = (
           newDate: row[4] as Date,
           newStartTime: row[5] as Date,
           newEndTime: row[6] as Date,
-          newRestStartTime: row[7] as string,
-          newRestEndTime: row[8] as string,
           newWorkingStyle: row[9] as string,
           deletionFlag: row[10] as boolean,
         };
@@ -256,8 +254,8 @@ const getModificationInfos = (
     newDate: Date;
     newStartTime: Date;
     newEndTime: Date;
-    newRestStartTime?: Date | string;
-    newRestEndTime?: Date | string;
+    newRestStartTime?: Date;
+    newRestEndTime?: Date;
     newWorkingStyle: string;
     deletionFlag: boolean;
   }[],
@@ -278,11 +276,9 @@ const getModificationInfos = (
       const newEndTime = format(row.newEndTime, "HH:mm");
       const newWorkingStyle = row.newWorkingStyle;
       if (newWorkingStyle === "") throw new Error("new working style is not defined");
-      if (row.newRestStartTime === "" || row.newRestEndTime === "") {
-        const newRestStartTime = row.newRestStartTime as string;
-        const newRestEndTime = row.newRestEndTime as string;
+      if (row.newRestStartTime === undefined || row.newRestEndTime === undefined) {
         const newTitle = createTitleFromEventInfo(
-          { restStartTime: newRestStartTime, restEndTime: newRestEndTime, workingStyle: newWorkingStyle },
+          {workingStyle: newWorkingStyle },
           partTimerProfile
         );
         return {
@@ -315,8 +311,8 @@ const getDeletionInfos = (
     newDate: Date;
     newStartTime: Date;
     newEndTime: Date;
-    newRestStartTime: Date | string;
-    newRestEndTime: Date | string;
+    newRestStartTime?: Date;
+    newRestEndTime?: Date;
     newWorkingStyle: string;
     deletionFlag: boolean;
   }[]

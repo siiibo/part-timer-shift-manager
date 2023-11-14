@@ -1,4 +1,4 @@
-import { initNotifyDailyShift } from "./notify-daily-shift";
+import { initNotifyDailyShift, notifyDailyShift } from "./notify-daily-shift";
 import {
   callModificationAndDeletion,
   callRegistration,
@@ -19,6 +19,7 @@ import {
 declare const global: any;
 global.initShiftChanger = initShiftChanger;
 global.initNotifyDailyShift = initNotifyDailyShift;
+global.notifyDailyShift = notifyDailyShift;
 global.doPost = doPost;
 global.onOpen = onOpen;
 global.onOpenForDev = onOpenForDev;

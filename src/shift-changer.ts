@@ -415,7 +415,7 @@ const getRegistrationInfos = (
       const workingStyle = eventInfo[5] as string;
       if (workingStyle === "") throw new Error("working style is not defined");
       if (eventInfo[3] === "" || eventInfo[4] === "") {
-        const title = createTitleFromEventInfo({workingStyle}, partTimerProfile);
+        const title = createTitleFromEventInfo({ workingStyle }, partTimerProfile);
         return { title, date, startTime, endTime };
       } else {
         const restStartTime = format(eventInfo[3] as Date, "HH:mm");

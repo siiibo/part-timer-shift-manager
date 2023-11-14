@@ -242,7 +242,7 @@ const getModificationInfos = (
     newEndTime: Date;
     newRestStartTime?: Date;
     newRestEndTime?: Date;
-    newWorkingStyle: string;
+    newWorkingStyle?: string;
     deletionFlag: boolean;
   }[],
   partTimerProfile: PartTimerProfile
@@ -261,7 +261,7 @@ const getModificationInfos = (
       const newStartTime = format(row.newStartTime, "HH:mm");
       const newEndTime = format(row.newEndTime, "HH:mm");
       const newWorkingStyle = row.newWorkingStyle;
-      if (newWorkingStyle === "") throw new Error("new working style is not defined");
+      if (newWorkingStyle === undefined) throw new Error("new working style is not defined");
       if (row.newRestStartTime === undefined || row.newRestEndTime === undefined) {
         const newTitle = createTitleFromEventInfo({ workingStyle: newWorkingStyle }, partTimerProfile);
         return {
@@ -415,9 +415,7 @@ const getRegistrationInfos = (
       const workingStyle = eventInfo[5] as string;
       if (workingStyle === "") throw new Error("working style is not defined");
       if (eventInfo[3] === "" || eventInfo[4] === "") {
-        const restStartTime = eventInfo[3] as string;
-        const restEndTime = eventInfo[4] as string;
-        const title = createTitleFromEventInfo({ restStartTime, restEndTime, workingStyle }, partTimerProfile);
+        const title = createTitleFromEventInfo({workingStyle}, partTimerProfile);
         return { title, date, startTime, endTime };
       } else {
         const restStartTime = format(eventInfo[3] as Date, "HH:mm");

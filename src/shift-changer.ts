@@ -210,25 +210,25 @@ const getModificationAndDeletionSheetValues = (
   deletionFlag: boolean;
 }[] => {
   const sheetValues = sheet
-  .getRange(9, 1, sheet.getLastRow() - 8, sheet.getLastColumn())
-  .getValues()
-  .map((row) => {
-    return {
-      title: row[0] as string,
-      date: row[1] as Date,
-      startTime: row[2] as Date,
-      endTime: row[3] as Date,
-      newDate: row[4] as Date,
-      newStartTime: row[5] as Date,
-      newEndTime: row[6] as Date,
-      newRestStartTime: row[7] === "" ? undefined : row[7],
-      newRestEndTime: row[8] === "" ? undefined : row[8],
-      newWorkingStyle: row[9] as string,
-      deletionFlag: row[10] as boolean,
-    };
-  });
+    .getRange(9, 1, sheet.getLastRow() - 8, sheet.getLastColumn())
+    .getValues()
+    .map((row) => {
+      return {
+        title: row[0] as string,
+        date: row[1] as Date,
+        startTime: row[2] as Date,
+        endTime: row[3] as Date,
+        newDate: row[4] as Date,
+        newStartTime: row[5] as Date,
+        newEndTime: row[6] as Date,
+        newRestStartTime: row[7] === "" ? undefined : row[7],
+        newRestEndTime: row[8] === "" ? undefined : row[8],
+        newWorkingStyle: row[9] as string,
+        deletionFlag: row[10] as boolean,
+      };
+    });
 
-return sheetValues;
+  return sheetValues;
 };
 
 const getModificationInfos = (
@@ -263,10 +263,7 @@ const getModificationInfos = (
       const newWorkingStyle = row.newWorkingStyle;
       if (newWorkingStyle === "") throw new Error("new working style is not defined");
       if (row.newRestStartTime === undefined || row.newRestEndTime === undefined) {
-        const newTitle = createTitleFromEventInfo(
-          {workingStyle: newWorkingStyle },
-          partTimerProfile
-        );
+        const newTitle = createTitleFromEventInfo({ workingStyle: newWorkingStyle }, partTimerProfile);
         return {
           previousEventInfo: { title, date, startTime, endTime },
           newEventInfo: { title: newTitle, date: newDate, startTime: newStartTime, endTime: newEndTime },
@@ -544,7 +541,9 @@ const getManagerSlackIds = (managerEmails: string[], client: SlackClient): strin
   return managerSlackIds;
 };
 
-const getEventInfoFromTitle = (title: string): { workingStyle?: string; restStartTime?: string; restEndTime?: string } => {
+const getEventInfoFromTitle = (
+  title: string
+): { workingStyle?: string; restStartTime?: string; restEndTime?: string } => {
   const workingStyleRegex = /【(.*?)】/;
   const matchResult = title.match(workingStyleRegex)?.[1];
   const workingStyle = matchResult ?? "未設定";

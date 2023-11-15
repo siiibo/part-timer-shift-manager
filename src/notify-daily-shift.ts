@@ -13,6 +13,7 @@ export function initNotifyDailyShift() {
   ScriptApp.newTrigger(notifyDailyShift.name)
     .timeBased()
     .atHour(ANNOUNCE_HOUR - 1)
+    .nearMinute(43)
     .everyDays(1)
     .create();
 }

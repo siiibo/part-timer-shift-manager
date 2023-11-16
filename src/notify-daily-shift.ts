@@ -8,7 +8,7 @@ const ANNOUNCE_HOUR = 9;
 export function initNotifyDailyShift() {
   ScriptApp.getProjectTriggers()
     .filter((trigger) => trigger.getHandlerFunction() === notifyDailyShift.name)
-    .forEach(ScriptApp.deleteTrigger);
+    .forEach((trigger) => ScriptApp.deleteTrigger(trigger));
 
   ScriptApp.newTrigger(notifyDailyShift.name)
     .timeBased()

@@ -63,7 +63,10 @@ export const insertRegistrationSheet = () => {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = spreadsheet.insertSheet(`登録`, 0);
   sheet.addDeveloperMetadata(`part-timer-shift-manager-registration`);
+  setvaluesRegistrationSheet(sheet);
+};
 
+const setvaluesRegistrationSheet = (sheet: GoogleAppsScript.Spreadsheet.Sheet) => {
   const description1 = "コメント欄 (下の色付きセルに記入してください)";
   sheet.getRange("A1").setValue(description1).setFontWeight("bold");
   const commentCell = sheet.getRange("A2");
@@ -98,7 +101,10 @@ export const insertModificationAndDeletionSheet = () => {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = spreadsheet.insertSheet(`変更・削除`, 0);
   sheet.addDeveloperMetadata(`part-timer-shift-manager-modificationAndDeletion`);
+  setvaluesModificationAndDeletionSheet(sheet);
+};
 
+const setvaluesModificationAndDeletionSheet = (sheet: GoogleAppsScript.Spreadsheet.Sheet) => {
   const description1 = "コメント欄 (下の色付きセルに記入してください)";
   sheet.getRange("A1").setValue(description1).setFontWeight("bold");
   const commentCell = sheet.getRange("A2");
@@ -165,6 +171,7 @@ export const insertModificationAndDeletionSheet = () => {
 
   sheet.setColumnWidth(1, 370);
 };
+
 export const callRegistration = () => {
   const userEmail = Session.getActiveUser().getEmail();
   const spreadsheetUrl = SpreadsheetApp.getActiveSpreadsheet().getUrl();
@@ -192,7 +199,11 @@ export const callRegistration = () => {
   UrlFetchApp.fetch(API_URL, options);
   const messageToNotify = createRegistrationMessage(registrationInfos, comment, partTimerProfile);
   postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, messageToNotify, partTimerProfile);
+  sheet.clear();
+  SpreadsheetApp.flush();
+  setvaluesRegistrationSheet(sheet);
 };
+
 
 const getModificationAndDeletionSheetValues = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet
@@ -350,6 +361,9 @@ export const callModificationAndDeletion = () => {
     .join("\n---\n");
 
   postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, modificationAndDeletionMessageToNotify, partTimerProfile);
+  sheet.clear();
+  SpreadsheetApp.flush();
+  setvaluesModificationAndDeletionSheet(sheet);
 };
 
 export const callShowEvents = () => {

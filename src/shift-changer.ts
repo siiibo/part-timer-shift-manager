@@ -328,6 +328,10 @@ const getDeletionInfos = (
   return deletionInfos;
 };
 export const callModificationAndDeletion = () => {
+  const lock = LockService.getUserLock();
+  if (!lock.tryLock(0)) {
+    throw new Error("すでに処理を実行中です。そのままお待ちください");
+  }
   const userEmail = Session.getActiveUser().getEmail();
   const spreadsheetUrl = SpreadsheetApp.getActiveSpreadsheet().getUrl();
   const { SLACK_ACCESS_TOKEN } = getConfig();
@@ -368,6 +372,7 @@ export const callModificationAndDeletion = () => {
   sheet.clear();
   SpreadsheetApp.flush();
   setvaluesModificationAndDeletionSheet(sheet);
+  lock.releaseLock();
 };
 
 export const callShowEvents = () => {

@@ -175,7 +175,7 @@ const setvaluesModificationAndDeletionSheet = (sheet: GoogleAppsScript.Spreadshe
 export const callRegistration = () => {
   const lock = LockService.getUserLock();
   if (!lock.tryLock(0)) {
-    throw new Error("１度のみ提出を行います。そのままお待ちください");
+    throw new Error("すでに処理を実行中です。そのままお待ちください");
   }
   const userEmail = Session.getActiveUser().getEmail();
   const spreadsheetUrl = SpreadsheetApp.getActiveSpreadsheet().getUrl();

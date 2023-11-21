@@ -205,11 +205,10 @@ export const callRegistration = () => {
     SpreadsheetApp.flush();
     setvaluesRegistrationSheet(sheet);
     lock.releaseLock();
-  }else{
+  } else {
     throw new Error("ボタンが2回押されました");
   }
 };
-
 
 const getModificationAndDeletionSheetValues = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet

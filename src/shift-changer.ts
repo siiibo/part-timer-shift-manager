@@ -174,40 +174,39 @@ const setvaluesModificationAndDeletionSheet = (sheet: GoogleAppsScript.Spreadshe
 
 export const callRegistration = () => {
   const lock = LockService.getUserLock();
-  if (lock.tryLock(10000)) {
-    const userEmail = Session.getActiveUser().getEmail();
-    const spreadsheetUrl = SpreadsheetApp.getActiveSpreadsheet().getUrl();
-    const { SLACK_ACCESS_TOKEN } = getConfig();
-    const client = getSlackClient(SLACK_ACCESS_TOKEN);
-    const partTimerProfile = getPartTimerProfile(userEmail);
-
-    const sheetType: SheetType = "registration";
-    const sheet = getSheet(sheetType, spreadsheetUrl);
-    const operationType: OperationType = "registration";
-    const comment = sheet.getRange("A2").getValue();
-    const registrationInfos = getRegistrationInfos(sheet, partTimerProfile);
-
-    const payload = {
-      apiId: "shift-changer",
-      operationType: operationType,
-      userEmail: userEmail,
-      registrationInfos: JSON.stringify(registrationInfos),
-    };
-    const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
-      method: "post",
-      payload: payload,
-    };
-    const { API_URL, SLACK_CHANNEL_TO_POST } = getConfig();
-    UrlFetchApp.fetch(API_URL, options);
-    const messageToNotify = createRegistrationMessage(registrationInfos, comment, partTimerProfile);
-    postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, messageToNotify, partTimerProfile);
-    sheet.clear();
-    SpreadsheetApp.flush();
-    setvaluesRegistrationSheet(sheet);
-    lock.releaseLock();
-  } else {
-    throw new Error("ボタンが2回押されました");
+  if (!lock.tryLock(0)) {
+    throw new Error("１度のみ提出を行います。そのままお待ちください");
   }
+  const userEmail = Session.getActiveUser().getEmail();
+  const spreadsheetUrl = SpreadsheetApp.getActiveSpreadsheet().getUrl();
+  const { SLACK_ACCESS_TOKEN } = getConfig();
+  const client = getSlackClient(SLACK_ACCESS_TOKEN);
+  const partTimerProfile = getPartTimerProfile(userEmail);
+
+  const sheetType: SheetType = "registration";
+  const sheet = getSheet(sheetType, spreadsheetUrl);
+  const operationType: OperationType = "registration";
+  const comment = sheet.getRange("A2").getValue();
+  const registrationInfos = getRegistrationInfos(sheet, partTimerProfile);
+
+  const payload = {
+    apiId: "shift-changer",
+    operationType: operationType,
+    userEmail: userEmail,
+    registrationInfos: JSON.stringify(registrationInfos),
+  };
+  const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
+    method: "post",
+    payload: payload,
+  };
+  const { API_URL, SLACK_CHANNEL_TO_POST } = getConfig();
+  UrlFetchApp.fetch(API_URL, options);
+  const messageToNotify = createRegistrationMessage(registrationInfos, comment, partTimerProfile);
+  postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, messageToNotify, partTimerProfile);
+  sheet.clear();
+  SpreadsheetApp.flush();
+  setvaluesRegistrationSheet(sheet);
+  lock.releaseLock();
 };
 
 const getModificationAndDeletionSheetValues = (

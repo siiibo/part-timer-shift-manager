@@ -206,7 +206,6 @@ export const callRegistration = () => {
   sheet.clear();
   SpreadsheetApp.flush();
   setvaluesRegistrationSheet(sheet);
-  lock.releaseLock();
 };
 
 const getModificationAndDeletionSheetValues = (
@@ -372,7 +371,6 @@ export const callModificationAndDeletion = () => {
   sheet.clear();
   SpreadsheetApp.flush();
   setvaluesModificationAndDeletionSheet(sheet);
-  lock.releaseLock();
 };
 
 export const callShowEvents = () => {

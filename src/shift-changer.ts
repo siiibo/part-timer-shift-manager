@@ -61,8 +61,8 @@ const createMenu = (ui: GoogleAppsScript.Base.Ui, menu: GoogleAppsScript.Base.Me
 
 export const insertRegistrationSheet = () => {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-  const spreadsheetObjects=spreadsheet.getSheets();
-  const existsheet = spreadsheetObjects.find(sheet => sheet.getName() === "登録");
+  const sheetObjects=spreadsheet.getSheets();
+  const existsheet = sheetObjects.find(sheet => sheet.getName() === "登録");
   if (existsheet) {
     const metaData = existsheet.getDeveloperMetadata();
     const errorMessage = metaData.some(meta => meta.getKey() === "part-timer-shift-manager-registration") ? "既存の「登録」シートを使用してください" : "「登録」の名前がすでに存在しています。名前を変更して再度実行してください";
@@ -106,8 +106,8 @@ const setvaluesRegistrationSheet = (sheet: GoogleAppsScript.Spreadsheet.Sheet) =
 
 export const insertModificationAndDeletionSheet = () => {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-  const spreadsheetObjects=spreadsheet.getSheets();
-  const existsheet = spreadsheetObjects.find(sheet => sheet.getName() === "変更・削除");
+  const sheetObjects=spreadsheet.getSheets();
+  const existsheet = sheetObjects.find(sheet => sheet.getName() === "変更・削除");
   if (existsheet) {
     const metaData = existsheet.getDeveloperMetadata();
     const errorMessage = metaData.some(meta => meta.getKey() === "part-timer-shift-manager-modificationAndDeletion") ? "既存の「変更・削除」シートを使用してください" : "「変更・削除」の名前がすでに存在しています。名前を変更して再度シートを追加してください";

@@ -106,6 +106,13 @@ const setvaluesRegistrationSheet = (sheet: GoogleAppsScript.Spreadsheet.Sheet) =
 
 export const insertModificationAndDeletionSheet = () => {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  const spreadsheetObjects=spreadsheet.getSheets();
+  const existsheet = spreadsheetObjects.find(sheet => sheet.getName() === "変更・削除");
+  if (existsheet) {
+    const metaData = existsheet.getDeveloperMetadata();
+    const errorMessage = metaData.some(meta => meta.getKey() === "part-timer-shift-manager-modificationAndDeletion") ? "既存の「変更・削除」シートを使用してください" : "「変更・削除」の名前がすでに存在しています。名前を変更して再度シートを追加してください";
+    throw new Error(errorMessage);
+  }
   const sheet = spreadsheet.insertSheet(`変更・削除`, 0);
   sheet.addDeveloperMetadata(`part-timer-shift-manager-modificationAndDeletion`);
   setvaluesModificationAndDeletionSheet(sheet);

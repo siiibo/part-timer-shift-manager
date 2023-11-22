@@ -61,6 +61,13 @@ const createMenu = (ui: GoogleAppsScript.Base.Ui, menu: GoogleAppsScript.Base.Me
 
 export const insertRegistrationSheet = () => {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  const spreadsheetObjects=spreadsheet.getSheets();
+  const existsheet = spreadsheetObjects.find(sheet => sheet.getName() === "登録");
+  if (existsheet) {
+    const metaData = existsheet.getDeveloperMetadata();
+    const errorMessage = metaData.some(meta => meta.getKey() === "part-timer-shift-manager-registration") ? "既存の「登録」シートを使用してください" : "「登録」の名前がすでに存在しています。名前を変更して再度実行してください";
+    throw new Error(errorMessage);
+  }
   const sheet = spreadsheet.insertSheet(`登録`, 0);
   sheet.addDeveloperMetadata(`part-timer-shift-manager-registration`);
   setvaluesRegistrationSheet(sheet);

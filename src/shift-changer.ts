@@ -198,11 +198,11 @@ export const callRegistration = () => {
   };
   const { API_URL, SLACK_CHANNEL_TO_POST } = getConfig();
   const response = UrlFetchApp.fetch(API_URL, options);
-  if (response.getResponseCode() < 200 || 299 < response.getResponseCode()) {
+  if (200 <= response.getResponseCode() && response.getResponseCode()<= 299) {
     console.log(response.getResponseCode());
-    console.log(response.getContentText());
   } else {
     console.log(response.getResponseCode());
+    console.log(response.getContentText());
   }
   const messageToNotify = createRegistrationMessage(registrationInfos, comment, partTimerProfile);
   postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, messageToNotify, partTimerProfile);
@@ -358,11 +358,11 @@ export const callModificationAndDeletion = () => {
   };
   const { API_URL, SLACK_CHANNEL_TO_POST } = getConfig();
   const response = UrlFetchApp.fetch(API_URL, options);
-  if (response.getResponseCode() < 200 || 299 < response.getResponseCode()) {
+  if (200 <= response.getResponseCode() && response.getResponseCode()<= 299) {
     console.log(response.getResponseCode());
-    console.log(response.getContentText());
   } else {
     console.log(response.getResponseCode());
+    console.log(response.getContentText());
   }
 
   const modificationAndDeletionMessageToNotify = [
@@ -401,11 +401,11 @@ export const callShowEvents = () => {
   };
   const { API_URL } = getConfig();
   const response = UrlFetchApp.fetch(API_URL, options);
-  if (response.getResponseCode() < 200 || 299 < response.getResponseCode()) {
+  if (200 <= response.getResponseCode() && response.getResponseCode()<= 299) {
     console.log(response.getResponseCode());
-    console.log(response.getContentText());
   } else {
     console.log(response.getResponseCode());
+    console.log(response.getContentText());
   }
 
   if (!response.getContentText()) return;

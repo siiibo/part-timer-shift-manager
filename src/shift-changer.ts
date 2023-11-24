@@ -197,27 +197,20 @@ export const callRegistration = () => {
     muteHttpExceptions: true,
   };
   const { API_URL, SLACK_CHANNEL_TO_POST } = getConfig();
-  try{
-    const response=UrlFetchApp.fetch(API_URL, options);
-    if(response.getResponseCode()<200 || 299<response.getResponseCode()){
-      console.log(response.getResponseCode());
-      console.log(response.getContentText());
-      throw new Error;
-    }else{
-      console.log(response.getResponseCode());
-    }
-  }catch{
-    throw new Error("APIによるエラーが発生");
+  const response = UrlFetchApp.fetch(API_URL, options);
+  if (response.getResponseCode() < 200 || 299 < response.getResponseCode()) {
+    console.log(response.getResponseCode());
+    console.log(response.getContentText());
+  } else {
+    console.log(response.getResponseCode());
   }
-  
-
+//https://script.google.com/macros/s/AKfycbyXZobTZVyNbElxkFVVq_mi3UxwboLKAhzNDXQnvBk9xsrpzACEqAT117JV_NpE5_5R/exec
   const messageToNotify = createRegistrationMessage(registrationInfos, comment, partTimerProfile);
   postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, messageToNotify, partTimerProfile);
   sheet.clear();
   SpreadsheetApp.flush();
   setvaluesRegistrationSheet(sheet);
 };
-
 
 const getModificationAndDeletionSheetValues = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet
@@ -365,19 +358,13 @@ export const callModificationAndDeletion = () => {
     muteHttpExceptions: true,
   };
   const { API_URL, SLACK_CHANNEL_TO_POST } = getConfig();
-  try{
-    const response=UrlFetchApp.fetch(API_URL, options);
-    if(response.getResponseCode()<200 || 299<response.getResponseCode()){
-      console.log(response.getResponseCode());
-      console.log(response.getContentText());
-      throw new Error;
-    }else{
-      console.log(response.getResponseCode());
-    }
-  }catch{
-    throw new Error("APIによるエラーが発生");
+  const response = UrlFetchApp.fetch(API_URL, options);
+  if (response.getResponseCode() < 200 || 299 < response.getResponseCode()) {
+    console.log(response.getResponseCode());
+    console.log(response.getContentText());
+  } else {
+    console.log(response.getResponseCode());
   }
-  
 
   const modificationAndDeletionMessageToNotify = [
     createModificationMessage(modificationInfos, partTimerProfile),
@@ -414,19 +401,14 @@ export const callShowEvents = () => {
     muteHttpExceptions: true,
   };
   const { API_URL } = getConfig();
-  let response;
-  try{
-    response = UrlFetchApp.fetch(API_URL, options);
-    if(response.getResponseCode()<200 || 299<response.getResponseCode()){
-      console.log(response.getResponseCode());
-      console.log(response.getContentText());
-      throw new Error;
-    }else{
-      console.log(response.getResponseCode());
-    }
-  }catch{
-    throw new Error("APIによるエラーが発生");
+  const response = UrlFetchApp.fetch(API_URL, options);
+  if (response.getResponseCode() < 200 || 299 < response.getResponseCode()) {
+    console.log(response.getResponseCode());
+    console.log(response.getContentText());
+  } else {
+    console.log(response.getResponseCode());
   }
+
   if (!response.getContentText()) return;
   const eventInfos: EventInfo[] = JSON.parse(response.getContentText());
   if (eventInfos.length === 0) throw new Error("no events");

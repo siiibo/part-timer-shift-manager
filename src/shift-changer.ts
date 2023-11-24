@@ -199,10 +199,15 @@ export const callRegistration = () => {
   const { API_URL, SLACK_CHANNEL_TO_POST } = getConfig();
   try{
     const response=UrlFetchApp.fetch(API_URL, options);
-    console.log(response);
-  }catch(e){
-    console.log("Error\n"+e);
-    throw new Error("APIエラーが出ました");
+    if(response.getResponseCode()<200 || 299<response.getResponseCode()){
+      console.log(response.getResponseCode());
+      console.log(response.getContentText());
+      throw new Error;
+    }else{
+      console.log(response.getResponseCode());
+    }
+  }catch{
+    throw new Error("APIによるエラーが発生");
   }
   
 
@@ -362,10 +367,15 @@ export const callModificationAndDeletion = () => {
   const { API_URL, SLACK_CHANNEL_TO_POST } = getConfig();
   try{
     const response=UrlFetchApp.fetch(API_URL, options);
-    console.log(response);
-  }catch(e){
-    console.log("Error:"+e);
-    throw new Error("APIエラーが出ました");
+    if(response.getResponseCode()<200 || 299<response.getResponseCode()){
+      console.log(response.getResponseCode());
+      console.log(response.getContentText());
+      throw new Error;
+    }else{
+      console.log(response.getResponseCode());
+    }
+  }catch{
+    throw new Error("APIによるエラーが発生");
   }
   
 
@@ -407,13 +417,17 @@ export const callShowEvents = () => {
   let response;
   try{
     response = UrlFetchApp.fetch(API_URL, options);
-    console.log(response);
-  }catch(e){
-    console.log("Error:\n"+e);
-    throw new Error("APIエラーが出ました");
+    if(response.getResponseCode()<200 || 299<response.getResponseCode()){
+      console.log(response.getResponseCode());
+      console.log(response.getContentText());
+      throw new Error;
+    }else{
+      console.log(response.getResponseCode());
+    }
+  }catch{
+    throw new Error("APIによるエラーが発生");
   }
   if (!response.getContentText()) return;
-
   const eventInfos: EventInfo[] = JSON.parse(response.getContentText());
   if (eventInfos.length === 0) throw new Error("no events");
 

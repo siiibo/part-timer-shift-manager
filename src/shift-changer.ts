@@ -204,7 +204,6 @@ export const callRegistration = () => {
   } else {
     console.log(response.getResponseCode());
   }
-//https://script.google.com/macros/s/AKfycbyXZobTZVyNbElxkFVVq_mi3UxwboLKAhzNDXQnvBk9xsrpzACEqAT117JV_NpE5_5R/exec
   const messageToNotify = createRegistrationMessage(registrationInfos, comment, partTimerProfile);
   postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, messageToNotify, partTimerProfile);
   sheet.clear();

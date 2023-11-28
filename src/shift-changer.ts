@@ -173,6 +173,10 @@ const setvaluesModificationAndDeletionSheet = (sheet: GoogleAppsScript.Spreadshe
 };
 
 export const callRegistration = () => {
+  const lock = LockService.getUserLock();
+  if (!lock.tryLock(0)) {
+    throw new Error("すでに処理を実行中です。そのままお待ちください");
+  }
   const userEmail = Session.getActiveUser().getEmail();
   const spreadsheetUrl = SpreadsheetApp.getActiveSpreadsheet().getUrl();
   const { SLACK_ACCESS_TOKEN } = getConfig();
@@ -203,7 +207,6 @@ export const callRegistration = () => {
   SpreadsheetApp.flush();
   setvaluesRegistrationSheet(sheet);
 };
-
 
 const getModificationAndDeletionSheetValues = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet
@@ -324,6 +327,10 @@ const getDeletionInfos = (
   return deletionInfos;
 };
 export const callModificationAndDeletion = () => {
+  const lock = LockService.getUserLock();
+  if (!lock.tryLock(0)) {
+    throw new Error("すでに処理を実行中です。そのままお待ちください");
+  }
   const userEmail = Session.getActiveUser().getEmail();
   const spreadsheetUrl = SpreadsheetApp.getActiveSpreadsheet().getUrl();
   const { SLACK_ACCESS_TOKEN } = getConfig();

@@ -68,10 +68,10 @@ export const insertRegistrationSheet = () => {
     throw new Error("既存の「登録」シートを使用してください");
   }
   sheet.addDeveloperMetadata(`part-timer-shift-manager-registration`);
-  setvaluesRegistrationSheet(sheet);
+  setValuesRegistrationSheet(sheet);
 };
 
-const setvaluesRegistrationSheet = (sheet: GoogleAppsScript.Spreadsheet.Sheet) => {
+const setValuesRegistrationSheet = (sheet: GoogleAppsScript.Spreadsheet.Sheet) => {
   const description1 = "コメント欄 (下の色付きセルに記入してください)";
   sheet.getRange("A1").setValue(description1).setFontWeight("bold");
   const commentCell = sheet.getRange("A2");
@@ -111,10 +111,10 @@ export const insertModificationAndDeletionSheet = () => {
     throw new Error("既存の「変更・削除」シートを使用してください");
   }
   sheet.addDeveloperMetadata(`part-timer-shift-manager-modificationAndDeletion`);
-  setvaluesModificationAndDeletionSheet(sheet);
+  setValuesModificationAndDeletionSheet(sheet);
 };
 
-const setvaluesModificationAndDeletionSheet = (sheet: GoogleAppsScript.Spreadsheet.Sheet) => {
+const setValuesModificationAndDeletionSheet = (sheet: GoogleAppsScript.Spreadsheet.Sheet) => {
   const description1 = "コメント欄 (下の色付きセルに記入してください)";
   sheet.getRange("A1").setValue(description1).setFontWeight("bold");
   const commentCell = sheet.getRange("A2");
@@ -211,7 +211,7 @@ export const callRegistration = () => {
   postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, messageToNotify, partTimerProfile);
   sheet.clear();
   SpreadsheetApp.flush();
-  setvaluesRegistrationSheet(sheet);
+  setValuesRegistrationSheet(sheet);
 };
 
 const getModificationAndDeletionSheetValues = (
@@ -372,7 +372,7 @@ export const callModificationAndDeletion = () => {
   postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, modificationAndDeletionMessageToNotify, partTimerProfile);
   sheet.clear();
   SpreadsheetApp.flush();
-  setvaluesModificationAndDeletionSheet(sheet);
+  setValuesModificationAndDeletionSheet(sheet);
 };
 
 export const callShowEvents = () => {

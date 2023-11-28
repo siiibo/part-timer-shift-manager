@@ -6,6 +6,7 @@ import {
 } from "./ModificationAndDeletionSheet";
 import { callRegistration, insertRegistrationSheet } from "./RegistrationSheet";
 import { shiftChanger } from "./shift-changer-api";
+
 export const doPost = (e: GoogleAppsScript.Events.DoPost): GoogleAppsScript.Content.TextOutput => {
   if (e.parameter.apiId === "shift-changer") {
     const response = shiftChanger(e) ?? "";

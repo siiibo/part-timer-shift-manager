@@ -10,6 +10,7 @@ import {
   getSlackClient,
   postMessageToSlackChannel,
 } from "./utils";
+
 type SheetType = "registration" | "modificationAndDeletion";
 type OperationType = "registration" | "modificationAndDeletion" | "showEvents";
 type PartTimerProfile = {
@@ -18,6 +19,7 @@ type PartTimerProfile = {
   email: string;
   managerEmails: string[];
 };
+
 export const insertRegistrationSheet = () => {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   let sheet;
@@ -59,6 +61,7 @@ const setValuesRegistrationSheet = (sheet: GoogleAppsScript.Spreadsheet.Sheet) =
     .build();
   timeCells.setDataValidation(timeRule);
 };
+
 export const callRegistration = () => {
   const lock = LockService.getUserLock();
   if (!lock.tryLock(0)) {
@@ -94,31 +97,32 @@ export const callRegistration = () => {
   SpreadsheetApp.flush();
   setValuesRegistrationSheet(sheet);
 };
+
 const getRegistrationInfos = (
-  sheet: GoogleAppsScript.Spreadsheet.Sheet,
-  partTimerProfile: PartTimerProfile
-): EventInfo[] => {
-  const registrationInfos = sheet
-    .getRange(5, 1, sheet.getLastRow() - 4, sheet.getLastColumn())
-    .getValues()
-    .map((eventInfo) => {
-      const date = format(eventInfo[0] as Date, "yyyy-MM-dd");
-      const startTime = format(eventInfo[1] as Date, "HH:mm");
-      const endTime = format(eventInfo[2] as Date, "HH:mm");
-      const workingStyle = eventInfo[5] as string;
-      if (workingStyle === "") throw new Error("working style is not defined");
-      if (eventInfo[3] === "" || eventInfo[4] === "") {
-        const title = createTitleFromEventInfo({ workingStyle }, partTimerProfile);
-        return { title, date, startTime, endTime };
-      } else {
-        const restStartTime = format(eventInfo[3] as Date, "HH:mm");
-        const restEndTime = format(eventInfo[4] as Date, "HH:mm");
-        const title = createTitleFromEventInfo({ restStartTime, restEndTime, workingStyle }, partTimerProfile);
-        return { title, date, startTime, endTime };
-      }
-    });
-  return registrationInfos;
-};
+    sheet: GoogleAppsScript.Spreadsheet.Sheet,
+    partTimerProfile: PartTimerProfile
+  ): EventInfo[] => {
+    const registrationInfos = sheet
+      .getRange(5, 1, sheet.getLastRow() - 4, sheet.getLastColumn())
+      .getValues()
+      .map((eventInfo) => {
+        const date = format(eventInfo[0] as Date, "yyyy-MM-dd");
+        const startTime = format(eventInfo[1] as Date, "HH:mm");
+        const endTime = format(eventInfo[2] as Date, "HH:mm");
+        const workingStyle = eventInfo[5] as string;
+        if (workingStyle === "") throw new Error("working style is not defined");
+        if (eventInfo[3] === "" || eventInfo[4] === "") {
+          const title = createTitleFromEventInfo({ workingStyle }, partTimerProfile);
+          return { title, date, startTime, endTime };
+        } else {
+          const restStartTime = format(eventInfo[3] as Date, "HH:mm");
+          const restEndTime = format(eventInfo[4] as Date, "HH:mm");
+          const title = createTitleFromEventInfo({ restStartTime, restEndTime, workingStyle }, partTimerProfile);
+          return { title, date, startTime, endTime };
+        }
+      });
+    return registrationInfos;
+  };
 const createRegistrationMessage = (
   registrationInfos: EventInfo[],
   comment: string,

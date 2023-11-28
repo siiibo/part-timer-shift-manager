@@ -88,9 +88,13 @@ export const callRegistration = () => {
   const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
     method: "post",
     payload: payload,
+    muteHttpExceptions: true,
   };
   const { API_URL, SLACK_CHANNEL_TO_POST } = getConfig();
-  UrlFetchApp.fetch(API_URL, options);
+  const response = UrlFetchApp.fetch(API_URL, options);
+  if (response.getResponseCode() !== 200) {
+    throw new Error(response.getContentText());
+  }
   const messageToNotify = createRegistrationMessage(registrationInfos, comment, partTimerProfile);
   postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, messageToNotify, partTimerProfile);
   sheet.clear();

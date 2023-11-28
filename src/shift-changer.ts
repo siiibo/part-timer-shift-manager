@@ -399,7 +399,7 @@ export const callShowEvents = () => {
     throw new Error(response.getContentText());
   }
 
-  if (!response.getContentText()) return;
+
   const eventInfos: EventInfo[] = JSON.parse(response.getContentText());
   if (eventInfos.length === 0) throw new Error("no events");
 

@@ -266,8 +266,8 @@ const getModificationInfos = (
           newEventInfo: { title: newTitle, date: newDate, startTime: newStartTime, endTime: newEndTime },
         };
       } else {
-        const newRestStartTime = format(row.newRestStartTime as Date, "HH:mm");
-        const newRestEndTime = format(row.newRestEndTime as Date, "HH:mm");
+        const newRestStartTime =row.newRestStartTime;
+        const newRestEndTime = row.newRestEndTime;
         const newTitle = createTitleFromEventInfo(
           { restStartTime: newRestStartTime, restEndTime: newRestEndTime, workingStyle: newWorkingStyle },
           partTimerProfile

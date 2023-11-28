@@ -99,16 +99,16 @@ export const getSlackClient = (slackToken: string): SlackClient => {
 };
 export const createTitleFromEventInfo = (
   eventInfo: {
-    restStartTime?: string;
-    restEndTime?: string;
+    restStartTime?: Date;
+    restEndTime?: Date;
     workingStyle: string;
   },
   partTimerProfile: PartTimerProfile
 ): string => {
   const { job, lastName } = partTimerProfile;
 
-  const restStartTime = eventInfo.restStartTime;
-  const restEndTime = eventInfo.restEndTime;
+  const restStartTime = format(eventInfo.restStartTime as Date, "HH:mm");
+  const restEndTime = format(eventInfo.restEndTime as Date, "HH:mm");
   const workingStyle = eventInfo.workingStyle;
 
   if (restStartTime === undefined || restEndTime === undefined) {

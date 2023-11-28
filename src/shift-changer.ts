@@ -62,9 +62,9 @@ const createMenu = (ui: GoogleAppsScript.Base.Ui, menu: GoogleAppsScript.Base.Me
 export const insertRegistrationSheet = () => {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   let sheet;
-  try{
+  try {
     sheet = spreadsheet.insertSheet(`登録`, 0);
-  }catch{
+  } catch {
     throw new Error("既存の「登録」シートを使用してください");
   }
   sheet.addDeveloperMetadata(`part-timer-shift-manager-registration`);
@@ -105,9 +105,9 @@ const setvaluesRegistrationSheet = (sheet: GoogleAppsScript.Spreadsheet.Sheet) =
 export const insertModificationAndDeletionSheet = () => {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   let sheet;
-  try{
+  try {
     sheet = spreadsheet.insertSheet(`変更・削除`, 0);
-  }catch{
+  } catch {
     throw new Error("既存の「変更・削除」シートを使用してください");
   }
   sheet.addDeveloperMetadata(`part-timer-shift-manager-modificationAndDeletion`);
@@ -213,7 +213,6 @@ export const callRegistration = () => {
   SpreadsheetApp.flush();
   setvaluesRegistrationSheet(sheet);
 };
-
 
 const getModificationAndDeletionSheetValues = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet

@@ -201,8 +201,7 @@ export const callRegistration = () => {
   if (200===response.getResponseCode()) {
     console.log(response.getResponseCode());
   } else {
-    console.log(response.getResponseCode());
-    console.log(response.getContentText());
+    throw new Error(response.getContentText());
   }
   const messageToNotify = createRegistrationMessage(registrationInfos, comment, partTimerProfile);
   postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, messageToNotify, partTimerProfile);
@@ -361,8 +360,7 @@ export const callModificationAndDeletion = () => {
   if (200 === response.getResponseCode()) {
     console.log(response.getResponseCode());
   } else {
-    console.log(response.getResponseCode());
-    console.log(response.getContentText());
+    throw new Error(response.getContentText());
   }
 
   const modificationAndDeletionMessageToNotify = [
@@ -404,8 +402,7 @@ export const callShowEvents = () => {
   if (200 === response.getResponseCode()) {
     console.log(response.getResponseCode());
   } else {
-    console.log(response.getResponseCode());
-    console.log(response.getContentText());
+    throw new Error(response.getContentText());
   }
 
   if (!response.getContentText()) return;

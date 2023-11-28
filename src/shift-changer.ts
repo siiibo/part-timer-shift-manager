@@ -198,9 +198,7 @@ export const callRegistration = () => {
   };
   const { API_URL, SLACK_CHANNEL_TO_POST } = getConfig();
   const response = UrlFetchApp.fetch(API_URL, options);
-  if (200===response.getResponseCode()) {
-    console.log(response.getResponseCode());
-  } else {
+  if (response.getResponseCode() !== 200) {
     throw new Error(response.getContentText());
   }
   const messageToNotify = createRegistrationMessage(registrationInfos, comment, partTimerProfile);
@@ -357,9 +355,7 @@ export const callModificationAndDeletion = () => {
   };
   const { API_URL, SLACK_CHANNEL_TO_POST } = getConfig();
   const response = UrlFetchApp.fetch(API_URL, options);
-  if (200 === response.getResponseCode()) {
-    console.log(response.getResponseCode());
-  } else {
+  if (response.getResponseCode() !== 200) {
     throw new Error(response.getContentText());
   }
 
@@ -399,9 +395,7 @@ export const callShowEvents = () => {
   };
   const { API_URL } = getConfig();
   const response = UrlFetchApp.fetch(API_URL, options);
-  if (200 === response.getResponseCode()) {
-    console.log(response.getResponseCode());
-  } else {
+  if (response.getResponseCode() !== 200) {
     throw new Error(response.getContentText());
   }
 

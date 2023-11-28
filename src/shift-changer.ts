@@ -198,7 +198,7 @@ export const callRegistration = () => {
   };
   const { API_URL, SLACK_CHANNEL_TO_POST } = getConfig();
   const response = UrlFetchApp.fetch(API_URL, options);
-  if (200 <= response.getResponseCode() && response.getResponseCode()<= 299) {
+  if (200===response.getResponseCode()) {
     console.log(response.getResponseCode());
   } else {
     console.log(response.getResponseCode());
@@ -358,7 +358,7 @@ export const callModificationAndDeletion = () => {
   };
   const { API_URL, SLACK_CHANNEL_TO_POST } = getConfig();
   const response = UrlFetchApp.fetch(API_URL, options);
-  if (200 <= response.getResponseCode() && response.getResponseCode()<= 299) {
+  if (200 === response.getResponseCode()) {
     console.log(response.getResponseCode());
   } else {
     console.log(response.getResponseCode());
@@ -401,7 +401,7 @@ export const callShowEvents = () => {
   };
   const { API_URL } = getConfig();
   const response = UrlFetchApp.fetch(API_URL, options);
-  if (200 <= response.getResponseCode() && response.getResponseCode()<= 299) {
+  if (200 === response.getResponseCode()) {
     console.log(response.getResponseCode());
   } else {
     console.log(response.getResponseCode());

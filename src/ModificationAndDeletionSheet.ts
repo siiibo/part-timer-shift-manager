@@ -227,7 +227,6 @@ const getModificationAndDeletionSheetValues = (
   return sheetValues;
 };
 
-
 const getModificationInfos = (
   sheetValues: {
     title: string;
@@ -266,8 +265,8 @@ const getModificationInfos = (
           newEventInfo: { title: newTitle, date: newDate, startTime: newStartTime, endTime: newEndTime },
         };
       } else {
-        const newRestStartTime =row.newRestStartTime;
-        const newRestEndTime = row.newRestEndTime;
+        const newRestStartTime = format(row.newRestStartTime as Date, "HH:mm");
+        const newRestEndTime = format(row.newRestEndTime as Date, "HH:mm");
         const newTitle = createTitleFromEventInfo(
           { restStartTime: newRestStartTime, restEndTime: newRestEndTime, workingStyle: newWorkingStyle },
           partTimerProfile
@@ -282,47 +281,47 @@ const getModificationInfos = (
   return modificationInfos;
 };
 const getDeletionInfos = (
-    sheetValues: {
-      title: string;
-      date: Date;
-      startTime: Date;
-      endTime: Date;
-      newDate: Date;
-      newStartTime: Date;
-      newEndTime: Date;
-      newRestStartTime?: Date;
-      newRestEndTime?: Date;
-      newWorkingStyle: string;
-      deletionFlag: boolean;
-    }[]
-  ): EventInfo[] => {
-    const deletionInfos = sheetValues
-      .filter((row) => row.deletionFlag)
-      .map((row) => {
-        const title = row.title;
-        const date = format(row.date, "yyyy-MM-dd");
-        const startTime = format(row.startTime, "HH:mm");
-        const endTime = format(row.endTime, "HH:mm");
-        return { title, date, startTime, endTime };
-      });
-  
-    return deletionInfos;
-  };
-const createModificationMessage = (
-    modificationInfos: {
-      previousEventInfo: EventInfo;
-      newEventInfo: EventInfo;
-    }[],
-    partTimerProfile: PartTimerProfile
-  ): string | undefined => {
-    const messages = modificationInfos.map(({ previousEventInfo, newEventInfo }) => {
-      return `${createMessageFromEventInfo(previousEventInfo)}\n↓\n${createMessageFromEventInfo(newEventInfo)}`;
+  sheetValues: {
+    title: string;
+    date: Date;
+    startTime: Date;
+    endTime: Date;
+    newDate: Date;
+    newStartTime: Date;
+    newEndTime: Date;
+    newRestStartTime?: Date;
+    newRestEndTime?: Date;
+    newWorkingStyle: string;
+    deletionFlag: boolean;
+  }[]
+): EventInfo[] => {
+  const deletionInfos = sheetValues
+    .filter((row) => row.deletionFlag)
+    .map((row) => {
+      const title = row.title;
+      const date = format(row.date, "yyyy-MM-dd");
+      const startTime = format(row.startTime, "HH:mm");
+      const endTime = format(row.endTime, "HH:mm");
+      return { title, date, startTime, endTime };
     });
-    if (messages.length == 0) return;
-    const { job, lastName } = partTimerProfile;
-    const messageTitle = `${job}${lastName}さんの以下の予定が変更されました。`;
-    return `${messageTitle}\n${messages.join("\n\n")}`;
-  };
+
+  return deletionInfos;
+};
+const createModificationMessage = (
+  modificationInfos: {
+    previousEventInfo: EventInfo;
+    newEventInfo: EventInfo;
+  }[],
+  partTimerProfile: PartTimerProfile
+): string | undefined => {
+  const messages = modificationInfos.map(({ previousEventInfo, newEventInfo }) => {
+    return `${createMessageFromEventInfo(previousEventInfo)}\n↓\n${createMessageFromEventInfo(newEventInfo)}`;
+  });
+  if (messages.length == 0) return;
+  const { job, lastName } = partTimerProfile;
+  const messageTitle = `${job}${lastName}さんの以下の予定が変更されました。`;
+  return `${messageTitle}\n${messages.join("\n\n")}`;
+};
 const createDeletionMessage = (deletionInfos: EventInfo[], partTimerProfile: PartTimerProfile): string | undefined => {
   const messages = deletionInfos.map(createMessageFromEventInfo);
   if (messages.length == 0) return;
@@ -330,4 +329,3 @@ const createDeletionMessage = (deletionInfos: EventInfo[], partTimerProfile: Par
   const messageTitle = `${job}${lastName}さんの以下の予定が削除されました。`;
   return `${messageTitle}\n${messages.join("\n")}`;
 };
-

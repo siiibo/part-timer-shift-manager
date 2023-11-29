@@ -1,18 +1,8 @@
 import { format } from "date-fns";
 
-import { getConfig } from "./config";
+import {createTitleFromEventInfo} from "./shift-changer";
 import { EventInfo } from "./shift-changer-api";
-import {
-  createMessageFromEventInfo,
-  createTitleFromEventInfo,
-  getPartTimerProfile,
-  getSheet,
-  getSlackClient,
-  postMessageToSlackChannel,
-} from "./utils";
 
-type SheetType = "registration" | "modificationAndDeletion";
-type OperationType = "registration" | "modificationAndDeletion" | "showEvents";
 type PartTimerProfile = {
   job: string;
   lastName: string;
@@ -20,18 +10,7 @@ type PartTimerProfile = {
   managerEmails: string[];
 };
 
-export const insertRegistrationSheet = () => {
-  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-  let sheet;
-  try {
-    sheet = spreadsheet.insertSheet(`登録`, 0);
-  } catch {
-    throw new Error("既存の「登録」シートを使用してください");
-  }
-  sheet.addDeveloperMetadata(`part-timer-shift-manager-registration`);
-  setValuesRegistrationSheet(sheet);
-};
-const setValuesRegistrationSheet = (sheet: GoogleAppsScript.Spreadsheet.Sheet) => {
+export const setValuesRegistrationSheet = (sheet: GoogleAppsScript.Spreadsheet.Sheet) => {
   const description1 = "コメント欄 (下の色付きセルに記入してください)";
   sheet.getRange("A1").setValue(description1).setFontWeight("bold");
   const commentCell = sheet.getRange("A2");
@@ -62,47 +41,7 @@ const setValuesRegistrationSheet = (sheet: GoogleAppsScript.Spreadsheet.Sheet) =
   timeCells.setDataValidation(timeRule);
 };
 
-export const callRegistration = () => {
-  const lock = LockService.getUserLock();
-  if (!lock.tryLock(0)) {
-    throw new Error("すでに処理を実行中です。そのままお待ちください");
-  }
-  const userEmail = Session.getActiveUser().getEmail();
-  const spreadsheetUrl = SpreadsheetApp.getActiveSpreadsheet().getUrl();
-  const { SLACK_ACCESS_TOKEN } = getConfig();
-  const client = getSlackClient(SLACK_ACCESS_TOKEN);
-  const partTimerProfile = getPartTimerProfile(userEmail);
-
-  const sheetType: SheetType = "registration";
-  const sheet = getSheet(sheetType, spreadsheetUrl);
-  const operationType: OperationType = "registration";
-  const comment = sheet.getRange("A2").getValue();
-  const registrationInfos = getRegistrationInfos(sheet, partTimerProfile);
-
-  const payload = {
-    apiId: "shift-changer",
-    operationType: operationType,
-    userEmail: userEmail,
-    registrationInfos: JSON.stringify(registrationInfos),
-  };
-  const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
-    method: "post",
-    payload: payload,
-    muteHttpExceptions: true,
-  };
-  const { API_URL, SLACK_CHANNEL_TO_POST } = getConfig();
-  const response = UrlFetchApp.fetch(API_URL, options);
-  if (response.getResponseCode() !== 200) {
-    throw new Error(response.getContentText());
-  }
-  const messageToNotify = createRegistrationMessage(registrationInfos, comment, partTimerProfile);
-  postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, messageToNotify, partTimerProfile);
-  sheet.clear();
-  SpreadsheetApp.flush();
-  setValuesRegistrationSheet(sheet);
-};
-
-const getRegistrationInfos = (
+export const getRegistrationInfos = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
   partTimerProfile: PartTimerProfile
 ): EventInfo[] => {
@@ -126,16 +65,4 @@ const getRegistrationInfos = (
       }
     });
   return registrationInfos;
-};
-const createRegistrationMessage = (
-  registrationInfos: EventInfo[],
-  comment: string,
-  partTimerProfile: PartTimerProfile
-): string => {
-  const messages = registrationInfos.map(createMessageFromEventInfo);
-  const { job, lastName } = partTimerProfile;
-  const messageTitle = `${job}${lastName}さんの以下の予定が追加されました。`;
-  return comment
-    ? `${messageTitle}\n${messages.join("\n")}\n\nコメント: ${comment}`
-    : `${messageTitle}\n${messages.join("\n")}`;
 };

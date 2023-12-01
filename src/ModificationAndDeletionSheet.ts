@@ -1,14 +1,7 @@
 import { format } from "date-fns";
 
-import { createTitleFromEventInfo } from "./shift-changer";
+import { createTitleFromEventInfo, PartTimerProfile } from "./shift-changer";
 import { EventInfo } from "./shift-changer-api";
-//TODO:PartTimerProfile 型は shift-changer.ts のみに定義する
-type PartTimerProfile = {
-  job: string;
-  lastName: string;
-  email: string;
-  managerEmails: string[];
-};
 
 export const setValuesModificationAndDeletionSheet = (sheet: GoogleAppsScript.Spreadsheet.Sheet) => {
   const description1 = "コメント欄 (下の色付きセルに記入してください)";

@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 
-import { createTitleFromEventInfo } from "./Postslack";
+import {createTitleFromEventInfo} from "./shift-changer";
 import { EventInfo } from "./shift-changer-api";
 type PartTimerProfile = {
   job: string;

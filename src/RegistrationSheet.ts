@@ -1,6 +1,7 @@
 import { format } from "date-fns";
 
-import { createTitleFromEventInfo, PartTimerProfile } from "./shift-changer";
+import {PartTimerProfile} from "./JobSheet";
+import { createTitleFromEventInfo } from "./shift-changer";
 import { EventInfo } from "./shift-changer-api";
 
 export const setValuesRegistrationSheet = (sheet: GoogleAppsScript.Spreadsheet.Sheet) => {

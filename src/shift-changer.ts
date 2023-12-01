@@ -2,6 +2,8 @@ import { GasWebClient as SlackClient } from "@hi-se/web-api";
 import { format } from "date-fns";
 
 import { getConfig } from "./config";
+import {PartTimerProfile} from "./JobSheet";
+import { getPartTimerProfile,} from "./JobSheet";
 import {
   getDeletionInfos,
   getModificationAndDeletionSheetValues,
@@ -13,13 +15,6 @@ import { EventInfo, shiftChanger } from "./shift-changer-api";
 
 type SheetType = "registration" | "modificationAndDeletion";
 type OperationType = "registration" | "modificationAndDeletion" | "showEvents";
-//TODO:循環参照を解決
-export type PartTimerProfile = {
-  job: string;
-  lastName: string;
-  email: string;
-  managerEmails: string[];
-};
 
 export const doPost = (e: GoogleAppsScript.Events.DoPost): GoogleAppsScript.Content.TextOutput => {
   if (e.parameter.apiId === "shift-changer") {
@@ -257,28 +252,7 @@ const createDeletionMessage = (deletionInfos: EventInfo[], partTimerProfile: Par
   const messageTitle = `${job}${lastName}さんの以下の予定が削除されました。`;
   return `${messageTitle}\n${messages.join("\n")}`;
 };
-const getPartTimerProfile = (userEmail: string): PartTimerProfile => {
-  const { JOB_SHEET_URL } = getConfig();
-  const sheet = SpreadsheetApp.openByUrl(JOB_SHEET_URL).getSheetByName("シート1");
-  if (!sheet) throw new Error("SHEET is not defined");
-  const partTimerProfiles = sheet
-    .getRange(1, 1, sheet.getLastRow(), sheet.getLastColumn())
-    .getValues()
-    .map((row) => ({
-      job: row[0] as string,
-      // \u3000は全角空白
-      lastName: row[1].split(/(\s|\u3000)+/)[0] as string,
-      email: row[2] as string,
-      managerEmails: row[3] === "" ? [] : (row[3] as string).replaceAll(/\s/g, "").split(","),
-    }));
 
-  const partTimerProfile = partTimerProfiles.find(({ email }) => {
-    return email === userEmail;
-  });
-  if (partTimerProfile === undefined) throw new Error("no part timer information for the email");
-
-  return partTimerProfile;
-};
 const getSlackClient = (slackToken: string): SlackClient => {
   return new SlackClient(slackToken);
 };

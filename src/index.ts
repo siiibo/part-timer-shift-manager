@@ -1,16 +1,15 @@
+import { insertModificationAndDeletionSheet } from "./ModificationAndDeletionSheet";
 import { initNotifyDailyShift, notifyDailyShift } from "./notify-daily-shift";
+import { insertRegistrationSheet } from "./RegistrationSheet";
 import {
   callModificationAndDeletion,
   callRegistration,
   callShowEvents,
   doPost,
   initShiftChanger,
-  insertModificationAndDeletionSheet,
-  insertRegistrationSheet,
   onOpen,
   onOpenForDev,
 } from "./shift-changer";
-
 /**
  * @file GASエディタから実行できる関数を定義する
  */

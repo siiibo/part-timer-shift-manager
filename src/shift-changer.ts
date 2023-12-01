@@ -13,7 +13,7 @@ import { EventInfo, shiftChanger } from "./shift-changer-api";
 
 type SheetType = "registration" | "modificationAndDeletion";
 type OperationType = "registration" | "modificationAndDeletion" | "showEvents";
-//TODO: 循環参照を解決
+//TODO: PartTimerProfile 型は shift-changer.ts のみに定義する
 type PartTimerProfile = {
   job: string;
   lastName: string;

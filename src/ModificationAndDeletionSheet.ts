@@ -2,7 +2,7 @@ import { format } from "date-fns";
 
 import { createTitleFromEventInfo } from "./shift-changer";
 import { EventInfo } from "./shift-changer-api";
-//TODO:循環参照を解決
+//TODO:PartTimerProfile 型は shift-changer.ts のみに定義する
 type PartTimerProfile = {
   job: string;
   lastName: string;

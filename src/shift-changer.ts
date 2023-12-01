@@ -2,8 +2,8 @@ import { GasWebClient as SlackClient } from "@hi-se/web-api";
 import { format } from "date-fns";
 
 import { getConfig } from "./config";
-import {PartTimerProfile} from "./JobSheet";
-import { getPartTimerProfile,} from "./JobSheet";
+import { PartTimerProfile } from "./JobSheet";
+import { getPartTimerProfile } from "./JobSheet";
 import {
   getDeletionInfos,
   getModificationAndDeletionSheetValues,

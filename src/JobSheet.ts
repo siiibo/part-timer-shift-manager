@@ -1,11 +1,11 @@
 import { getConfig } from "./config";
 
 export type PartTimerProfile = {
-    job: string;
-    lastName: string;
-    email: string;
-    managerEmails: string[];
-  };
+  job: string;
+  lastName: string;
+  email: string;
+  managerEmails: string[];
+};
 export const getPartTimerProfile = (userEmail: string): PartTimerProfile => {
   const { JOB_SHEET_URL } = getConfig();
   const sheet = SpreadsheetApp.openByUrl(JOB_SHEET_URL).getSheetByName("シート1");

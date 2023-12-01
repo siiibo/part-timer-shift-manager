@@ -13,6 +13,7 @@ import { EventInfo, shiftChanger } from "./shift-changer-api";
 
 type SheetType = "registration" | "modificationAndDeletion";
 type OperationType = "registration" | "modificationAndDeletion" | "showEvents";
+//TODO: 循環参照を解決
 type PartTimerProfile = {
   job: string;
   lastName: string;
@@ -343,6 +344,7 @@ const getEventInfoFromTitle = (
   const [restStartTime, restEndTime] = restTimeResult ? restTimeResult.split("~") : [];
   return { workingStyle, restStartTime, restEndTime };
 };
+//TODO:循環参照を解決
 export const createTitleFromEventInfo = (
   eventInfo: {
     restStartTime?: string;

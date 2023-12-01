@@ -2,6 +2,7 @@ import { format } from "date-fns";
 
 import { createTitleFromEventInfo } from "./shift-changer";
 import { EventInfo } from "./shift-changer-api";
+//循環参照を解決
 type PartTimerProfile = {
   job: string;
   lastName: string;

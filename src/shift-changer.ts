@@ -8,9 +8,10 @@ import {
   getDeletionInfos,
   getModificationAndDeletionSheetValues,
   getModificationInfos,
+  insertModificationAndDeletionSheet,
   setValuesModificationAndDeletionSheet,
 } from "./ModificationAndDeletionSheet";
-import { getRegistrationInfos, setValuesRegistrationSheet } from "./RegistrationSheet";
+import { getRegistrationInfos, insertRegistrationSheet, setValuesRegistrationSheet } from "./RegistrationSheet";
 import { EventInfo, shiftChanger } from "./shift-changer-api";
 
 type SheetType = "registration" | "modificationAndDeletion";
@@ -60,18 +61,6 @@ const createMenu = (ui: GoogleAppsScript.Base.Ui, menu: GoogleAppsScript.Base.Me
         .addItem("提出", callModificationAndDeletion.name)
     )
     .addToUi();
-};
-
-export const insertRegistrationSheet = () => {
-  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-  let sheet;
-  try {
-    sheet = spreadsheet.insertSheet(`登録`, 0);
-  } catch {
-    throw new Error("既存の「登録」シートを使用してください");
-  }
-  sheet.addDeveloperMetadata(`part-timer-shift-manager-registration`);
-  setValuesRegistrationSheet(sheet);
 };
 
 export const callRegistration = () => {
@@ -125,18 +114,6 @@ const createRegistrationMessage = (
   return comment
     ? `${messageTitle}\n${messages.join("\n")}\n\nコメント: ${comment}`
     : `${messageTitle}\n${messages.join("\n")}`;
-};
-
-export const insertModificationAndDeletionSheet = () => {
-  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-  let sheet;
-  try {
-    sheet = spreadsheet.insertSheet(`変更・削除`, 0);
-  } catch {
-    throw new Error("既存の「変更・削除」シートを使用してください");
-  }
-  sheet.addDeveloperMetadata(`part-timer-shift-manager-modificationAndDeletion`);
-  setValuesModificationAndDeletionSheet(sheet);
 };
 
 export const callShowEvents = () => {

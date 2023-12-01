@@ -1,8 +1,20 @@
 import { format } from "date-fns";
 
-import {PartTimerProfile} from "./JobSheet";
+import { PartTimerProfile } from "./JobSheet";
 import { createTitleFromEventInfo } from "./shift-changer";
 import { EventInfo } from "./shift-changer-api";
+
+export const insertRegistrationSheet = () => {
+  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet;
+  try {
+    sheet = spreadsheet.insertSheet(`登録`, 0);
+  } catch {
+    throw new Error("既存の「登録」シートを使用してください");
+  }
+  sheet.addDeveloperMetadata(`part-timer-shift-manager-registration`);
+  setValuesRegistrationSheet(sheet);
+};
 
 export const setValuesRegistrationSheet = (sheet: GoogleAppsScript.Spreadsheet.Sheet) => {
   const description1 = "コメント欄 (下の色付きセルに記入してください)";

@@ -4,6 +4,18 @@ import { PartTimerProfile } from "./JobSheet";
 import { createTitleFromEventInfo } from "./shift-changer";
 import { EventInfo } from "./shift-changer-api";
 
+export const insertModificationAndDeletionSheet = () => {
+  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet;
+  try {
+    sheet = spreadsheet.insertSheet(`変更・削除`, 0);
+  } catch {
+    throw new Error("既存の「変更・削除」シートを使用してください");
+  }
+  sheet.addDeveloperMetadata(`part-timer-shift-manager-modificationAndDeletion`);
+  setValuesModificationAndDeletionSheet(sheet);
+};
+
 export const setValuesModificationAndDeletionSheet = (sheet: GoogleAppsScript.Spreadsheet.Sheet) => {
   const description1 = "コメント欄 (下の色付きセルに記入してください)";
   sheet.getRange("A1").setValue(description1).setFontWeight("bold");

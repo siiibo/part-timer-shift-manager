@@ -9,8 +9,7 @@ import {
   setValuesModificationAndDeletionSheet,
 } from "./ModificationAndDeletionSheet";
 import { getRegistrationInfos, setValuesRegistrationSheet } from "./RegistrationSheet";
-import { shiftChanger } from "./shift-changer-api";
-import { EventInfo } from "./shift-changer-api";
+import { EventInfo, shiftChanger } from "./shift-changer-api";
 
 type SheetType = "registration" | "modificationAndDeletion";
 type OperationType = "registration" | "modificationAndDeletion" | "showEvents";

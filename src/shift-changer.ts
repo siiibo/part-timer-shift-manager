@@ -193,9 +193,12 @@ export const callModificationAndDeletion = () => {
     throw new Error(response.getContentText());
   }
   let modificationAndDeletionMessageToNotify: string;
-  if (!createModificationMessage(modificationInfos, partTimerProfile) && !createDeletionMessage(deletionInfos, partTimerProfile)) {
+  if (
+    !createModificationMessage(modificationInfos, partTimerProfile) &&
+    !createDeletionMessage(deletionInfos, partTimerProfile)
+  ) {
     throw new Error("変更・削除する予定がありません。");
-  }else{
+  } else {
     modificationAndDeletionMessageToNotify = [
       createModificationMessage(modificationInfos, partTimerProfile),
       createDeletionMessage(deletionInfos, partTimerProfile),
@@ -204,7 +207,6 @@ export const callModificationAndDeletion = () => {
       .filter(Boolean)
       .join("\n---\n");
   }
-
 
   postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, modificationAndDeletionMessageToNotify, partTimerProfile);
   sheet.clear();

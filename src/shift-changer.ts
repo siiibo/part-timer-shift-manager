@@ -193,10 +193,7 @@ export const callModificationAndDeletion = () => {
     throw new Error(response.getContentText());
   }
   let modificationAndDeletionMessageToNotify: string;
-  if (
-    !createModificationMessage(modificationInfos, partTimerProfile) &&
-    !createDeletionMessage(deletionInfos, partTimerProfile)
-  ) {
+  if (modificationInfos.length == 0 && deletionInfos.length == 0) {
     throw new Error("変更・削除する予定がありません。");
   } else {
     modificationAndDeletionMessageToNotify = [

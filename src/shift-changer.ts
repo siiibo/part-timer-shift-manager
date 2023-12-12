@@ -192,7 +192,9 @@ export const callModificationAndDeletion = () => {
   if (response.getResponseCode() !== 200) {
     throw new Error(response.getContentText());
   }
-
+  if (modificationInfos.length == 0 && deletionInfos.length == 0) {
+    throw new Error("変更・削除する予定がありません。");
+  }
   const modificationAndDeletionMessageToNotify = [
     createModificationMessage(modificationInfos, partTimerProfile),
     createDeletionMessage(deletionInfos, partTimerProfile),

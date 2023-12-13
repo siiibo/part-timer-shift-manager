@@ -64,8 +64,8 @@ export const getRegistrationInfos = (
         const title = createTitleFromEventInfo({ workingStyle }, partTimerProfile);
         return { title, date, startTime, endTime };
       } else {
-        const restStartTime = format(eventInfo[3] as Date, "HH:mm");
-        const restEndTime = format(eventInfo[4] as Date, "HH:mm");
+        const restStartTime =eventInfo[3];
+        const restEndTime =eventInfo[4];
         const title = createTitleFromEventInfo({ restStartTime, restEndTime, workingStyle }, partTimerProfile);
         return { title, date, startTime, endTime };
       }

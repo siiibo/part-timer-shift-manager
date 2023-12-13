@@ -300,16 +300,16 @@ const getEventInfoFromTitle = (
 //TODO:循環参照を解決
 export const createTitleFromEventInfo = (
   eventInfo: {
-    restStartTime?: string;
-    restEndTime?: string;
+    restStartTime?: Date;
+    restEndTime?: Date;
     workingStyle: string;
   },
   partTimerProfile: PartTimerProfile
 ): string => {
   const { job, lastName } = partTimerProfile;
 
-  const restStartTime = eventInfo.restStartTime;
-  const restEndTime = eventInfo.restEndTime;
+  const restStartTime = eventInfo.restStartTime ? format(eventInfo.restStartTime, "HH:mm") : undefined;
+  const restEndTime = eventInfo.restEndTime ? format(eventInfo.restEndTime, "HH:mm") : undefined;
   const workingStyle = eventInfo.workingStyle;
 
   if (restStartTime === undefined || restEndTime === undefined) {

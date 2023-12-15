@@ -146,7 +146,12 @@ export const callShowEvents = () => {
   if (eventInfos.length === 0) throw new Error("no events");
 
   const moldedEventInfos = eventInfos.map(({ title, date, startTime, endTime }) => {
-    return [title, date, startTime, endTime];
+    console.log(title, date, startTime, endTime);
+    const dateStr = Utilities.formatDate(new Date(date), "Asia/Tokyo", "MM/dd");
+    const startTimeStr = Utilities.formatDate(new Date(startTime), "Asia/Tokyo", "HH:mm");
+    const endTimeStr = Utilities.formatDate(new Date(endTime), "Asia/Tokyo", "HH:mm");
+    console.log(title, dateStr, startTimeStr, endTimeStr);
+    return [title, dateStr, startTimeStr, endTimeStr];
   });
 
   if (sheet.getLastRow() > 8) {

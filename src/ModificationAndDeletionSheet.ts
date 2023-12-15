@@ -1,4 +1,3 @@
-import { format } from "date-fns";
 
 import { PartTimerProfile } from "./JobSheet";
 import { createTitleFromEventInfo } from "./shift-changer";
@@ -143,12 +142,12 @@ export const getModificationInfos = (
     .filter((row) => !row.deletionFlag)
     .map((row) => {
       const title = row.title;
-      const date = format(row.date, "yyyy-MM-dd");
-      const startTime = format(row.startTime, "HH:mm");
-      const endTime = format(row.endTime, "HH:mm");
-      const newDate = format(row.newDate, "yyyy-MM-dd");
-      const newStartTime = format(row.newStartTime, "HH:mm");
-      const newEndTime = format(row.newEndTime, "HH:mm");
+      const date = row.date;
+      const startTime = row.startTime;
+      const endTime =row.endTime;
+      const newDate = row.newDate;
+      const newStartTime = row.newStartTime;
+      const newEndTime = row.newEndTime;
       const newWorkingStyle = row.newWorkingStyle;
       if (newWorkingStyle === undefined) throw new Error("new working style is not defined");
       if (row.newRestStartTime === undefined || row.newRestEndTime === undefined) {
@@ -192,9 +191,9 @@ export const getDeletionInfos = (
     .filter((row) => row.deletionFlag)
     .map((row) => {
       const title = row.title;
-      const date = format(row.date, "yyyy-MM-dd");
-      const startTime = format(row.startTime, "HH:mm");
-      const endTime = format(row.endTime, "HH:mm");
+      const date = row.date;
+      const startTime = row.startTime;
+      const endTime = row.endTime;
       return { title, date, startTime, endTime };
     });
 

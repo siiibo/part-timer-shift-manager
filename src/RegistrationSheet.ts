@@ -1,4 +1,3 @@
-import { format } from "date-fns";
 
 import { PartTimerProfile } from "./JobSheet";
 import { createTitleFromEventInfo } from "./shift-changer";
@@ -55,9 +54,9 @@ export const getRegistrationInfos = (
     .getRange(5, 1, sheet.getLastRow() - 4, sheet.getLastColumn())
     .getValues()
     .map((eventInfo) => {
-      const date = format(eventInfo[0] as Date, "yyyy-MM-dd");
-      const startTime = format(eventInfo[1] as Date, "HH:mm");
-      const endTime = format(eventInfo[2] as Date, "HH:mm");
+      const date = eventInfo[0] as Date;
+      const startTime = eventInfo[1] as Date;
+      const endTime = eventInfo[2] as Date;
       const workingStyle = eventInfo[5] as string;
       if (workingStyle === "") throw new Error("working style is not defined");
       if (eventInfo[3] === "" || eventInfo[4] === "") {

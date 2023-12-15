@@ -1,4 +1,3 @@
-import { format } from "date-fns";
 
 import { PartTimerProfile } from "./JobSheet";
 import { createTitleFromEventInfo } from "./shift-changer";

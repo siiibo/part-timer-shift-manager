@@ -1,3 +1,4 @@
+import { format } from "date-fns";
 import { addWeeks } from "date-fns";
 
 import { getConfig } from "./config";
@@ -103,8 +104,15 @@ const modifyEvent = (
   event.setTitle(newTitle);
 };
 
-const getStartEndDate = ({ startTime, endTime }: EventInfo): [Date, Date] => {
-  return [startTime, endTime];
+const getStartEndDate = ({ date,startTime, endTime }: EventInfo): [Date, Date] => {
+  startTime.setFullYear(date.getFullYear());
+  startTime.setMonth(date.getMonth());
+  startTime.setDate(date.getDate());
+
+  endTime.setFullYear(date.getFullYear());
+  endTime.setMonth(date.getMonth());
+  endTime.setDate(date.getDate());
+    return [startTime, endTime];
 }
 
 const deletion = (deletionInfos: EventInfo[], userEmail: string) => {

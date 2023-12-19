@@ -61,7 +61,7 @@ const registerEvent = (eventInfo: EventInfo, userEmail: string) => {
 };
 
 const showEvents = (userEmail: string, startDate: Date): EventInfo[] => {
-  const endDate = addWeeks(startDate, 1);
+  const endDate = addWeeks(startDate, 4);
   const calendar = getCalendar();
   const events = calendar.getEvents(startDate, endDate).filter((event) => isEventGuest(event, userEmail));
   const eventInfos = events.map((event) => {

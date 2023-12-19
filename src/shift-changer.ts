@@ -147,9 +147,9 @@ export const callShowEvents = () => {
 
   const moldedEventInfos = eventInfos.map(({ title, date, startTime, endTime }) => {
     console.log(title, date, startTime, endTime);
-    const dateStr = Utilities.formatDate(new Date(date), "Asia/Tokyo", "MM/dd");
-    const startTimeStr = Utilities.formatDate(new Date(startTime), "Asia/Tokyo", "HH:mm");
-    const endTimeStr = Utilities.formatDate(new Date(endTime), "Asia/Tokyo", "HH:mm");
+    const dateStr = Utilities.formatDate(new Date(date), "JST", "MM/dd");
+    const startTimeStr = Utilities.formatDate(new Date(startTime), "JST", "HH:mm");
+    const endTimeStr = Utilities.formatDate(new Date(endTime), "JST", "HH:mm");
     console.log(title, dateStr, startTimeStr, endTimeStr);
     return [title, dateStr, startTimeStr, endTimeStr];
   });
@@ -158,6 +158,7 @@ export const callShowEvents = () => {
     sheet.getRange(9, 1, sheet.getLastRow() - 8, sheet.getLastColumn()).clearContent();
   }
 
+  console.log(moldedEventInfos);
   sheet.getRange(9, 1, moldedEventInfos.length, moldedEventInfos[0].length).setValues(moldedEventInfos);
 };
 

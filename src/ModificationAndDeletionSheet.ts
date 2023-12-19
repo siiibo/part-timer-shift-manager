@@ -102,12 +102,12 @@ export const getModificationAndDeletionSheetValues = (
     .map((row) => {
       return {
         title: row[0] as string,
-        date: row[1],
-        startTime: row[2],
-        endTime: row[3],
-        newDate: row[4],
-        newStartTime: row[5],
-        newEndTime: row[6],
+        date: row[1] as Date,
+        startTime: row[2] as Date,
+        endTime: row[3] as Date,
+        newDate: row[4] as Date,
+        newStartTime: row[5] as Date,
+        newEndTime: row[6] as Date,
         newRestStartTime: row[7] === "" ? undefined : row[7],
         newRestEndTime: row[8] === "" ? undefined : row[8],
         newWorkingStyle: row[9] as string,

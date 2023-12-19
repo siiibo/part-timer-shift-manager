@@ -1,4 +1,3 @@
-import { format } from "date-fns";
 import { addWeeks } from "date-fns";
 
 import { getConfig } from "./config";
@@ -66,9 +65,9 @@ const showEvents = (userEmail: string, startDate: Date): EventInfo[] => {
   const events = calendar.getEvents(startDate, endDate).filter((event) => isEventGuest(event, userEmail));
   const eventInfos = events.map((event) => {
     const title = event.getTitle();
-    const date =event.getStartTime() as Date;
-    const startTime = event.getStartTime() as Date;
-    const endTime = event.getEndTime() as Date;
+    const date = new Date(event.getStartTime().getTime());
+    const startTime = new Date(event.getStartTime().getTime());
+    const endTime = new Date(event.getEndTime().getTime());
 
     return { title, date, startTime, endTime };
   });
@@ -104,16 +103,13 @@ const modifyEvent = (
   event.setTitle(newTitle);
 };
 
-const getStartEndDate = ({ date,startTime, endTime }: EventInfo): [Date, Date] => {
-  startTime.setFullYear(date.getFullYear());
-  startTime.setMonth(date.getMonth());
-  startTime.setDate(date.getDate());
-
-  endTime.setFullYear(date.getFullYear());
-  endTime.setMonth(date.getMonth());
-  endTime.setDate(date.getDate());
-    return [startTime, endTime];
-}
+const getStartEndDate = ({ date, startTime, endTime }: EventInfo): [Date, Date] => {
+  const startDate = new Date(
+    `${date.getMonth() + 1}/${date.getDate()} ${startTime.getHours()}:${startTime.getMinutes()}`
+  );
+  const endDate = new Date(`${date.getMonth() + 1}/${date.getDate()} ${endTime.getHours()}:${endTime.getMinutes()}`);
+  return [startDate, endDate];
+};
 
 const deletion = (deletionInfos: EventInfo[], userEmail: string) => {
   const calendar = getCalendar();

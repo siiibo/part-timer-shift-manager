@@ -1,4 +1,3 @@
-
 import { PartTimerProfile } from "./JobSheet";
 import { createTitleFromEventInfo } from "./shift-changer";
 import { EventInfo } from "./shift-changer-api";
@@ -54,9 +53,9 @@ export const getRegistrationInfos = (
     .getRange(5, 1, sheet.getLastRow() - 4, sheet.getLastColumn())
     .getValues()
     .map((eventInfo) => {
-      const date = eventInfo[0] as Date;
-      const startTime = eventInfo[1] as Date;
-      const endTime = eventInfo[2] as Date;
+      const date = eventInfo[0];
+      const startTime = eventInfo[1];
+      const endTime = eventInfo[2];
       const workingStyle = eventInfo[5] as string;
       if (workingStyle === "") throw new Error("working style is not defined");
       if (eventInfo[3] === "" || eventInfo[4] === "") {

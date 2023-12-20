@@ -156,7 +156,6 @@ export const callShowEvents = () => {
     sheet.getRange(9, 1, sheet.getLastRow() - 8, sheet.getLastColumn()).clearContent();
   }
 
-  console.log(moldedEventInfos);
   sheet.getRange(9, 1, moldedEventInfos.length, moldedEventInfos[0].length).setValues(moldedEventInfos);
 };
 
@@ -178,7 +177,6 @@ export const callModificationAndDeletion = () => {
   const valuesForOperation = sheetValues.filter((row) => row.deletionFlag || row.newDate);
   const modificationInfos = getModificationInfos(valuesForOperation, partTimerProfile);
   const deletionInfos = getDeletionInfos(valuesForOperation);
-  console.log(deletionInfos[0]);
 
   const payload = {
     apiId: "shift-changer",

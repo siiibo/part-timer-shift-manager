@@ -22,7 +22,7 @@ export const setValuesModificationAndDeletionSheet = (sheet: GoogleAppsScript.Sp
   const commentCell = sheet.getRange("A2");
   commentCell.setBackground("#f0f8ff");
 
-  const description2 = "本日以降の日付を下の色付きセルに記入してください。一ヶ月後までの予定が表示されます。";
+  const description2 = "本日以降の日付を下の色付きセルに記入してください。一週間後までの予定が表示されます。";
   sheet.getRange("A4").setValue(description2).setFontWeight("bold");
   const dateCell = sheet.getRange("A5");
   dateCell.setBackground("#f0f8ff");

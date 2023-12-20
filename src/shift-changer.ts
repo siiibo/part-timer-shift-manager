@@ -79,7 +79,7 @@ export const callRegistration = () => {
   const operationType: OperationType = "registration";
   const comment = sheet.getRange("A2").getValue();
   const registrationInfos = getRegistrationInfos(sheet, partTimerProfile);
-
+  console.log(registrationInfos);
   const payload = {
     apiId: "shift-changer",
     operationType: operationType,

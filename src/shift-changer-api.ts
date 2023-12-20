@@ -104,8 +104,11 @@ const modifyEvent = (
 };
 
 const getStartEndDate = ({ date, startTime, endTime }: EventInfo): [Date, Date] => {
-  const startDate = new Date(`${date} ${startTime}`);
-  const endDate = new Date(`${date} ${endTime}`);
+  const tmpDate=new Date(date);
+  const tmpStartTime=new Date(startTime);
+  const tmpEndTime=new Date(endTime);
+  const startDate = new Date(`${tmpDate.getDay()+1} ${tmpDate.getDate()}, ${tmpDate.getFullYear()} ${tmpStartTime.getHours()}:${tmpStartTime.getMinutes()}`);
+  const endDate = new Date(`${tmpDate.getDate()+1} ${tmpDate.getDate()}, ${tmpDate.getFullYear()} ${tmpEndTime.getHours()}:${tmpEndTime.getMinutes()}`);
   return [startDate, endDate];
 };
 

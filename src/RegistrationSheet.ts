@@ -56,8 +56,20 @@ export const getRegistrationInfos = (
       const date = new Date(eventInfo[0]);
       const startDate = new Date(eventInfo[1]);
       const endDate = new Date(eventInfo[2]);
-      const startTime= new Date(date.getFullYear(), date.getMonth(), date.getDate(), startDate.getHours(), startDate.getMinutes());
-      const endTime= new Date(date.getFullYear(), date.getMonth(), date.getDate(), endDate.getHours(), endDate.getMinutes());
+      const startTime = new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate(),
+        startDate.getHours(),
+        startDate.getMinutes()
+      );
+      const endTime = new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate(),
+        endDate.getHours(),
+        endDate.getMinutes()
+      );
       const workingStyle = eventInfo[5] as string;
       if (workingStyle === "") throw new Error("working style is not defined");
       if (eventInfo[3] === "" || eventInfo[4] === "") {

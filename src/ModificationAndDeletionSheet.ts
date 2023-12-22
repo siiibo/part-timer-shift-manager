@@ -142,17 +142,41 @@ export const getModificationInfos = (
     .map((row) => {
       const title = row.title;
       const date = row.date;
-      const startDate= new Date(row.startTime);
-      const startTime = new Date(date.getFullYear(), date.getMonth(), date.getDate(), startDate.getHours(), startDate.getMinutes());
+      const startDate = new Date(row.startTime);
+      const startTime = new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate(),
+        startDate.getHours(),
+        startDate.getMinutes()
+      );
       const endDate = new Date(row.endTime);
-      const endTime= new Date(date.getFullYear(), date.getMonth(), date.getDate(), endDate.getHours(), endDate.getMinutes());
+      const endTime = new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate(),
+        endDate.getHours(),
+        endDate.getMinutes()
+      );
       const newDate = row.newDate;
-      const newStartDate= new Date(row.newStartTime);
-      const newStartTime= new Date(newDate.getFullYear(), newDate.getMonth(), newDate.getDate(), newStartDate.getHours(), newStartDate.getMinutes());
+      const newStartDate = new Date(row.newStartTime);
+      const newStartTime = new Date(
+        newDate.getFullYear(),
+        newDate.getMonth(),
+        newDate.getDate(),
+        newStartDate.getHours(),
+        newStartDate.getMinutes()
+      );
       const newEndDate = new Date(row.newEndTime);
-      const newEndTime = new Date(newDate.getFullYear(), newDate.getMonth(), newDate.getDate(), newEndDate.getHours(), newEndDate.getMinutes());
+      const newEndTime = new Date(
+        newDate.getFullYear(),
+        newDate.getMonth(),
+        newDate.getDate(),
+        newEndDate.getHours(),
+        newEndDate.getMinutes()
+      );
       const newWorkingStyle = row.newWorkingStyle;
-      console.log("Modification",date,typeof(date),startTime, endTime, newStartTime, newEndTime, newWorkingStyle);
+      console.log("Modification", date, typeof date, startTime, endTime, newStartTime, newEndTime, newWorkingStyle);
       if (newWorkingStyle === undefined) throw new Error("new working style is not defined");
       if (row.newRestStartTime === undefined || row.newRestEndTime === undefined) {
         const newTitle = createTitleFromEventInfo({ workingStyle: newWorkingStyle }, partTimerProfile);
@@ -198,9 +222,21 @@ export const getDeletionInfos = (
       const title = row.title;
       const date = row.date;
       const startDate = row.startTime;
-      const startTime= new Date(date.getFullYear(), date.getMonth(), date.getDate(), startDate.getHours(), startDate.getMinutes());
+      const startTime = new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate(),
+        startDate.getHours(),
+        startDate.getMinutes()
+      );
       const endDate = row.endTime;
-      const endTime= new Date(date.getFullYear(), date.getMonth(), date.getDate(), endDate.getHours(), endDate.getMinutes());
+      const endTime = new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate(),
+        endDate.getHours(),
+        endDate.getMinutes()
+      );
       return { title, date, startTime, endTime };
     });
 

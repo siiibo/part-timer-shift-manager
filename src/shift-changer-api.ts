@@ -95,10 +95,10 @@ const modifyEvent = (
 ) => {
   const [startDate, endDate] = getStartEndDate(eventInfo.previousEventInfo);
   const newTitle = eventInfo.newEventInfo.title;
-  const [newStartDate, nweEndDate] = getStartEndDate(eventInfo.newEventInfo);
+  const [newStartDate, newEndDate] = getStartEndDate(eventInfo.newEventInfo);
   const event = calendar.getEvents(startDate, endDate).find((event) => isEventGuest(event, userEmail));
   if (!event) return;
-  event.setTime(newStartDate, nweEndDate);
+  event.setTime(newStartDate, newEndDate);
   event.setTitle(newTitle);
 };
 

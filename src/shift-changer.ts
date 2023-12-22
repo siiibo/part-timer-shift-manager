@@ -18,6 +18,7 @@ type SheetType = "registration" | "modificationAndDeletion";
 type OperationType = "registration" | "modificationAndDeletion" | "showEvents";
 
 export const doPost = (e: GoogleAppsScript.Events.DoPost): GoogleAppsScript.Content.TextOutput => {
+  console.log("aaa");
   if (e.parameter.apiId === "shift-changer") {
     const response = shiftChanger(e) ?? "";
     return ContentService.createTextOutput(response).setMimeType(ContentService.MimeType.JSON);

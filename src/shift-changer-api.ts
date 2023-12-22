@@ -56,6 +56,7 @@ const registration = (userEmail: string, registrationInfos: EventInfo[]) => {
 const registerEvent = (eventInfo: EventInfo, userEmail: string) => {
   const calendar = getCalendar();
   const [startDate, endDate] = getStartEndDate(eventInfo);
+  console.log(startDate, endDate,typeof(startDate),typeof(endDate));
   calendar.createEvent(eventInfo.title, startDate, endDate, { guests: userEmail });
 };
 
@@ -104,11 +105,9 @@ const modifyEvent = (
 };
 
 const getStartEndDate = ({ date, startTime, endTime }: EventInfo): [Date, Date] => {
-  const tmpDate=new Date(date);
-  const tmpStartTime=new Date(startTime);
-  const tmpEndTime=new Date(endTime);
-  const startDate = new Date(`${tmpDate.getDay()+1} ${tmpDate.getDate()}, ${tmpDate.getFullYear()} ${tmpStartTime.getHours()}:${tmpStartTime.getMinutes()}`);
-  const endDate = new Date(`${tmpDate.getDate()+1} ${tmpDate.getDate()}, ${tmpDate.getFullYear()} ${tmpEndTime.getHours()}:${tmpEndTime.getMinutes()}`);
+  const startDate=new Date(startTime);
+  const endDate=new Date(endTime);
+  console.log(startDate, endDate,typeof(startDate),typeof(endDate));
   return [startDate, endDate];
 };
 

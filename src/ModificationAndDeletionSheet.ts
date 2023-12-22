@@ -183,7 +183,7 @@ export const getModificationInfos = (
           previousEventInfo: { title, date, startTime, endTime },
           newEventInfo: { title: newTitle, date: newDate, startTime: newStartTime, endTime: newEndTime },
         };
-      } else {Ï
+      } else {
         const newRestStartTime = row.newRestStartTime;
         const newRestEndTime = row.newRestEndTime;
         const newTitle = createTitleFromEventInfo(

@@ -146,9 +146,9 @@ export const callShowEvents = () => {
 
   const moldedEventInfos = eventInfos.map(({ title, date, startTime, endTime }) => {
     const dateStr = date;
-    const startTimeStr = startTime;
-    const endTimeStr = endTime;
-    return [title, dateStr, startTimeStr, endTimeStr];
+    const startTimeDate = startTime;
+    const endTimeDate = endTime;
+    return [title, dateStr, startTimeDate, endTimeDate];
   });
 
   if (sheet.getLastRow() > 8) {
@@ -282,10 +282,12 @@ const getManagerSlackIds = (managerEmails: string[], client: SlackClient): strin
 const createMessageFromEventInfo = (eventInfo: EventInfo) => {
   const date = format(new Date(eventInfo.date), "MM/dd");
   const { workingStyle, restStartTime, restEndTime } = getEventInfoFromTitle(eventInfo.title);
+  const startTime = format(eventInfo.startTime, "HH:mm");
+  const endTime = format(eventInfo.endTime, "HH:mm");
   if (restStartTime === undefined || restEndTime === undefined)
-    return `【${workingStyle}】 ${date} ${eventInfo.startTime}~${eventInfo.endTime}`;
+    return `【${workingStyle}】 ${date} ${startTime}~${endTime}`;
   else
-    return `【${workingStyle}】 ${date} ${eventInfo.startTime}~${eventInfo.endTime} (休憩: ${restStartTime}~${restEndTime})`;
+    return `【${workingStyle}】 ${date} ${startTime}~${endTime} (休憩: ${restStartTime}~${restEndTime})`;
 };
 const getEventInfoFromTitle = (
   title: string

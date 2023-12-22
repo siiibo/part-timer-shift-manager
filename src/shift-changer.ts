@@ -18,7 +18,6 @@ type SheetType = "registration" | "modificationAndDeletion";
 type OperationType = "registration" | "modificationAndDeletion" | "showEvents";
 
 export const doPost = (e: GoogleAppsScript.Events.DoPost): GoogleAppsScript.Content.TextOutput => {
-  console.log("aaa");
   if (e.parameter.apiId === "shift-changer") {
     const response = shiftChanger(e) ?? "";
     return ContentService.createTextOutput(response).setMimeType(ContentService.MimeType.JSON);
@@ -80,7 +79,6 @@ export const callRegistration = () => {
   const operationType: OperationType = "registration";
   const comment = sheet.getRange("A2").getValue();
   const registrationInfos = getRegistrationInfos(sheet, partTimerProfile);
-  console.log(registrationInfos);
   const payload = {
     apiId: "shift-changer",
     operationType: operationType,
@@ -178,7 +176,7 @@ export const callModificationAndDeletion = () => {
   const valuesForOperation = sheetValues.filter((row) => row.deletionFlag || row.newDate);
   const modificationInfos = getModificationInfos(valuesForOperation, partTimerProfile);
   const deletionInfos = getDeletionInfos(valuesForOperation);
-
+  console.log(modificationInfos, deletionInfos);
   const payload = {
     apiId: "shift-changer",
     operationType: operationType,

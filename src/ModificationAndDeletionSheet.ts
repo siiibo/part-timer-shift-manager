@@ -142,12 +142,17 @@ export const getModificationInfos = (
     .map((row) => {
       const title = row.title;
       const date = row.date;
-      const startTime = row.startTime;
-      const endTime = row.endTime;
+      const startDate= new Date(row.startTime);
+      const startTime = new Date(date.getFullYear(), date.getMonth(), date.getDate(), startDate.getHours(), startDate.getMinutes());
+      const endDate = new Date(row.endTime);
+      const endTime= new Date(date.getFullYear(), date.getMonth(), date.getDate(), endDate.getHours(), endDate.getMinutes());
       const newDate = row.newDate;
-      const newStartTime = row.newStartTime;
-      const newEndTime = row.newEndTime;
+      const newStartDate= new Date(row.newStartTime);
+      const newStartTime= new Date(newDate.getFullYear(), newDate.getMonth(), newDate.getDate(), newStartDate.getHours(), newStartDate.getMinutes());
+      const newEndDate = new Date(row.newEndTime);
+      const newEndTime = new Date(newDate.getFullYear(), newDate.getMonth(), newDate.getDate(), newEndDate.getHours(), newEndDate.getMinutes());
       const newWorkingStyle = row.newWorkingStyle;
+      console.log("Modification",date,typeof(date),startTime, endTime, newStartTime, newEndTime, newWorkingStyle);
       if (newWorkingStyle === undefined) throw new Error("new working style is not defined");
       if (row.newRestStartTime === undefined || row.newRestEndTime === undefined) {
         const newTitle = createTitleFromEventInfo({ workingStyle: newWorkingStyle }, partTimerProfile);
@@ -156,6 +161,7 @@ export const getModificationInfos = (
           newEventInfo: { title: newTitle, date: newDate, startTime: newStartTime, endTime: newEndTime },
         };
       } else {
+        //NOTE: 休憩時間は、タイトルしか使わないのでDate型に変換しない
         const newRestStartTime = row.newRestStartTime;
         const newRestEndTime = row.newRestEndTime;
         const newTitle = createTitleFromEventInfo(
@@ -191,8 +197,10 @@ export const getDeletionInfos = (
     .map((row) => {
       const title = row.title;
       const date = row.date;
-      const startTime = row.startTime;
-      const endTime = row.endTime;
+      const startDate = row.startTime;
+      const startTime= new Date(date.getFullYear(), date.getMonth(), date.getDate(), startDate.getHours(), startDate.getMinutes());
+      const endDate = row.endTime;
+      const endTime= new Date(date.getFullYear(), date.getMonth(), date.getDate(), endDate.getHours(), endDate.getMinutes());
       return { title, date, startTime, endTime };
     });
 

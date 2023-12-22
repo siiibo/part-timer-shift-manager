@@ -56,7 +56,6 @@ const registration = (userEmail: string, registrationInfos: EventInfo[]) => {
 const registerEvent = (eventInfo: EventInfo, userEmail: string) => {
   const calendar = getCalendar();
   const [startDate, endDate] = getStartEndDate(eventInfo);
-  console.log(startDate, endDate,typeof(startDate),typeof(endDate));
   calendar.createEvent(eventInfo.title, startDate, endDate, { guests: userEmail });
 };
 
@@ -95,19 +94,21 @@ const modifyEvent = (
   userEmail: string
 ) => {
   const [startDate, endDate] = getStartEndDate(eventInfo.previousEventInfo);
-
+  console.log("時間表示:",startDate, endDate,typeof startDate, typeof endDate);
   const newTitle = eventInfo.newEventInfo.title;
-
+  const [newStartDate,nweEndDate] = getStartEndDate(eventInfo.newEventInfo);
+  console.log(newStartDate,newStartDate,typeof newStartDate, typeof nweEndDate);
   const event = calendar.getEvents(startDate, endDate).find((event) => isEventGuest(event, userEmail));
+  console.log("イベント表示:" ,event,calendar.getEvents(startDate, endDate));
   if (!event) return;
-  event.setTime(startDate, endDate);
+  event.setTime(newStartDate, nweEndDate);
   event.setTitle(newTitle);
+  console.log(event.getTitle(),event.getStartTime(),event.getEndTime());
 };
 
-const getStartEndDate = ({ date, startTime, endTime }: EventInfo): [Date, Date] => {
-  const startDate=new Date(startTime);
-  const endDate=new Date(endTime);
-  console.log(startDate, endDate,typeof(startDate),typeof(endDate));
+const getStartEndDate = ({ startTime, endTime }: EventInfo): [Date, Date] => {
+  const startDate = new Date(startTime);
+  const endDate = new Date(endTime);
   return [startDate, endDate];
 };
 

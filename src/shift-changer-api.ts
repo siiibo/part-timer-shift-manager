@@ -55,7 +55,7 @@ const registration = (userEmail: string, registrationInfos: EventInfo[]) => {
 
 const registerEvent = (eventInfo: EventInfo, userEmail: string) => {
   const calendar = getCalendar();
-  const [startDate, endDate] = [new Date(eventInfo.startTime),new Date(eventInfo.endTime)];
+  const [startDate, endDate] = [new Date(eventInfo.startTime), new Date(eventInfo.endTime)];
   calendar.createEvent(eventInfo.title, startDate, endDate, { guests: userEmail });
 };
 
@@ -93,15 +93,20 @@ const modifyEvent = (
   calendar: GoogleAppsScript.Calendar.Calendar,
   userEmail: string
 ) => {
-  const [startDate, endDate] =[new Date(eventInfo.previousEventInfo.startTime),new Date(eventInfo.previousEventInfo.endTime)];
+  const [startDate, endDate] = [
+    new Date(eventInfo.previousEventInfo.startTime),
+    new Date(eventInfo.previousEventInfo.endTime),
+  ];
   const newTitle = eventInfo.newEventInfo.title;
-  const [newStartDate, newEndDate] = [new Date(eventInfo.newEventInfo.startTime),new Date(eventInfo.newEventInfo.endTime)];
+  const [newStartDate, newEndDate] = [
+    new Date(eventInfo.newEventInfo.startTime),
+    new Date(eventInfo.newEventInfo.endTime),
+  ];
   const event = calendar.getEvents(startDate, endDate).find((event) => isEventGuest(event, userEmail));
   if (!event) return;
   event.setTime(newStartDate, newEndDate);
   event.setTitle(newTitle);
 };
-
 
 const deletion = (deletionInfos: EventInfo[], userEmail: string) => {
   const calendar = getCalendar();
@@ -109,7 +114,7 @@ const deletion = (deletionInfos: EventInfo[], userEmail: string) => {
 };
 
 const deleteEvent = (eventInfo: EventInfo, calendar: GoogleAppsScript.Calendar.Calendar, userEmail: string) => {
-  const [startDate, endDate] =[new Date(eventInfo.startTime),new Date(eventInfo.endTime)];
+  const [startDate, endDate] = [new Date(eventInfo.startTime), new Date(eventInfo.endTime)];
   const event = calendar.getEvents(startDate, endDate).find((event) => isEventGuest(event, userEmail));
   if (!event) return;
   event.deleteEvent();

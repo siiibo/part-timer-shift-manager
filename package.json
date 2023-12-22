@@ -13,6 +13,7 @@
     "postinstall": "mkdir -p build && cp appsscript.json build/appsscript.json"
   },
   "dependencies": {
+    "@effect/schema": "^0.56.0",
     "@hi-se/web-api": "https://gitpkg.now.sh/hi-se/node-slack-sdk/packages/web-api?ab078b145617d511327a8f74fe34f1d4695ff893",
     "date-fns": "^2.28.0",
     "zod": "^3.21.4"

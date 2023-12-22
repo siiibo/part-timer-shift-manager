@@ -145,7 +145,10 @@ export const callShowEvents = () => {
   if (eventInfos.length === 0) throw new Error("no events");
 
   const moldedEventInfos = eventInfos.map(({ title, date, startTime, endTime }) => {
-    return [title, date, startTime, endTime];
+    const dateStr = Utilities.formatDate(new Date(date), "JST", "MM/dd");
+    const startTimeStr = Utilities.formatDate(new Date(startTime), "JST", "HH:mm");
+    const endTimeStr = Utilities.formatDate(new Date(endTime), "JST", "HH:mm");
+    return [title, dateStr, startTimeStr, endTimeStr];
   });
 
   if (sheet.getLastRow() > 8) {
@@ -276,7 +279,7 @@ const getManagerSlackIds = (managerEmails: string[], client: SlackClient): strin
   return managerSlackIds;
 };
 const createMessageFromEventInfo = (eventInfo: EventInfo) => {
-  const date = format(new Date(eventInfo.date), "MM/dd");
+  const date = format(eventInfo.date, "MM/dd");
   const { workingStyle, restStartTime, restEndTime } = getEventInfoFromTitle(eventInfo.title);
   const startTime = format(eventInfo.startTime, "HH:mm");
   const endTime = format(eventInfo.endTime, "HH:mm");

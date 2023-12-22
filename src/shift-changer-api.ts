@@ -36,9 +36,9 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
       const eventInfos = showEvents(userEmail, startDate);
       const formattedEvents = eventInfos.map((event) => {
         const title = event.title;
-        const date = Utilities.formatDate(event.date, "JST", "MM/dd");
-        const startTime = Utilities.formatDate(event.startTime, "JST", "HH:mm");
-        const endTime = Utilities.formatDate(event.endTime, "JST", "HH:mm");
+        const date = event.date;
+        const startTime =event.startTime;
+        const endTime =event.endTime;
         return { title, date, startTime, endTime };
       });
       return JSON.stringify(formattedEvents);
@@ -114,7 +114,7 @@ const deletion = (deletionInfos: EventInfo[], userEmail: string) => {
 };
 
 const deleteEvent = (eventInfo: EventInfo, calendar: GoogleAppsScript.Calendar.Calendar, userEmail: string) => {
-  const [startDate, endDate] = [new Date(eventInfo.startTime), new Date(eventInfo.endTime)];
+  const [startDate, endDate] = [new Date(eventInfo.startTime),new Date(eventInfo.endTime)];
   const event = calendar.getEvents(startDate, endDate).find((event) => isEventGuest(event, userEmail));
   if (!event) return;
   event.deleteEvent();

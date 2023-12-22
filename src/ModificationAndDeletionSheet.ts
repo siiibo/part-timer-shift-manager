@@ -183,8 +183,7 @@ export const getModificationInfos = (
           previousEventInfo: { title, date, startTime, endTime },
           newEventInfo: { title: newTitle, date: newDate, startTime: newStartTime, endTime: newEndTime },
         };
-      } else {
-        //NOTE: 休憩時間は、タイトルしか使わないのでDate型に変換しない
+      } else {Ï
         const newRestStartTime = row.newRestStartTime;
         const newRestEndTime = row.newRestEndTime;
         const newTitle = createTitleFromEventInfo(

@@ -176,7 +176,6 @@ export const getModificationInfos = (
         newEndDate.getMinutes()
       );
       const newWorkingStyle = row.newWorkingStyle;
-      console.log("Modification", date, typeof date, startTime, endTime, newStartTime, newEndTime, newWorkingStyle);
       if (newWorkingStyle === undefined) throw new Error("new working style is not defined");
       if (row.newRestStartTime === undefined || row.newRestEndTime === undefined) {
         const newTitle = createTitleFromEventInfo({ workingStyle: newWorkingStyle }, partTimerProfile);

@@ -176,7 +176,6 @@ export const callModificationAndDeletion = () => {
   const valuesForOperation = sheetValues.filter((row) => row.deletionFlag || row.newDate);
   const modificationInfos = getModificationInfos(valuesForOperation, partTimerProfile);
   const deletionInfos = getDeletionInfos(valuesForOperation);
-  console.log(modificationInfos, deletionInfos);
   const payload = {
     apiId: "shift-changer",
     operationType: operationType,

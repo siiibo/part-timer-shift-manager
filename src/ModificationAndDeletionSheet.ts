@@ -142,7 +142,7 @@ export const getModificationInfos = (
     .map((row) => {
       const title = row.title;
       const date = row.date;
-      const startDate = new Date(row.startTime);
+      const startDate = row.startTime;
       const startTime = new Date(
         date.getFullYear(),
         date.getMonth(),
@@ -150,7 +150,7 @@ export const getModificationInfos = (
         startDate.getHours(),
         startDate.getMinutes()
       );
-      const endDate = new Date(row.endTime);
+      const endDate = row.endTime;
       const endTime = new Date(
         date.getFullYear(),
         date.getMonth(),
@@ -159,7 +159,7 @@ export const getModificationInfos = (
         endDate.getMinutes()
       );
       const newDate = row.newDate;
-      const newStartDate = new Date(row.newStartTime);
+      const newStartDate = row.newStartTime;
       const newStartTime = new Date(
         newDate.getFullYear(),
         newDate.getMonth(),
@@ -167,7 +167,7 @@ export const getModificationInfos = (
         newStartDate.getHours(),
         newStartDate.getMinutes()
       );
-      const newEndDate = new Date(row.newEndTime);
+      const newEndDate = row.newEndTime;
       const newEndTime = new Date(
         newDate.getFullYear(),
         newDate.getMonth(),

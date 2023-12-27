@@ -1,8 +1,20 @@
+import * as S from "@effect/schema/Schema";
 import { addWeeks } from "date-fns";
 
 import { getConfig } from "./config";
 
-export type EventInfo = { title: string; date: Date; startTime: Date; endTime: Date };
+export const EventInfo = S.struct({
+  title: S.string,
+  date: S.Date,
+  startTime: S.Date,
+  endTime: S.Date,
+});
+export type EventInfo = S.Schema.To<typeof EventInfo>;
+
+const ModificationInfo = S.struct({
+  previousEventInfo: EventInfo,
+  newEventInfo: EventInfo,
+});
 
 const getCalendar = () => {
   const { CALENDAR_ID } = getConfig();
@@ -20,13 +32,14 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
   const userEmail = e.parameter.userEmail;
   switch (operationType) {
     case "registration": {
-      const registrationInfos = JSON.parse(e.parameter.registrationInfos);
+      const registrationInfos = S.parseSync(EventInfo.pipe(S.array, S.mutable))(e.parameter.registrationInfos);
       registration(userEmail, registrationInfos);
       break;
     }
     case "modificationAndDeletion": {
-      const modificationInfos = JSON.parse(e.parameter.modificationInfos);
-      const deletionInfos = JSON.parse(e.parameter.deletionInfos);
+      const modificationInfos = S.parseSync(ModificationInfo.pipe(S.array, S.mutable))(e.parameter.modificationInfos);
+      const deletionInfos = S.parseSync(EventInfo.pipe(S.array, S.mutable))(e.parameter.deletionInfos);
+
       modification(modificationInfos, userEmail);
       deletion(deletionInfos, userEmail);
       break;
@@ -37,8 +50,8 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
       const formattedEvents = eventInfos.map((event) => {
         const title = event.title;
         const date = event.date;
-        const startTime =event.startTime;
-        const endTime =event.endTime;
+        const startTime = event.startTime;
+        const endTime = event.endTime;
         return { title, date, startTime, endTime };
       });
       return JSON.stringify(formattedEvents);
@@ -55,7 +68,7 @@ const registration = (userEmail: string, registrationInfos: EventInfo[]) => {
 
 const registerEvent = (eventInfo: EventInfo, userEmail: string) => {
   const calendar = getCalendar();
-  const [startDate, endDate] = [new Date(eventInfo.startTime), new Date(eventInfo.endTime)];
+  const [startDate, endDate] = [eventInfo.startTime, eventInfo.endTime];
   calendar.createEvent(eventInfo.title, startDate, endDate, { guests: userEmail });
 };
 
@@ -93,15 +106,9 @@ const modifyEvent = (
   calendar: GoogleAppsScript.Calendar.Calendar,
   userEmail: string
 ) => {
-  const [startDate, endDate] = [
-    new Date(eventInfo.previousEventInfo.startTime),
-    new Date(eventInfo.previousEventInfo.endTime),
-  ];
+  const [startDate, endDate] = [eventInfo.previousEventInfo.startTime, eventInfo.previousEventInfo.endTime];
   const newTitle = eventInfo.newEventInfo.title;
-  const [newStartDate, newEndDate] = [
-    new Date(eventInfo.newEventInfo.startTime),
-    new Date(eventInfo.newEventInfo.endTime),
-  ];
+  const [newStartDate, newEndDate] = [eventInfo.newEventInfo.startTime, eventInfo.newEventInfo.endTime];
   const event = calendar.getEvents(startDate, endDate).find((event) => isEventGuest(event, userEmail));
   if (!event) return;
   event.setTime(newStartDate, newEndDate);
@@ -114,7 +121,7 @@ const deletion = (deletionInfos: EventInfo[], userEmail: string) => {
 };
 
 const deleteEvent = (eventInfo: EventInfo, calendar: GoogleAppsScript.Calendar.Calendar, userEmail: string) => {
-  const [startDate, endDate] = [new Date(eventInfo.startTime),new Date(eventInfo.endTime)];
+  const [startDate, endDate] = [eventInfo.startTime, eventInfo.endTime];
   const event = calendar.getEvents(startDate, endDate).find((event) => isEventGuest(event, userEmail));
   if (!event) return;
   event.deleteEvent();

@@ -16,6 +16,7 @@ const ModificationInfo = S.struct({
   newEventInfo: EventInfo,
 });
 
+
 const getCalendar = () => {
   const { CALENDAR_ID } = getConfig();
   const calendar = CalendarApp.getCalendarById(CALENDAR_ID);
@@ -32,13 +33,13 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
   const userEmail = e.parameter.userEmail;
   switch (operationType) {
     case "registration": {
-      const registrationInfos = S.parseSync(EventInfo.pipe(S.array, S.mutable))(e.parameter.registrationInfos);
+      const registrationInfos = S.parseSync(EventInfo.pipe(S.array, S.mutable))(JSON.parse(e.parameter.registrationInfos));
       registration(userEmail, registrationInfos);
       break;
     }
     case "modificationAndDeletion": {
-      const modificationInfos = S.parseSync(ModificationInfo.pipe(S.array, S.mutable))(e.parameter.modificationInfos);
-      const deletionInfos = S.parseSync(EventInfo.pipe(S.array, S.mutable))(e.parameter.deletionInfos);
+      const modificationInfos = S.parseSync(ModificationInfo.pipe(S.array, S.mutable))(JSON.parse(e.parameter.modificationInfos));
+      const deletionInfos = S.parseSync(EventInfo.pipe(S.array, S.mutable))(JSON.parse(e.parameter.deletionInfos));
 
       modification(modificationInfos, userEmail);
       deletion(deletionInfos, userEmail);

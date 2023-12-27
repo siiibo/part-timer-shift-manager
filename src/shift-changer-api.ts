@@ -16,7 +16,6 @@ const ModificationInfo = S.struct({
   newEventInfo: EventInfo,
 });
 
-
 const getCalendar = () => {
   const { CALENDAR_ID } = getConfig();
   const calendar = CalendarApp.getCalendarById(CALENDAR_ID);
@@ -33,12 +32,16 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
   const userEmail = e.parameter.userEmail;
   switch (operationType) {
     case "registration": {
-      const registrationInfos = S.parseSync(EventInfo.pipe(S.array, S.mutable))(JSON.parse(e.parameter.registrationInfos));
+      const registrationInfos = S.parseSync(EventInfo.pipe(S.array, S.mutable))(
+        JSON.parse(e.parameter.registrationInfos)
+      );
       registration(userEmail, registrationInfos);
       break;
     }
     case "modificationAndDeletion": {
-      const modificationInfos = S.parseSync(ModificationInfo.pipe(S.array, S.mutable))(JSON.parse(e.parameter.modificationInfos));
+      const modificationInfos = S.parseSync(ModificationInfo.pipe(S.array, S.mutable))(
+        JSON.parse(e.parameter.modificationInfos)
+      );
       const deletionInfos = S.parseSync(EventInfo.pipe(S.array, S.mutable))(JSON.parse(e.parameter.deletionInfos));
 
       modification(modificationInfos, userEmail);
@@ -48,14 +51,7 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
     case "showEvents": {
       const startDate = new Date(e.parameter.startDate);
       const eventInfos = showEvents(userEmail, startDate);
-      const formattedEvents = eventInfos.map((event) => {
-        const title = event.title;
-        const date = event.date;
-        const startTime = event.startTime;
-        const endTime = event.endTime;
-        return { title, date, startTime, endTime };
-      });
-      return JSON.stringify(formattedEvents);
+      return JSON.stringify(eventInfos);
     }
   }
   return;

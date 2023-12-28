@@ -58,7 +58,7 @@ const showEvents = (userEmail: string, startDate: Date): EventInfo[] => {
   const events = calendar.getEvents(startDate, endDate).filter((event) => isEventGuest(event, userEmail));
   const eventInfos = events.map((event) => {
     const title = event.getTitle();
-    const date = Utilities.formatDate(event.getStartTime(), "JST", "MM/dd");
+    const date = Utilities.formatDate(event.getStartTime(), "JST", "yyyy/MM/dd");
     const startTime = Utilities.formatDate(event.getStartTime(), "JST", "HH:mm");
     const endTime = Utilities.formatDate(event.getEndTime(), "JST", "HH:mm");
 

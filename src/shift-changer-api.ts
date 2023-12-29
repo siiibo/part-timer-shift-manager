@@ -75,6 +75,7 @@ const showEvents = (userEmail: string, startDate: Date): EventInfo[] => {
     const startTime = new Date(event.getStartTime().getTime());
     const endTime = new Date(event.getEndTime().getTime());
 
+
     return { title, date, startTime, endTime };
   });
   return eventInfos;

@@ -4,7 +4,7 @@ import { z } from "zod";
 import { getConfig } from "./config";
 
 export const EventInfo = z.object({
-  title: z.coerce.string(),
+  title: z.string(),
   date: z.coerce.date(),
   startTime: z.coerce.date(),
   endTime: z.coerce.date(),
@@ -74,7 +74,6 @@ const showEvents = (userEmail: string, startDate: Date): EventInfo[] => {
     const date = new Date(event.getStartTime().getTime());
     const startTime = new Date(event.getStartTime().getTime());
     const endTime = new Date(event.getEndTime().getTime());
-
 
     return { title, date, startTime, endTime };
   });

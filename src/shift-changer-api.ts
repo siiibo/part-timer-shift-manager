@@ -1,17 +1,17 @@
-import * as S from "@effect/schema/Schema";
 import { addWeeks } from "date-fns";
+import { z } from "zod";
 
 import { getConfig } from "./config";
 
-export const EventInfo = S.struct({
-  title: S.string,
-  date: S.Date,
-  startTime: S.Date,
-  endTime: S.Date,
+export const EventInfo = z.object({
+  title: z.coerce.string(),
+  date: z.coerce.date(),
+  startTime: z.coerce.date(),
+  endTime: z.coerce.date(),
 });
-export type EventInfo = S.Schema.To<typeof EventInfo>;
+export type EventInfo = z.infer<typeof EventInfo>;
 
-const ModificationInfo = S.struct({
+const ModificationInfo = z.object({
   previousEventInfo: EventInfo,
   newEventInfo: EventInfo,
 });
@@ -32,17 +32,13 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
   const userEmail = e.parameter.userEmail;
   switch (operationType) {
     case "registration": {
-      const registrationInfos = S.parseSync(EventInfo.pipe(S.array, S.mutable))(
-        JSON.parse(e.parameter.registrationInfos)
-      );
+      const registrationInfos = EventInfo.array().parse(JSON.parse(e.parameter.registrationInfos));
       registration(userEmail, registrationInfos);
       break;
     }
     case "modificationAndDeletion": {
-      const modificationInfos = S.parseSync(ModificationInfo.pipe(S.array, S.mutable))(
-        JSON.parse(e.parameter.modificationInfos)
-      );
-      const deletionInfos = S.parseSync(EventInfo.pipe(S.array, S.mutable))(JSON.parse(e.parameter.deletionInfos));
+      const modificationInfos = ModificationInfo.array().parse(JSON.parse(e.parameter.modificationInfos));
+      const deletionInfos = EventInfo.array().parse(JSON.parse(e.parameter.deletionInfos));
 
       modification(modificationInfos, userEmail);
       deletion(deletionInfos, userEmail);

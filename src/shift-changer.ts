@@ -1,4 +1,3 @@
-import * as S from "@effect/schema/Schema";
 import { GasWebClient as SlackClient } from "@hi-se/web-api";
 import { format } from "date-fns";
 
@@ -141,7 +140,8 @@ export const callShowEvents = () => {
   if (response.getResponseCode() !== 200) {
     throw new Error(response.getContentText());
   }
-  const eventInfos = S.parseSync(EventInfo.pipe(S.array, S.mutable))(JSON.parse(response.getContentText()));
+  const eventInfos = EventInfo.array().parse(JSON.parse(response.getContentText()));
+
   if (eventInfos.length === 0) throw new Error("no events");
 
   const moldedEventInfos = eventInfos.map(({ title, date, startTime, endTime }) => {

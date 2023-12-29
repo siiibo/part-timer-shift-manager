@@ -100,14 +100,44 @@ export const getModificationAndDeletionSheetValues = (
     .getRange(9, 1, sheet.getLastRow() - 8, sheet.getLastColumn())
     .getValues()
     .map((row) => {
+      const date = new Date(row[1]);
+      const startTime = new Date(row[2]);
+      const endTime = new Date(row[3]);
+      const newDate = new Date(row[4]);
+      const newStartTime = new Date(row[5]);
+      const newEndTime = new Date(row[6]);
       return {
         title: row[0] as string,
-        date: row[1] as Date,
-        startTime: row[2] as Date,
-        endTime: row[3] as Date,
-        newDate: row[4] as Date,
-        newStartTime: row[5] as Date,
-        newEndTime: row[6] as Date,
+        date: date,
+        startTime: new Date(
+          date.getFullYear(),
+          date.getMonth(),
+          date.getDate(),
+          startTime.getHours(),
+          startTime.getMinutes()
+        ),
+        endTime: new Date(
+          date.getFullYear(),
+          date.getMonth(),
+          date.getDate(),
+          endTime.getHours(),
+          endTime.getMinutes()
+        ),
+        newDate: newDate,
+        newStartTime: new Date(
+          newDate.getFullYear(),
+          newDate.getMonth(),
+          newDate.getDate(),
+          newStartTime.getHours(),
+          newStartTime.getMinutes()
+        ),
+        newEndTime: new Date(
+          newDate.getFullYear(),
+          newDate.getMonth(),
+          newDate.getDate(),
+          newEndTime.getHours(),
+          newEndTime.getMinutes()
+        ),
         newRestStartTime: row[7] === "" ? undefined : row[7],
         newRestEndTime: row[8] === "" ? undefined : row[8],
         newWorkingStyle: row[9] as string,
@@ -142,39 +172,11 @@ export const getModificationInfos = (
     .map((row) => {
       const title = row.title;
       const date = row.date;
-      const startDate = row.startTime;
-      const startTime = new Date(
-        date.getFullYear(),
-        date.getMonth(),
-        date.getDate(),
-        startDate.getHours(),
-        startDate.getMinutes()
-      );
-      const endDate = row.endTime;
-      const endTime = new Date(
-        date.getFullYear(),
-        date.getMonth(),
-        date.getDate(),
-        endDate.getHours(),
-        endDate.getMinutes()
-      );
+      const startTime = row.startTime;
+      const endTime = row.endTime;
       const newDate = row.newDate;
-      const newStartDate = row.newStartTime;
-      const newStartTime = new Date(
-        newDate.getFullYear(),
-        newDate.getMonth(),
-        newDate.getDate(),
-        newStartDate.getHours(),
-        newStartDate.getMinutes()
-      );
-      const newEndDate = row.newEndTime;
-      const newEndTime = new Date(
-        newDate.getFullYear(),
-        newDate.getMonth(),
-        newDate.getDate(),
-        newEndDate.getHours(),
-        newEndDate.getMinutes()
-      );
+      const newStartTime = row.newStartTime;
+      const newEndTime = row.newEndTime;
       const newWorkingStyle = row.newWorkingStyle;
       if (newWorkingStyle === undefined) throw new Error("new working style is not defined");
       if (row.newRestStartTime === undefined || row.newRestEndTime === undefined) {
@@ -217,22 +219,8 @@ export const getDeletionInfos = (
     .map((row) => {
       const title = row.title;
       const date = row.date;
-      const startDate = row.startTime;
-      const startTime = new Date(
-        date.getFullYear(),
-        date.getMonth(),
-        date.getDate(),
-        startDate.getHours(),
-        startDate.getMinutes()
-      );
-      const endDate = row.endTime;
-      const endTime = new Date(
-        date.getFullYear(),
-        date.getMonth(),
-        date.getDate(),
-        endDate.getHours(),
-        endDate.getMinutes()
-      );
+      const startTime = row.startTime;
+      const endTime = row.endTime;
       return { title, date, startTime, endTime };
     });
 

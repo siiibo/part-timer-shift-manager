@@ -54,21 +54,21 @@ export const getRegistrationInfos = (
     .getValues()
     .map((eventInfo) => {
       const date = new Date(eventInfo[0]);
-      const startDate = new Date(eventInfo[1]);
-      const endDate = new Date(eventInfo[2]);
+      const startTimeDate= new Date(eventInfo[1]);
       const startTime = new Date(
         date.getFullYear(),
         date.getMonth(),
         date.getDate(),
-        startDate.getHours(),
-        startDate.getMinutes()
+        startTimeDate.getHours(),
+        startTimeDate.getMinutes()
       );
+      const endTimeDate = new Date(eventInfo[2]);
       const endTime = new Date(
         date.getFullYear(),
         date.getMonth(),
         date.getDate(),
-        endDate.getHours(),
-        endDate.getMinutes()
+        endTimeDate.getHours(),
+        endTimeDate.getMinutes()
       );
       const workingStyle = eventInfo[5] as string;
       if (workingStyle === "") throw new Error("working style is not defined");

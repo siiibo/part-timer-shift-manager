@@ -102,15 +102,13 @@ export const getModificationAndDeletionSheetValues = (
     .getRange(9, 1, sheet.getLastRow() - 8, sheet.getLastColumn())
     .getValues()
     .map((row) => {
+      //NOTE: シートの情報~TimeはDate型で取得される
       const date = new Date(row[1]);
       const startTime = row[2] as Date;
       const endTime = row[3] as Date;
-      const newDate = new Date(row[4]);
-      const newStartTime = row[5] as Date;
-      const newEndTime = row[6] as Date;
-      console.log(newStartTime, newEndTime);
-      console.log("########");
-      console.log(typeof newStartTime,typeof newEndTime);
+      const newDate = row[4];
+      const newStartTime = row[5];
+      const newEndTime = row[6];
       return {
         title: row[0] as string,
         date: date,
@@ -155,7 +153,7 @@ export const getModificationInfos = (
       const date = row.date;
       const startTime =set(date, { hours: Number(row.startTime.getHours()), minutes: Number(row.startTime.getMinutes()) }) ;
       const endTime = set(date, { hours: Number(row.endTime.getHours()), minutes: Number(row.endTime.getMinutes()) });
-      const newDate = row.newDate;
+      const newDate = new Date(row.newDate);
       const newStartTime =set(newDate, { hours: Number(row.newStartTime.getHours()), minutes: Number(row.newStartTime.getMinutes()) }) ;
       const newEndTime = set(newDate, { hours: Number(row.newEndTime.getHours()), minutes: Number(row.newEndTime.getMinutes()) });
       console.log(startTime, endTime, newStartTime, newEndTime);

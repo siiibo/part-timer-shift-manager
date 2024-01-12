@@ -1,3 +1,5 @@
+import { set } from "date-fns";
+
 import { PartTimerProfile } from "./JobSheet";
 import { createTitleFromEventInfo } from "./shift-changer";
 import { EventInfo } from "./shift-changer-api";
@@ -101,43 +103,22 @@ export const getModificationAndDeletionSheetValues = (
     .getValues()
     .map((row) => {
       const date = new Date(row[1]);
-      const startTime = new Date(row[2]);
-      const endTime = new Date(row[3]);
+      const startTime = row[2] as Date;
+      const endTime = row[3] as Date;
       const newDate = new Date(row[4]);
-      const newStartTime = new Date(row[5]);
-      const newEndTime = new Date(row[6]);
+      const newStartTime = row[5] as Date;
+      const newEndTime = row[6] as Date;
+      console.log(newStartTime, newEndTime);
+      console.log("########");
+      console.log(typeof newStartTime,typeof newEndTime);
       return {
         title: row[0] as string,
         date: date,
-        startTime: new Date(
-          date.getFullYear(),
-          date.getMonth(),
-          date.getDate(),
-          startTime.getHours(),
-          startTime.getMinutes()
-        ),
-        endTime: new Date(
-          date.getFullYear(),
-          date.getMonth(),
-          date.getDate(),
-          endTime.getHours(),
-          endTime.getMinutes()
-        ),
+        startTime: startTime,
+        endTime: endTime,
         newDate: newDate,
-        newStartTime: new Date(
-          newDate.getFullYear(),
-          newDate.getMonth(),
-          newDate.getDate(),
-          newStartTime.getHours(),
-          newStartTime.getMinutes()
-        ),
-        newEndTime: new Date(
-          newDate.getFullYear(),
-          newDate.getMonth(),
-          newDate.getDate(),
-          newEndTime.getHours(),
-          newEndTime.getMinutes()
-        ),
+        newStartTime: newStartTime,
+        newEndTime: newEndTime,
         newRestStartTime: row[7] === "" ? undefined : row[7],
         newRestEndTime: row[8] === "" ? undefined : row[8],
         newWorkingStyle: row[9] as string,
@@ -172,11 +153,12 @@ export const getModificationInfos = (
     .map((row) => {
       const title = row.title;
       const date = row.date;
-      const startTime = row.startTime;
-      const endTime = row.endTime;
+      const startTime =set(date, { hours: Number(row.startTime.getHours()), minutes: Number(row.startTime.getMinutes()) }) ;
+      const endTime = set(date, { hours: Number(row.endTime.getHours()), minutes: Number(row.endTime.getMinutes()) });
       const newDate = row.newDate;
-      const newStartTime = row.newStartTime;
-      const newEndTime = row.newEndTime;
+      const newStartTime =set(newDate, { hours: Number(row.newStartTime.getHours()), minutes: Number(row.newStartTime.getMinutes()) }) ;
+      const newEndTime = set(newDate, { hours: Number(row.newEndTime.getHours()), minutes: Number(row.newEndTime.getMinutes()) });
+      console.log(startTime, endTime, newStartTime, newEndTime);
       const newWorkingStyle = row.newWorkingStyle;
       if (newWorkingStyle === undefined) throw new Error("new working style is not defined");
       if (row.newRestStartTime === undefined || row.newRestEndTime === undefined) {
@@ -219,8 +201,8 @@ export const getDeletionInfos = (
     .map((row) => {
       const title = row.title;
       const date = row.date;
-      const startTime = row.startTime;
-      const endTime = row.endTime;
+      const startTime =set(date, { hours: Number(row.startTime.getHours()), minutes: Number(row.startTime.getMinutes()) }) ;
+      const endTime = set(date, { hours: Number(row.endTime.getHours()), minutes: Number(row.endTime.getMinutes()) });
       return { title, date, startTime, endTime };
     });
 

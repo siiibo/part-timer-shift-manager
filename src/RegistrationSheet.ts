@@ -54,7 +54,7 @@ export const getRegistrationInfos = (
     .getValues()
     .map((eventInfo) => {
       const date = new Date(eventInfo[0]);
-      const startTimeDate= new Date(eventInfo[1]);
+      const startTimeDate = new Date(eventInfo[1]);
       const startTime = new Date(
         date.getFullYear(),
         date.getMonth(),

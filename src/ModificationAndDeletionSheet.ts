@@ -151,12 +151,20 @@ export const getModificationInfos = (
     .map((row) => {
       const title = row.title;
       const date = row.date;
-      const startTime =set(date, { hours: Number(row.startTime.getHours()), minutes: Number(row.startTime.getMinutes()) }) ;
+      const startTime = set(date, {
+        hours: Number(row.startTime.getHours()),
+        minutes: Number(row.startTime.getMinutes()),
+      });
       const endTime = set(date, { hours: Number(row.endTime.getHours()), minutes: Number(row.endTime.getMinutes()) });
       const newDate = new Date(row.newDate);
-      const newStartTime =set(newDate, { hours: Number(row.newStartTime.getHours()), minutes: Number(row.newStartTime.getMinutes()) }) ;
-      const newEndTime = set(newDate, { hours: Number(row.newEndTime.getHours()), minutes: Number(row.newEndTime.getMinutes()) });
-      console.log(startTime, endTime, newStartTime, newEndTime);
+      const newStartTime = set(newDate, {
+        hours: Number(row.newStartTime.getHours()),
+        minutes: Number(row.newStartTime.getMinutes()),
+      });
+      const newEndTime = set(newDate, {
+        hours: Number(row.newEndTime.getHours()),
+        minutes: Number(row.newEndTime.getMinutes()),
+      });
       const newWorkingStyle = row.newWorkingStyle;
       if (newWorkingStyle === undefined) throw new Error("new working style is not defined");
       if (row.newRestStartTime === undefined || row.newRestEndTime === undefined) {
@@ -199,7 +207,10 @@ export const getDeletionInfos = (
     .map((row) => {
       const title = row.title;
       const date = row.date;
-      const startTime =set(date, { hours: Number(row.startTime.getHours()), minutes: Number(row.startTime.getMinutes()) }) ;
+      const startTime = set(date, {
+        hours: Number(row.startTime.getHours()),
+        minutes: Number(row.startTime.getMinutes()),
+      });
       const endTime = set(date, { hours: Number(row.endTime.getHours()), minutes: Number(row.endTime.getMinutes()) });
       return { title, date, startTime, endTime };
     });

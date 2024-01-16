@@ -1,3 +1,5 @@
+import { set } from "date-fns";
+
 import { PartTimerProfile } from "./JobSheet";
 import { createTitleFromEventInfo } from "./shift-changer";
 import { EventInfo } from "./shift-changer-api";
@@ -55,21 +57,12 @@ export const getRegistrationInfos = (
     .map((eventInfo) => {
       const date = eventInfo[0];
       const startTimeDate = eventInfo[1];
-      const startTime = new Date(
-        date.getFullYear(),
-        date.getMonth(),
-        date.getDate(),
-        startTimeDate.getHours(),
-        startTimeDate.getMinutes()
-      );
+      const startTime = set(date, {
+        hours: Number(startTimeDate.getHours()),
+        minutes: Number(startTimeDate.getMinutes()),
+      });
       const endTimeDate = eventInfo[2];
-      const endTime = new Date(
-        date.getFullYear(),
-        date.getMonth(),
-        date.getDate(),
-        endTimeDate.getHours(),
-        endTimeDate.getMinutes()
-      );
+      const endTime = set(date, { hours: Number(endTimeDate.getHours()), minutes: Number(endTimeDate.getMinutes()) });
       const workingStyle = eventInfo[5] as string;
       if (workingStyle === "") throw new Error("working style is not defined");
       if (eventInfo[3] === "" || eventInfo[4] === "") {

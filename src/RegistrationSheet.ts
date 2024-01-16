@@ -55,6 +55,7 @@ export const getRegistrationInfos = (
     .getRange(5, 1, sheet.getLastRow() - 4, sheet.getLastColumn())
     .getValues()
     .map((eventInfo) => {
+      //NOTE: セルの書式設定が日付になっている場合はDate型が渡ってくる
       const date = eventInfo[0];
       const startTimeDate = eventInfo[1];
       const startTime = set(date, {

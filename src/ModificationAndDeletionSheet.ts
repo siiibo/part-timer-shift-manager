@@ -103,15 +103,15 @@ export const getModificationAndDeletionSheetValues = (
     .getValues()
     .map((row) => {
       return {
-        //NOTE: シート上の時間情報はDate型で取得される
+        //NOTE: セルの書式設定が日付になっている場合はDate型が渡ってくる
         title: row[0] as string,
         date: row[1],
         startTime: row[2],
         endTime: row[3],
-        //NOTE: new~のシート値が空白の場合はstring型が取得される
-        newDate: row[4],
-        newStartTime: row[5],
-        newEndTime: row[6],
+        //TODO: 未入力の場合undefinedとを返すようにする
+        newDate: row[4],// 未入力の場合は空文字、それ以外の場合はDate型が渡ってくる
+        newStartTime: row[5],// 未入力の場合は空文字、それ以外の場合はDate型が渡ってくる
+        newEndTime: row[6],// 未入力の場合は空文字、それ以外の場合はDate型が渡ってくる
         newRestStartTime: row[7] === "" ? undefined : row[7],
         newRestEndTime: row[8] === "" ? undefined : row[8],
         newWorkingStyle: row[9] as string,

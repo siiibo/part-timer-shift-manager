@@ -103,7 +103,7 @@ export const getModificationAndDeletionSheetValues = (
     .getValues()
     .map((row) => {
       //NOTE: シート上の時間情報はDate型で取得される
-      const date = new Date(row[1]);
+      const date = row[1] as Date;
       const startTime = row[2] as Date;
       const endTime = row[3] as Date;
       const newDate = row[4];
@@ -156,7 +156,7 @@ export const getModificationInfos = (
         minutes: row.startTime.getMinutes(),
       });
       const endTime = set(date, { hours: row.endTime.getHours(), minutes: row.endTime.getMinutes() });
-      const newDate = new Date(row.newDate);
+      const newDate = row.newDate;
       const newStartTime = set(newDate, {
         hours: row.newStartTime.getHours(),
         minutes: row.newStartTime.getMinutes(),

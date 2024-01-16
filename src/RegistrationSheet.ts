@@ -53,8 +53,8 @@ export const getRegistrationInfos = (
     .getRange(5, 1, sheet.getLastRow() - 4, sheet.getLastColumn())
     .getValues()
     .map((eventInfo) => {
-      const date = new Date(eventInfo[0]);
-      const startTimeDate = new Date(eventInfo[1]);
+      const date = eventInfo[0];
+      const startTimeDate = eventInfo[1];
       const startTime = new Date(
         date.getFullYear(),
         date.getMonth(),
@@ -62,7 +62,7 @@ export const getRegistrationInfos = (
         startTimeDate.getHours(),
         startTimeDate.getMinutes()
       );
-      const endTimeDate = new Date(eventInfo[2]);
+      const endTimeDate = eventInfo[2];
       const endTime = new Date(
         date.getFullYear(),
         date.getMonth(),

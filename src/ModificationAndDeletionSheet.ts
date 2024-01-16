@@ -1,4 +1,4 @@
-import { format } from "date-fns";
+import { set } from "date-fns";
 
 import { PartTimerProfile } from "./JobSheet";
 import { createTitleFromEventInfo } from "./shift-changer";
@@ -103,13 +103,15 @@ export const getModificationAndDeletionSheetValues = (
     .getValues()
     .map((row) => {
       return {
+        //NOTE: セルの書式設定が日付になっている場合はDate型が渡ってくる
         title: row[0] as string,
-        date: row[1] as Date,
-        startTime: row[2] as Date,
-        endTime: row[3] as Date,
-        newDate: row[4] as Date,
-        newStartTime: row[5] as Date,
-        newEndTime: row[6] as Date,
+        date: row[1],
+        startTime: row[2],
+        endTime: row[3],
+        //TODO: 未入力の場合undefinedを返すようにする
+        newDate: row[4],// 未入力の場合は空文字、それ以外の場合はDate型が渡ってくる
+        newStartTime: row[5],// 未入力の場合は空文字、それ以外の場合はDate型が渡ってくる
+        newEndTime: row[6],// 未入力の場合は空文字、それ以外の場合はDate型が渡ってくる
         newRestStartTime: row[7] === "" ? undefined : row[7],
         newRestEndTime: row[8] === "" ? undefined : row[8],
         newWorkingStyle: row[9] as string,
@@ -143,12 +145,21 @@ export const getModificationInfos = (
     .filter((row) => !row.deletionFlag)
     .map((row) => {
       const title = row.title;
-      const date = format(row.date, "yyyy-MM-dd");
-      const startTime = format(row.startTime, "HH:mm");
-      const endTime = format(row.endTime, "HH:mm");
-      const newDate = format(row.newDate, "yyyy-MM-dd");
-      const newStartTime = format(row.newStartTime, "HH:mm");
-      const newEndTime = format(row.newEndTime, "HH:mm");
+      const date = row.date;
+      const startTime = set(date, {
+        hours: row.startTime.getHours(),
+        minutes: row.startTime.getMinutes(),
+      });
+      const endTime = set(date, { hours: row.endTime.getHours(), minutes: row.endTime.getMinutes() });
+      const newDate = row.newDate;
+      const newStartTime = set(newDate, {
+        hours: row.newStartTime.getHours(),
+        minutes: row.newStartTime.getMinutes(),
+      });
+      const newEndTime = set(newDate, {
+        hours: row.newEndTime.getHours(),
+        minutes: row.newEndTime.getMinutes(),
+      });
       const newWorkingStyle = row.newWorkingStyle;
       if (newWorkingStyle === undefined) throw new Error("new working style is not defined");
       if (row.newRestStartTime === undefined || row.newRestEndTime === undefined) {
@@ -158,10 +169,8 @@ export const getModificationInfos = (
           newEventInfo: { title: newTitle, date: newDate, startTime: newStartTime, endTime: newEndTime },
         };
       } else {
-        const newRestStartTime = format(row.newRestStartTime as Date, "HH:mm");
-        const newRestEndTime = format(row.newRestEndTime as Date, "HH:mm");
         const newTitle = createTitleFromEventInfo(
-          { restStartTime: newRestStartTime, restEndTime: newRestEndTime, workingStyle: newWorkingStyle },
+          { restStartTime: row.newRestStartTime, restEndTime: row.newRestEndTime, workingStyle: newWorkingStyle },
           partTimerProfile
         );
         return {
@@ -192,9 +201,12 @@ export const getDeletionInfos = (
     .filter((row) => row.deletionFlag)
     .map((row) => {
       const title = row.title;
-      const date = format(row.date, "yyyy-MM-dd");
-      const startTime = format(row.startTime, "HH:mm");
-      const endTime = format(row.endTime, "HH:mm");
+      const date = row.date;
+      const startTime = set(date, {
+        hours: row.startTime.getHours(),
+        minutes: row.startTime.getMinutes(),
+      });
+      const endTime = set(date, { hours: row.endTime.getHours(), minutes: row.endTime.getMinutes() });
       return { title, date, startTime, endTime };
     });
 

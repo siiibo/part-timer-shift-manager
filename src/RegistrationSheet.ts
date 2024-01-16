@@ -1,4 +1,4 @@
-import { format } from "date-fns";
+import { set } from "date-fns";
 
 import { PartTimerProfile } from "./JobSheet";
 import { createTitleFromEventInfo } from "./shift-changer";
@@ -55,17 +55,23 @@ export const getRegistrationInfos = (
     .getRange(5, 1, sheet.getLastRow() - 4, sheet.getLastColumn())
     .getValues()
     .map((eventInfo) => {
-      const date = format(eventInfo[0] as Date, "yyyy-MM-dd");
-      const startTime = format(eventInfo[1] as Date, "HH:mm");
-      const endTime = format(eventInfo[2] as Date, "HH:mm");
+      //NOTE: セルの書式設定が日付になっている場合はDate型が渡ってくる
+      const date = eventInfo[0];
+      const startTimeDate = eventInfo[1];
+      const startTime = set(date, {
+        hours: startTimeDate.getHours(),
+        minutes: startTimeDate.getMinutes(),
+      });
+      const endTimeDate = eventInfo[2];
+      const endTime = set(date, { hours: endTimeDate.getHours(), minutes: endTimeDate.getMinutes() });
       const workingStyle = eventInfo[5] as string;
       if (workingStyle === "") throw new Error("working style is not defined");
       if (eventInfo[3] === "" || eventInfo[4] === "") {
         const title = createTitleFromEventInfo({ workingStyle }, partTimerProfile);
         return { title, date, startTime, endTime };
       } else {
-        const restStartTime = format(eventInfo[3] as Date, "HH:mm");
-        const restEndTime = format(eventInfo[4] as Date, "HH:mm");
+        const restStartTime = eventInfo[3];
+        const restEndTime = eventInfo[4];
         const title = createTitleFromEventInfo({ restStartTime, restEndTime, workingStyle }, partTimerProfile);
         return { title, date, startTime, endTime };
       }

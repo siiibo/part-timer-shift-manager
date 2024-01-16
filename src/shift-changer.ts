@@ -79,7 +79,6 @@ export const callRegistration = () => {
   const operationType: OperationType = "registration";
   const comment = sheet.getRange("A2").getValue();
   const registrationInfos = getRegistrationInfos(sheet, partTimerProfile);
-
   const payload = {
     apiId: "shift-changer",
     operationType: operationType,
@@ -141,12 +140,15 @@ export const callShowEvents = () => {
   if (response.getResponseCode() !== 200) {
     throw new Error(response.getContentText());
   }
+  const eventInfos = EventInfo.array().parse(JSON.parse(response.getContentText()));
 
-  const eventInfos: EventInfo[] = JSON.parse(response.getContentText());
   if (eventInfos.length === 0) throw new Error("no events");
 
   const moldedEventInfos = eventInfos.map(({ title, date, startTime, endTime }) => {
-    return [title, date, startTime, endTime];
+    const dateStr = format(date, "yyyy/MM/dd");
+    const startTimeStr = format(startTime, "HH:mm");
+    const endTimeStr = format(endTime, "HH:mm");
+    return [title, dateStr, startTimeStr, endTimeStr];
   });
 
   if (sheet.getLastRow() > 8) {
@@ -174,7 +176,6 @@ export const callModificationAndDeletion = () => {
   const valuesForOperation = sheetValues.filter((row) => row.deletionFlag || row.newDate);
   const modificationInfos = getModificationInfos(valuesForOperation, partTimerProfile);
   const deletionInfos = getDeletionInfos(valuesForOperation);
-
   const payload = {
     apiId: "shift-changer",
     operationType: operationType,
@@ -278,12 +279,13 @@ const getManagerSlackIds = (managerEmails: string[], client: SlackClient): strin
   return managerSlackIds;
 };
 const createMessageFromEventInfo = (eventInfo: EventInfo) => {
-  const date = format(new Date(eventInfo.date), "MM/dd");
+  const date = format(eventInfo.date, "MM/dd");
   const { workingStyle, restStartTime, restEndTime } = getEventInfoFromTitle(eventInfo.title);
+  const startTime = format(eventInfo.startTime, "HH:mm");
+  const endTime = format(eventInfo.endTime, "HH:mm");
   if (restStartTime === undefined || restEndTime === undefined)
-    return `【${workingStyle}】 ${date} ${eventInfo.startTime}~${eventInfo.endTime}`;
-  else
-    return `【${workingStyle}】 ${date} ${eventInfo.startTime}~${eventInfo.endTime} (休憩: ${restStartTime}~${restEndTime})`;
+    return `【${workingStyle}】 ${date} ${startTime}~${endTime}`;
+  else return `【${workingStyle}】 ${date} ${startTime}~${endTime} (休憩: ${restStartTime}~${restEndTime})`;
 };
 const getEventInfoFromTitle = (
   title: string
@@ -300,16 +302,16 @@ const getEventInfoFromTitle = (
 //TODO:循環参照を解決
 export const createTitleFromEventInfo = (
   eventInfo: {
-    restStartTime?: string;
-    restEndTime?: string;
+    restStartTime?: Date;
+    restEndTime?: Date;
     workingStyle: string;
   },
   partTimerProfile: PartTimerProfile
 ): string => {
   const { job, lastName } = partTimerProfile;
 
-  const restStartTime = eventInfo.restStartTime;
-  const restEndTime = eventInfo.restEndTime;
+  const restStartTime = eventInfo.restStartTime ? format(eventInfo.restStartTime, "HH:mm") : undefined;
+  const restEndTime = eventInfo.restEndTime ? format(eventInfo.restEndTime, "HH:mm") : undefined;
   const workingStyle = eventInfo.workingStyle;
 
   if (restStartTime === undefined || restEndTime === undefined) {

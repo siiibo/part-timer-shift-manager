@@ -102,7 +102,7 @@ export const getModificationAndDeletionSheetValues = (
     .getRange(9, 1, sheet.getLastRow() - 8, sheet.getLastColumn())
     .getValues()
     .map((row) => {
-      //NOTE: シートの情報~TimeはDate型で取得される
+      //NOTE: シート上の時間情報はDate型で取得される
       const date = new Date(row[1]);
       const startTime = row[2] as Date;
       const endTime = row[3] as Date;

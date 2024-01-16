@@ -145,9 +145,9 @@ export const callShowEvents = () => {
   if (eventInfos.length === 0) throw new Error("no events");
 
   const moldedEventInfos = eventInfos.map(({ title, date, startTime, endTime }) => {
-    const dateStr = Utilities.formatDate(date, "JST", "yyyy/MM/dd");
-    const startTimeStr = Utilities.formatDate(startTime, "JST", "HH:mm");
-    const endTimeStr = Utilities.formatDate(endTime, "JST", "HH:mm");
+    const dateStr = format(date, "yyyy/MM/dd");
+    const startTimeStr = format(startTime, "HH:mm");
+    const endTimeStr = format(endTime, "HH:mm");
     return [title, dateStr, startTimeStr, endTimeStr];
   });
 

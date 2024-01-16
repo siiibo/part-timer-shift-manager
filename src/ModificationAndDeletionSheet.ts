@@ -152,18 +152,18 @@ export const getModificationInfos = (
       const title = row.title;
       const date = row.date;
       const startTime = set(date, {
-        hours: Number(row.startTime.getHours()),
-        minutes: Number(row.startTime.getMinutes()),
+        hours: row.startTime.getHours(),
+        minutes: row.startTime.getMinutes(),
       });
-      const endTime = set(date, { hours: Number(row.endTime.getHours()), minutes: Number(row.endTime.getMinutes()) });
+      const endTime = set(date, { hours: row.endTime.getHours(), minutes: row.endTime.getMinutes() });
       const newDate = new Date(row.newDate);
       const newStartTime = set(newDate, {
-        hours: Number(row.newStartTime.getHours()),
-        minutes: Number(row.newStartTime.getMinutes()),
+        hours: row.newStartTime.getHours(),
+        minutes: row.newStartTime.getMinutes(),
       });
       const newEndTime = set(newDate, {
-        hours: Number(row.newEndTime.getHours()),
-        minutes: Number(row.newEndTime.getMinutes()),
+        hours: row.newEndTime.getHours(),
+        minutes: row.newEndTime.getMinutes(),
       });
       const newWorkingStyle = row.newWorkingStyle;
       if (newWorkingStyle === undefined) throw new Error("new working style is not defined");
@@ -208,10 +208,10 @@ export const getDeletionInfos = (
       const title = row.title;
       const date = row.date;
       const startTime = set(date, {
-        hours: Number(row.startTime.getHours()),
-        minutes: Number(row.startTime.getMinutes()),
+        hours: row.startTime.getHours(),
+        minutes: row.startTime.getMinutes(),
       });
-      const endTime = set(date, { hours: Number(row.endTime.getHours()), minutes: Number(row.endTime.getMinutes()) });
+      const endTime = set(date, { hours: row.endTime.getHours(), minutes: row.endTime.getMinutes() });
       return { title, date, startTime, endTime };
     });
 

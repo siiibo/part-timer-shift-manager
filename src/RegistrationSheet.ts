@@ -58,11 +58,11 @@ export const getRegistrationInfos = (
       const date = eventInfo[0];
       const startTimeDate = eventInfo[1];
       const startTime = set(date, {
-        hours: Number(startTimeDate.getHours()),
-        minutes: Number(startTimeDate.getMinutes()),
+        hours: startTimeDate.getHours(),
+        minutes: startTimeDate.getMinutes(),
       });
       const endTimeDate = eventInfo[2];
-      const endTime = set(date, { hours: Number(endTimeDate.getHours()), minutes: Number(endTimeDate.getMinutes()) });
+      const endTime = set(date, { hours: endTimeDate.getHours(), minutes: endTimeDate.getMinutes() });
       const workingStyle = eventInfo[5] as string;
       if (workingStyle === "") throw new Error("working style is not defined");
       if (eventInfo[3] === "" || eventInfo[4] === "") {

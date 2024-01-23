@@ -50,7 +50,7 @@ const createMenu = (ui: GoogleAppsScript.Base.Ui, menu: GoogleAppsScript.Base.Me
         .createMenu("登録")
         .addItem("シートの追加", insertRegistrationSheet.name)
         .addSeparator()
-        .addItem("提出", callRegistration.name)
+        .addItem("提出", callRegistration.name),
     )
     .addSubMenu(
       ui
@@ -58,7 +58,7 @@ const createMenu = (ui: GoogleAppsScript.Base.Ui, menu: GoogleAppsScript.Base.Me
         .addItem("シートの追加", insertModificationAndDeletionSheet.name)
         .addSeparator()
         .addItem("予定を表示", callShowEvents.name)
-        .addItem("提出", callModificationAndDeletion.name)
+        .addItem("提出", callModificationAndDeletion.name),
     )
     .addToUi();
 };
@@ -105,7 +105,7 @@ export const callRegistration = () => {
 const createRegistrationMessage = (
   registrationInfos: EventInfo[],
   comment: string,
-  partTimerProfile: PartTimerProfile
+  partTimerProfile: PartTimerProfile,
 ): string => {
   const messages = registrationInfos.map(createMessageFromEventInfo);
   const { job, lastName } = partTimerProfile;
@@ -215,7 +215,7 @@ const createModificationMessage = (
     previousEventInfo: EventInfo;
     newEventInfo: EventInfo;
   }[],
-  partTimerProfile: PartTimerProfile
+  partTimerProfile: PartTimerProfile,
 ): string | undefined => {
   const messages = modificationInfos.map(({ previousEventInfo, newEventInfo }) => {
     return `${createMessageFromEventInfo(previousEventInfo)}\n↓\n${createMessageFromEventInfo(newEventInfo)}`;
@@ -240,7 +240,7 @@ const getSheet = (sheetType: SheetType, spreadsheetUrl: string): GoogleAppsScrip
   const sheet = SpreadsheetApp.openByUrl(spreadsheetUrl)
     .getSheets()
     .find((sheet) =>
-      sheet.getDeveloperMetadata().some((metaData) => metaData.getKey() === `part-timer-shift-manager-${sheetType}`)
+      sheet.getDeveloperMetadata().some((metaData) => metaData.getKey() === `part-timer-shift-manager-${sheetType}`),
     );
 
   if (!sheet) throw new Error("SHEET is not defined");
@@ -252,7 +252,7 @@ const postMessageToSlackChannel = (
   client: SlackClient,
   slackChannelToPost: string,
   messageToNotify: string,
-  partTimerProfile: PartTimerProfile
+  partTimerProfile: PartTimerProfile,
 ) => {
   const { HR_MANAGER_SLACK_ID } = getConfig();
   const { managerEmails } = partTimerProfile;
@@ -288,7 +288,7 @@ const createMessageFromEventInfo = (eventInfo: EventInfo) => {
   else return `【${workingStyle}】 ${date} ${startTime}~${endTime} (休憩: ${restStartTime}~${restEndTime})`;
 };
 const getEventInfoFromTitle = (
-  title: string
+  title: string,
 ): { workingStyle?: string; restStartTime?: string; restEndTime?: string } => {
   const workingStyleRegex = /【(.*?)】/;
   const matchResult = title.match(workingStyleRegex)?.[1];
@@ -306,7 +306,7 @@ export const createTitleFromEventInfo = (
     restEndTime?: Date;
     workingStyle: string;
   },
-  partTimerProfile: PartTimerProfile
+  partTimerProfile: PartTimerProfile,
 ): string => {
   const { job, lastName } = partTimerProfile;
 

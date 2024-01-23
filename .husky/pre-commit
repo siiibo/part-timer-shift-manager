@@ -1,5 +1,6 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-npx lint-staged
+yarn prettier --write src/*{.js,.jsx,.ts,.tsx}
+yarn eslint --fix src/*{.js,.jsx,.ts,.tsx}
 git add .

@@ -84,7 +84,7 @@ export const setValuesModificationAndDeletionSheet = (sheet: GoogleAppsScript.Sp
   sheet.setColumnWidth(1, 370);
 };
 export const getModificationAndDeletionSheetValues = (
-  sheet: GoogleAppsScript.Spreadsheet.Sheet
+  sheet: GoogleAppsScript.Spreadsheet.Sheet,
 ): {
   title: string;
   date: Date;
@@ -109,9 +109,9 @@ export const getModificationAndDeletionSheetValues = (
         startTime: row[2],
         endTime: row[3],
         //TODO: 未入力の場合undefinedを返すようにする
-        newDate: row[4],// 未入力の場合は空文字、それ以外の場合はDate型が渡ってくる
-        newStartTime: row[5],// 未入力の場合は空文字、それ以外の場合はDate型が渡ってくる
-        newEndTime: row[6],// 未入力の場合は空文字、それ以外の場合はDate型が渡ってくる
+        newDate: row[4], // 未入力の場合は空文字、それ以外の場合はDate型が渡ってくる
+        newStartTime: row[5], // 未入力の場合は空文字、それ以外の場合はDate型が渡ってくる
+        newEndTime: row[6], // 未入力の場合は空文字、それ以外の場合はDate型が渡ってくる
         newRestStartTime: row[7] === "" ? undefined : row[7],
         newRestEndTime: row[8] === "" ? undefined : row[8],
         newWorkingStyle: row[9] as string,
@@ -136,7 +136,7 @@ export const getModificationInfos = (
     newWorkingStyle?: string;
     deletionFlag: boolean;
   }[],
-  partTimerProfile: PartTimerProfile
+  partTimerProfile: PartTimerProfile,
 ): {
   previousEventInfo: EventInfo;
   newEventInfo: EventInfo;
@@ -171,7 +171,7 @@ export const getModificationInfos = (
       } else {
         const newTitle = createTitleFromEventInfo(
           { restStartTime: row.newRestStartTime, restEndTime: row.newRestEndTime, workingStyle: newWorkingStyle },
-          partTimerProfile
+          partTimerProfile,
         );
         return {
           previousEventInfo: { title, date, startTime, endTime },
@@ -195,7 +195,7 @@ export const getDeletionInfos = (
     newRestEndTime?: Date;
     newWorkingStyle: string;
     deletionFlag: boolean;
-  }[]
+  }[],
 ): EventInfo[] => {
   const deletionInfos = sheetValues
     .filter((row) => row.deletionFlag)

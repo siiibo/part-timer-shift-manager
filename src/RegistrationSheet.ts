@@ -49,7 +49,7 @@ export const setValuesRegistrationSheet = (sheet: GoogleAppsScript.Spreadsheet.S
 
 export const getRegistrationInfos = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
-  partTimerProfile: PartTimerProfile
+  partTimerProfile: PartTimerProfile,
 ): EventInfo[] => {
   const registrationInfos = sheet
     .getRange(5, 1, sheet.getLastRow() - 4, sheet.getLastColumn())

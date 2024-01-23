@@ -3,4 +3,4 @@
 
 yarn prettier --write src/*{.js,.jsx,.ts,.tsx}
 yarn eslint --fix src/*{.js,.jsx,.ts,.tsx}
-git add .
+# git add .

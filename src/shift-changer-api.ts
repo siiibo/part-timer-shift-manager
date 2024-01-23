@@ -85,7 +85,7 @@ const modification = (
     previousEventInfo: EventInfo;
     newEventInfo: EventInfo;
   }[],
-  userEmail: string,
+  userEmail: string
 ) => {
   const calendar = getCalendar();
   modificationInfos.forEach((eventInfo) => modifyEvent(eventInfo, calendar, userEmail));
@@ -97,7 +97,7 @@ const modifyEvent = (
     newEventInfo: EventInfo;
   },
   calendar: GoogleAppsScript.Calendar.Calendar,
-  userEmail: string,
+  userEmail: string
 ) => {
   const [startDate, endDate] = [eventInfo.previousEventInfo.startTime, eventInfo.previousEventInfo.endTime];
   const newTitle = eventInfo.newEventInfo.title;

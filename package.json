@@ -10,11 +10,14 @@
     "build": "node build.js",
     "buildpush:prod": "yarn run build && cross-env clasp_config_project=.clasp.prod.json clasp push --force",
     "buildpush:dev": " yarn run build && cross-env clasp_config_project=.clasp.dev.json clasp push --force",
-    "postinstall": "mkdir -p build && cp appsscript.json build/appsscript.json"
+    "postinstall": "mkdir -p build && cp appsscript.json build/appsscript.json",
+    "prepare": "husky install"
   },
   "dependencies": {
     "@hi-se/web-api": "https://gitpkg.now.sh/hi-se/node-slack-sdk/packages/web-api?ab078b145617d511327a8f74fe34f1d4695ff893",
     "date-fns": "^3.2.0",
+    "husky": "^8.0.3",
+    "lint-staged": "^15.2.0",
     "zod": "^3.22.4"
   },
   "devDependencies": {
@@ -28,7 +31,13 @@
     "eslint": "^8.52.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-import": "^2.29.0",
-    "prettier": "^3.2.4",
+    "prettier": "3.2.4",
     "typescript": "^5.3.3"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "yarn prettier --write src/*{.js,.jsx,.ts,.tsx}",
+      "yarn eslint --fix src/*{.js,.jsx,.ts,.tsx}"
+    ]
   }
 }

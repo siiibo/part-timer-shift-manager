@@ -11,7 +11,7 @@
     "buildpush:prod": "yarn run build && cross-env clasp_config_project=.clasp.prod.json clasp push --force",
     "buildpush:dev": " yarn run build && cross-env clasp_config_project=.clasp.dev.json clasp push --force",
     "postinstall": "mkdir -p build && cp appsscript.json build/appsscript.json",
-    "prepare": "husky install"
+    "prepare": "husky"
   },
   "dependencies": {
     "@hi-se/web-api": "https://gitpkg.now.sh/hi-se/node-slack-sdk/packages/web-api?ab078b145617d511327a8f74fe34f1d4695ff893",

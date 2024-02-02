@@ -5,7 +5,7 @@ import {
   callModificationAndDeletion,
   callRegistration,
   callShowEvents,
-  dogGet,
+  doGet,
   doPost,
   initShiftChanger,
   onOpen,
@@ -22,7 +22,7 @@ global.initNotifyDailyShift = initNotifyDailyShift;
 global.notifyDailyShift = notifyDailyShift;
 global.doPost = doPost;
 global.onOpen = onOpen;
-global.dogGet = dogGet;
+global.dogGet = doGet;
 global.onOpenForDev = onOpenForDev;
 global.callRegistration = callRegistration;
 global.callShowEvents = callShowEvents;

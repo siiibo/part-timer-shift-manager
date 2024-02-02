@@ -16,8 +16,8 @@ import { EventInfo, shiftChanger } from "./shift-changer-api";
 
 type SheetType = "registration" | "modificationAndDeletion";
 type OperationType = "registration" | "modificationAndDeletion" | "showEvents";
-export const dogGet = () => {
-  return "ok";
+export const doGet = () => {
+  return ContentService.createTextOutput("ok");
 };
 export const doPost = (e: GoogleAppsScript.Events.DoPost): GoogleAppsScript.Content.TextOutput => {
   if (e.parameter.apiId === "shift-changer") {

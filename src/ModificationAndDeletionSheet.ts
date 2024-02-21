@@ -90,9 +90,9 @@ export const getModificationAndDeletionSheetValues = (
   date: Date;
   startTime: Date;
   endTime: Date;
-  newDate: Date;
-  newStartTime: Date;
-  newEndTime: Date;
+  newDate?: Date;
+  newStartTime?: Date;
+  newEndTime?: Date;
   newRestStartTime?: Date;
   newRestEndTime?: Date;
   newWorkingStyle: string;
@@ -109,9 +109,9 @@ export const getModificationAndDeletionSheetValues = (
         startTime: row[2],
         endTime: row[3],
         //TODO: 未入力の場合undefinedを返すようにする
-        newDate: row[4], // 未入力の場合は空文字、それ以外の場合はDate型が渡ってくる
-        newStartTime: row[5], // 未入力の場合は空文字、それ以外の場合はDate型が渡ってくる
-        newEndTime: row[6], // 未入力の場合は空文字、それ以外の場合はDate型が渡ってくる
+        newDate: row[4] === "" ? undefined : row[4], // 未入力の場合は空文字、それ以外の場合はDate型が渡ってくる
+        newStartTime: row[5] === "" ? undefined : row[5], // 未入力の場合は空文字、それ以外の場合はDate型が渡ってくる
+        newEndTime: row[6] === "" ? undefined : row[6], // 未入力の場合は空文字、それ以外の場合はDate型が渡ってくる
         newRestStartTime: row[7] === "" ? undefined : row[7],
         newRestEndTime: row[8] === "" ? undefined : row[8],
         newWorkingStyle: row[9] as string,
@@ -128,9 +128,9 @@ export const getModificationInfos = (
     date: Date;
     startTime: Date;
     endTime: Date;
-    newDate: Date;
-    newStartTime: Date;
-    newEndTime: Date;
+    newDate?: Date;
+    newStartTime?: Date;
+    newEndTime?: Date;
     newRestStartTime?: Date;
     newRestEndTime?: Date;
     newWorkingStyle?: string;
@@ -152,6 +152,7 @@ export const getModificationInfos = (
       });
       const endTime = set(date, { hours: row.endTime.getHours(), minutes: row.endTime.getMinutes() });
       const newDate = row.newDate;
+      if (!newDate || !row.newStartTime || !row.newEndTime) throw new Error("new date is not defined");
       const newStartTime = set(newDate, {
         hours: row.newStartTime.getHours(),
         minutes: row.newStartTime.getMinutes(),
@@ -191,9 +192,9 @@ export const getDeletionInfos = (
     date: Date;
     startTime: Date;
     endTime: Date;
-    newDate: Date;
-    newStartTime: Date;
-    newEndTime: Date;
+    newDate?: Date;
+    newStartTime?: Date;
+    newEndTime?: Date;
     newRestStartTime?: Date;
     newRestEndTime?: Date;
     newWorkingStyle: string;

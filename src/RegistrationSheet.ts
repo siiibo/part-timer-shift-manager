@@ -49,7 +49,7 @@ export const setValuesRegistrationSheet = (sheet: GoogleAppsScript.Spreadsheet.S
 
 export const getRegistrationInfos = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
-  partTimerProfile: PartTimerProfile
+  partTimerProfile: PartTimerProfile,
 ): EventInfo[] => {
   const registrationInfos = sheet
     .getRange(5, 1, sheet.getLastRow() - 4, sheet.getLastColumn())
@@ -64,6 +64,8 @@ export const getRegistrationInfos = (
       });
       const endTimeDate = eventInfo[2];
       const endTime = set(date, { hours: endTimeDate.getHours(), minutes: endTimeDate.getMinutes() });
+      const nowTime = new Date();
+      if (startTime < nowTime) throw new Error("過去の時間にシフト登録はできません");
       const workingStyle = eventInfo[5] as string;
       if (workingStyle === "") throw new Error("working style is not defined");
       if (eventInfo[3] === "" || eventInfo[4] === "") {

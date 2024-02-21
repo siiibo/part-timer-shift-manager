@@ -108,7 +108,6 @@ export const getModificationAndDeletionSheetValues = (
         date: row[1],
         startTime: row[2],
         endTime: row[3],
-        //TODO: 未入力の場合undefinedを返すようにする
         newDate: row[4] === "" ? undefined : row[4], // 未入力の場合は空文字、それ以外の場合はDate型が渡ってくる
         newStartTime: row[5] === "" ? undefined : row[5], // 未入力の場合は空文字、それ以外の場合はDate型が渡ってくる
         newEndTime: row[6] === "" ? undefined : row[6], // 未入力の場合は空文字、それ以外の場合はDate型が渡ってくる

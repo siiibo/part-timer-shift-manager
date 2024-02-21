@@ -168,8 +168,8 @@ export const getModificationInfos = (
       if (row.newRestStartTime === undefined || row.newRestEndTime === undefined) {
         const newTitle = createTitleFromEventInfo({ workingStyle: newWorkingStyle }, partTimerProfile);
         return {
-          previousEventInfo: { title, date, startTime, endTime },
-          newEventInfo: { title: newTitle, date: newDate, startTime: newStartTime, endTime: newEndTime },
+          previousEventInfo: { title, startTime, endTime },
+          newEventInfo: { title: newTitle, startTime: newStartTime, endTime: newEndTime },
         };
       } else {
         const newTitle = createTitleFromEventInfo(
@@ -177,8 +177,8 @@ export const getModificationInfos = (
           partTimerProfile,
         );
         return {
-          previousEventInfo: { title, date, startTime, endTime },
-          newEventInfo: { title: newTitle, date: newDate, startTime: newStartTime, endTime: newEndTime },
+          previousEventInfo: { title, startTime, endTime },
+          newEventInfo: { title: newTitle, startTime: newStartTime, endTime: newEndTime },
         };
       }
     });
@@ -212,7 +212,7 @@ export const getDeletionInfos = (
       const nowTime = new Date();
       if (startTime < nowTime) throw new Error("過去のシフトは削除できません");
       const endTime = set(date, { hours: row.endTime.getHours(), minutes: row.endTime.getMinutes() });
-      return { title, date, startTime, endTime };
+      return { title, startTime, endTime };
     });
 
   return deletionInfos;

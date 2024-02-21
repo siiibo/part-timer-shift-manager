@@ -146,8 +146,8 @@ export const callShowEvents = () => {
 
   if (eventInfos.length === 0) throw new Error("no events");
 
-  const moldedEventInfos = eventInfos.map(({ title, date, startTime, endTime }) => {
-    const dateStr = format(date, "yyyy/MM/dd");
+  const moldedEventInfos = eventInfos.map(({ title, startTime, endTime }) => {
+    const dateStr = format(startTime, "yyyy/MM/dd");
     const startTimeStr = format(startTime, "HH:mm");
     const endTimeStr = format(endTime, "HH:mm");
     return [title, dateStr, startTimeStr, endTimeStr];
@@ -281,7 +281,7 @@ const getManagerSlackIds = (managerEmails: string[], client: SlackClient): strin
   return managerSlackIds;
 };
 const createMessageFromEventInfo = (eventInfo: EventInfo) => {
-  const date = format(eventInfo.date, "MM/dd");
+  const date = format(eventInfo.startTime, "MM/dd");
   const { workingStyle, restStartTime, restEndTime } = getEventInfoFromTitle(eventInfo.title);
   const startTime = format(eventInfo.startTime, "HH:mm");
   const endTime = format(eventInfo.endTime, "HH:mm");

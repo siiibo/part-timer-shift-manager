@@ -70,12 +70,12 @@ export const getRegistrationInfos = (
       if (workingStyle === "") throw new Error("working style is not defined");
       if (eventInfo[3] === "" || eventInfo[4] === "") {
         const title = createTitleFromEventInfo({ workingStyle }, partTimerProfile);
-        return { title, date, startTime, endTime };
+        return { title, startTime, endTime };
       } else {
         const restStartTime = eventInfo[3];
         const restEndTime = eventInfo[4];
         const title = createTitleFromEventInfo({ restStartTime, restEndTime, workingStyle }, partTimerProfile);
-        return { title, date, startTime, endTime };
+        return { title, startTime, endTime };
       }
     });
   return registrationInfos;

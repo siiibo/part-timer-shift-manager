@@ -5,7 +5,6 @@ import { getConfig } from "./config";
 
 export const EventInfo = z.object({
   title: z.string(),
-  date: z.coerce.date(),
   startTime: z.coerce.date(),
   endTime: z.coerce.date(),
 });
@@ -71,11 +70,10 @@ const showEvents = (userEmail: string, startDate: Date): EventInfo[] => {
   const events = calendar.getEvents(startDate, endDate).filter((event) => isEventGuest(event, userEmail));
   const eventInfos = events.map((event) => {
     const title = event.getTitle();
-    const date = new Date(event.getStartTime().getTime());
     const startTime = new Date(event.getStartTime().getTime());
     const endTime = new Date(event.getEndTime().getTime());
 
-    return { title, date, startTime, endTime };
+    return { title, startTime, endTime };
   });
   return eventInfos;
 };
@@ -85,7 +83,7 @@ const modification = (
     previousEventInfo: EventInfo;
     newEventInfo: EventInfo;
   }[],
-  userEmail: string
+  userEmail: string,
 ) => {
   const calendar = getCalendar();
   modificationInfos.forEach((eventInfo) => modifyEvent(eventInfo, calendar, userEmail));
@@ -97,7 +95,7 @@ const modifyEvent = (
     newEventInfo: EventInfo;
   },
   calendar: GoogleAppsScript.Calendar.Calendar,
-  userEmail: string
+  userEmail: string,
 ) => {
   const [startDate, endDate] = [eventInfo.previousEventInfo.startTime, eventInfo.previousEventInfo.endTime];
   const newTitle = eventInfo.newEventInfo.title;

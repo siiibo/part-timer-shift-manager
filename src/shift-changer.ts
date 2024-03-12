@@ -15,12 +15,12 @@ import {
 import { getRegistrationInfos, insertRegistrationSheet, setValuesRegistrationSheet } from "./RegistrationSheet";
 import { DeletionInfo, ModificationInfo, RegistrationInfo, shiftChanger, ShowEventInfo } from "./shift-changer-api";
 
-export const CreateMessageInfo = z.object({
+const CreateMessageInfo = z.object({
   title: z.string(),
   startTime: z.coerce.date(),
   endTime: z.coerce.date(),
 });
-export type CreateMessageInfo = z.infer<typeof CreateMessageInfo>;
+type CreateMessageInfo = z.infer<typeof CreateMessageInfo>;
 
 type SheetType = "registration" | "modificationAndDeletion";
 type OperationType = "registration" | "modificationAndDeletion" | "showEvents";

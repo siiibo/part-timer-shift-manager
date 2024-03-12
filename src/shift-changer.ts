@@ -322,7 +322,7 @@ const getEventInfoFromTitle = (
 };
 //TODO:循環参照を解決
 export const createTitleFromEventInfo = (
-  eventInfo: {
+  createTitleEventInfo: {
     restStartTime?: Date;
     restEndTime?: Date;
     workingStyle: string;
@@ -331,9 +331,11 @@ export const createTitleFromEventInfo = (
 ): string => {
   const { job, lastName } = partTimerProfile;
 
-  const restStartTime = eventInfo.restStartTime ? format(eventInfo.restStartTime, "HH:mm") : undefined;
-  const restEndTime = eventInfo.restEndTime ? format(eventInfo.restEndTime, "HH:mm") : undefined;
-  const workingStyle = eventInfo.workingStyle;
+  const restStartTime = createTitleEventInfo.restStartTime
+    ? format(createTitleEventInfo.restStartTime, "HH:mm")
+    : undefined;
+  const restEndTime = createTitleEventInfo.restEndTime ? format(createTitleEventInfo.restEndTime, "HH:mm") : undefined;
+  const workingStyle = createTitleEventInfo.workingStyle;
 
   if (restStartTime === undefined || restEndTime === undefined) {
     const title = `【${workingStyle}】${job}${lastName}さん`;

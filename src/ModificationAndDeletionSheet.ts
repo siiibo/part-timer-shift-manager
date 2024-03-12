@@ -2,7 +2,7 @@ import { set } from "date-fns";
 
 import { PartTimerProfile } from "./JobSheet";
 import { createTitleFromEventInfo } from "./shift-changer";
-import { EventInfo } from "./shift-changer-api";
+import { DeletionInfo, ModificationInfo } from "./shift-changer-api";
 
 export const insertModificationAndDeletionSheet = () => {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
@@ -136,10 +136,7 @@ export const getModificationInfos = (
     deletionFlag: boolean;
   }[],
   partTimerProfile: PartTimerProfile,
-): {
-  previousEventInfo: EventInfo;
-  newEventInfo: EventInfo;
-}[] => {
+): ModificationInfo[] => {
   const modificationInfos = sheetValues
     .filter((row) => !row.deletionFlag)
     .map((row) => {
@@ -167,19 +164,13 @@ export const getModificationInfos = (
       if (newWorkingStyle === undefined) throw new Error("new working style is not defined");
       if (row.newRestStartTime === undefined || row.newRestEndTime === undefined) {
         const newTitle = createTitleFromEventInfo({ workingStyle: newWorkingStyle }, partTimerProfile);
-        return {
-          previousEventInfo: { title, startTime, endTime },
-          newEventInfo: { title: newTitle, startTime: newStartTime, endTime: newEndTime },
-        };
+        return { title, startTime, endTime, newTitle, newStartTime, newEndTime };
       } else {
         const newTitle = createTitleFromEventInfo(
           { restStartTime: row.newRestStartTime, restEndTime: row.newRestEndTime, workingStyle: newWorkingStyle },
           partTimerProfile,
         );
-        return {
-          previousEventInfo: { title, startTime, endTime },
-          newEventInfo: { title: newTitle, startTime: newStartTime, endTime: newEndTime },
-        };
+        return { title, startTime, endTime, newTitle, newStartTime, newEndTime };
       }
     });
 
@@ -199,7 +190,7 @@ export const getDeletionInfos = (
     newWorkingStyle: string;
     deletionFlag: boolean;
   }[],
-): EventInfo[] => {
+): DeletionInfo[] => {
   const deletionInfos = sheetValues
     .filter((row) => row.deletionFlag)
     .map((row) => {

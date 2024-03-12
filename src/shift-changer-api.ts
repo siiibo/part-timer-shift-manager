@@ -3,17 +3,36 @@ import { z } from "zod";
 
 import { getConfig } from "./config";
 
-export const EventInfo = z.object({
+export const RegistrationInfo = z.object({
   title: z.string(),
   startTime: z.coerce.date(),
   endTime: z.coerce.date(),
 });
-export type EventInfo = z.infer<typeof EventInfo>;
+export type RegistrationInfo = z.infer<typeof RegistrationInfo>;
 
-const ModificationInfo = z.object({
-  previousEventInfo: EventInfo,
-  newEventInfo: EventInfo,
+export const ModificationInfo = z.object({
+  title: z.string(),
+  startTime: z.coerce.date(),
+  endTime: z.coerce.date(),
+  newTitle: z.string(),
+  newStartTime: z.coerce.date(),
+  newEndTime: z.coerce.date(),
 });
+export type ModificationInfo = z.infer<typeof ModificationInfo>;
+
+export const DeletionInfo = z.object({
+  title: z.string(),
+  startTime: z.coerce.date(),
+  endTime: z.coerce.date(),
+});
+export type DeletionInfo = z.infer<typeof DeletionInfo>;
+
+export const ShowEventInfo = z.object({
+  title: z.string(),
+  startTime: z.coerce.date(),
+  endTime: z.coerce.date(),
+});
+export type ShowEventInfo = z.infer<typeof ShowEventInfo>;
 
 const getCalendar = () => {
   const { CALENDAR_ID } = getConfig();
@@ -31,88 +50,78 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
   const userEmail = e.parameter.userEmail;
   switch (operationType) {
     case "registration": {
-      const registrationInfos = EventInfo.array().parse(JSON.parse(e.parameter.registrationInfos));
+      const registrationInfos = RegistrationInfo.array().parse(JSON.parse(e.parameter.registrationInfos));
       registration(userEmail, registrationInfos);
       break;
     }
     case "modificationAndDeletion": {
       const modificationInfos = ModificationInfo.array().parse(JSON.parse(e.parameter.modificationInfos));
-      const deletionInfos = EventInfo.array().parse(JSON.parse(e.parameter.deletionInfos));
-
+      const deletionInfos = DeletionInfo.array().parse(JSON.parse(e.parameter.deletionInfos));
       modification(modificationInfos, userEmail);
       deletion(deletionInfos, userEmail);
       break;
     }
     case "showEvents": {
       const startDate = new Date(e.parameter.startDate);
-      const eventInfos = showEvents(userEmail, startDate);
-      return JSON.stringify(eventInfos);
+      const showEventInfo = showEvents(userEmail, startDate);
+      return JSON.stringify(showEventInfo);
     }
   }
   return;
 };
 
-const registration = (userEmail: string, registrationInfos: EventInfo[]) => {
+const registration = (userEmail: string, registrationInfos: RegistrationInfo[]) => {
   registrationInfos.forEach((registrationInfo) => {
     registerEvent(registrationInfo, userEmail);
   });
 };
 
-const registerEvent = (eventInfo: EventInfo, userEmail: string) => {
+const registerEvent = (eventInfo: RegistrationInfo, userEmail: string) => {
   const calendar = getCalendar();
   const [startDate, endDate] = [eventInfo.startTime, eventInfo.endTime];
   calendar.createEvent(eventInfo.title, startDate, endDate, { guests: userEmail });
 };
 
-const showEvents = (userEmail: string, startDate: Date): EventInfo[] => {
+const showEvents = (userEmail: string, startDate: Date): ShowEventInfo[] => {
   const endDate = addWeeks(startDate, 4);
   const calendar = getCalendar();
   const events = calendar.getEvents(startDate, endDate).filter((event) => isEventGuest(event, userEmail));
-  const eventInfos = events.map((event) => {
+  const showEventInfos = events.map((event) => {
     const title = event.getTitle();
     const startTime = new Date(event.getStartTime().getTime());
     const endTime = new Date(event.getEndTime().getTime());
 
     return { title, startTime, endTime };
   });
-  return eventInfos;
+  return showEventInfos;
 };
 
-const modification = (
-  modificationInfos: {
-    previousEventInfo: EventInfo;
-    newEventInfo: EventInfo;
-  }[],
-  userEmail: string,
-) => {
+const modification = (modificationInfos: ModificationInfo[], userEmail: string) => {
   const calendar = getCalendar();
-  modificationInfos.forEach((eventInfo) => modifyEvent(eventInfo, calendar, userEmail));
+  modificationInfos.forEach((modificationInfo) => modifyEvent(modificationInfo, calendar, userEmail));
 };
 
 const modifyEvent = (
-  eventInfo: {
-    previousEventInfo: EventInfo;
-    newEventInfo: EventInfo;
-  },
+  modificationInfo: ModificationInfo,
   calendar: GoogleAppsScript.Calendar.Calendar,
   userEmail: string,
 ) => {
-  const [startDate, endDate] = [eventInfo.previousEventInfo.startTime, eventInfo.previousEventInfo.endTime];
-  const newTitle = eventInfo.newEventInfo.title;
-  const [newStartDate, newEndDate] = [eventInfo.newEventInfo.startTime, eventInfo.newEventInfo.endTime];
+  const [startDate, endDate] = [modificationInfo.startTime, modificationInfo.endTime];
+  const newTitle = modificationInfo.newTitle;
+  const [newStartDate, newEndDate] = [modificationInfo.newStartTime, modificationInfo.newEndTime];
   const event = calendar.getEvents(startDate, endDate).find((event) => isEventGuest(event, userEmail));
   if (!event) return;
   event.setTime(newStartDate, newEndDate);
   event.setTitle(newTitle);
 };
 
-const deletion = (deletionInfos: EventInfo[], userEmail: string) => {
+const deletion = (deletionInfos: DeletionInfo[], userEmail: string) => {
   const calendar = getCalendar();
-  deletionInfos.forEach((eventInfo) => deleteEvent(eventInfo, calendar, userEmail));
+  deletionInfos.forEach((deletionInfo) => deleteEvent(deletionInfo, calendar, userEmail));
 };
 
-const deleteEvent = (eventInfo: EventInfo, calendar: GoogleAppsScript.Calendar.Calendar, userEmail: string) => {
-  const [startDate, endDate] = [eventInfo.startTime, eventInfo.endTime];
+const deleteEvent = (deletionInfo: DeletionInfo, calendar: GoogleAppsScript.Calendar.Calendar, userEmail: string) => {
+  const [startDate, endDate] = [deletionInfo.startTime, deletionInfo.endTime];
   const event = calendar.getEvents(startDate, endDate).find((event) => isEventGuest(event, userEmail));
   if (!event) return;
   event.deleteEvent();

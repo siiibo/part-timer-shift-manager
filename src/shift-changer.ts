@@ -1,5 +1,6 @@
 import { GasWebClient as SlackClient } from "@hi-se/web-api";
 import { format } from "date-fns";
+import { z } from "zod";
 
 import { getConfig } from "./config";
 import { PartTimerProfile } from "./JobSheet";
@@ -12,7 +13,14 @@ import {
   setValuesModificationAndDeletionSheet,
 } from "./ModificationAndDeletionSheet";
 import { getRegistrationInfos, insertRegistrationSheet, setValuesRegistrationSheet } from "./RegistrationSheet";
-import { EventInfo, shiftChanger } from "./shift-changer-api";
+import { DeletionInfo, ModificationInfo, RegistrationInfo, shiftChanger, ShowEventInfo } from "./shift-changer-api";
+
+export const CreateMessageInfo = z.object({
+  title: z.string(),
+  startTime: z.coerce.date(),
+  endTime: z.coerce.date(),
+});
+export type CreateMessageInfo = z.infer<typeof CreateMessageInfo>;
 
 type SheetType = "registration" | "modificationAndDeletion";
 type OperationType = "registration" | "modificationAndDeletion" | "showEvents";
@@ -105,7 +113,7 @@ export const callRegistration = () => {
 };
 
 const createRegistrationMessage = (
-  registrationInfos: EventInfo[],
+  registrationInfos: RegistrationInfo[],
   comment: string,
   partTimerProfile: PartTimerProfile,
 ): string => {
@@ -142,11 +150,11 @@ export const callShowEvents = () => {
   if (response.getResponseCode() !== 200) {
     throw new Error(response.getContentText());
   }
-  const eventInfos = EventInfo.array().parse(JSON.parse(response.getContentText()));
+  const showEventInfos = ShowEventInfo.array().parse(JSON.parse(response.getContentText()));
 
-  if (eventInfos.length === 0) throw new Error("no events");
+  if (showEventInfos.length === 0) throw new Error("no events");
 
-  const moldedEventInfos = eventInfos.map(({ title, startTime, endTime }) => {
+  const moldedEventInfos = showEventInfos.map(({ title, startTime, endTime }) => {
     const dateStr = format(startTime, "yyyy/MM/dd");
     const startTimeStr = format(startTime, "HH:mm");
     const endTimeStr = format(endTime, "HH:mm");
@@ -213,21 +221,31 @@ export const callModificationAndDeletion = () => {
 };
 
 const createModificationMessage = (
-  modificationInfos: {
-    previousEventInfo: EventInfo;
-    newEventInfo: EventInfo;
-  }[],
+  modificationInfos: ModificationInfo[],
   partTimerProfile: PartTimerProfile,
 ): string | undefined => {
-  const messages = modificationInfos.map(({ previousEventInfo, newEventInfo }) => {
-    return `${createMessageFromEventInfo(previousEventInfo)}\n↓\n${createMessageFromEventInfo(newEventInfo)}`;
+  const messages = modificationInfos.map((modificationInfo) => {
+    const oldEventInfo: CreateMessageInfo = {
+      title: modificationInfo.title,
+      startTime: modificationInfo.startTime,
+      endTime: modificationInfo.endTime,
+    };
+    const newEventInfo: CreateMessageInfo = {
+      title: modificationInfo.newTitle,
+      startTime: modificationInfo.newStartTime,
+      endTime: modificationInfo.newEndTime,
+    };
+    return `${createMessageFromEventInfo(oldEventInfo)}\n↓\n${createMessageFromEventInfo(newEventInfo)}`;
   });
   if (messages.length == 0) return;
   const { job, lastName } = partTimerProfile;
   const messageTitle = `${job}${lastName}さんの以下の予定が変更されました。`;
   return `${messageTitle}\n${messages.join("\n\n")}`;
 };
-const createDeletionMessage = (deletionInfos: EventInfo[], partTimerProfile: PartTimerProfile): string | undefined => {
+const createDeletionMessage = (
+  deletionInfos: DeletionInfo[],
+  partTimerProfile: PartTimerProfile,
+): string | undefined => {
   const messages = deletionInfos.map(createMessageFromEventInfo);
   if (messages.length == 0) return;
   const { job, lastName } = partTimerProfile;
@@ -280,7 +298,8 @@ const getManagerSlackIds = (managerEmails: string[], client: SlackClient): strin
 
   return managerSlackIds;
 };
-const createMessageFromEventInfo = (eventInfo: EventInfo) => {
+
+const createMessageFromEventInfo = (eventInfo: CreateMessageInfo) => {
   const date = format(eventInfo.startTime, "MM/dd");
   const { workingStyle, restStartTime, restEndTime } = getEventInfoFromTitle(eventInfo.title);
   const startTime = format(eventInfo.startTime, "HH:mm");

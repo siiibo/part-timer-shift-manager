@@ -299,11 +299,11 @@ const getManagerSlackIds = (managerEmails: string[], client: SlackClient): strin
   return managerSlackIds;
 };
 
-const createMessageFromEventInfo = (eventInfo: CreateMessageInfo) => {
-  const date = format(eventInfo.startTime, "MM/dd");
-  const { workingStyle, restStartTime, restEndTime } = getEventInfoFromTitle(eventInfo.title);
-  const startTime = format(eventInfo.startTime, "HH:mm");
-  const endTime = format(eventInfo.endTime, "HH:mm");
+const createMessageFromEventInfo = (createMessageInfo: CreateMessageInfo) => {
+  const date = format(createMessageInfo.startTime, "MM/dd");
+  const { workingStyle, restStartTime, restEndTime } = getEventInfoFromTitle(createMessageInfo.title);
+  const startTime = format(createMessageInfo.startTime, "HH:mm");
+  const endTime = format(createMessageInfo.endTime, "HH:mm");
   if (restStartTime === undefined || restEndTime === undefined)
     return `【${workingStyle}】 ${date} ${startTime}~${endTime}`;
   else return `【${workingStyle}】 ${date} ${startTime}~${endTime} (休憩: ${restStartTime}~${restEndTime})`;

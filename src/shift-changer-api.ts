@@ -76,10 +76,10 @@ const registration = (userEmail: string, registrationInfos: RegistrationInfo[]) 
   });
 };
 
-const registerEvent = (eventInfo: RegistrationInfo, userEmail: string) => {
+const registerEvent = (registrationInfo: RegistrationInfo, userEmail: string) => {
   const calendar = getCalendar();
-  const [startDate, endDate] = [eventInfo.startTime, eventInfo.endTime];
-  calendar.createEvent(eventInfo.title, startDate, endDate, { guests: userEmail });
+  const [startDate, endDate] = [registrationInfo.startTime, registrationInfo.endTime];
+  calendar.createEvent(registrationInfo.title, startDate, endDate, { guests: userEmail });
 };
 
 const showEvents = (userEmail: string, startDate: Date): ShowEventInfo[] => {

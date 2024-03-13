@@ -151,7 +151,8 @@ export const getModificationInfos = (
       });
       const endTime = set(date, { hours: row.endTime.getHours(), minutes: row.endTime.getMinutes() });
       const newDate = row.newDate;
-      if (!newDate || !row.newStartTime || !row.newEndTime) throw new Error("new date is not defined");
+      if (!newDate || !row.newStartTime || !row.newEndTime)
+        throw new Error("日付、開始時刻、終了時刻のいずれかが未入力です");
       const newStartTime = set(newDate, {
         hours: row.newStartTime.getHours(),
         minutes: row.newStartTime.getMinutes(),

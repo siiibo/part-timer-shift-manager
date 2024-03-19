@@ -1,8 +1,14 @@
 import { set } from "date-fns";
+import { z } from "zod";
 
-import { PartTimerProfile } from "./JobSheet";
-import { createTitleFromEventInfo } from "./shift-changer";
-import { EventInfo } from "./shift-changer-api";
+const RegistrationSheet = z.object({
+  startTime: z.coerce.date(),
+  endTime: z.coerce.date(),
+  restStartTime: z.coerce.date().optional(),
+  restEndTime: z.coerce.date().optional(),
+  workingStyle: z.string(),
+});
+type RegistrationSheet = z.infer<typeof RegistrationSheet>;
 
 export const insertRegistrationSheet = () => {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
@@ -47,10 +53,7 @@ export const setValuesRegistrationSheet = (sheet: GoogleAppsScript.Spreadsheet.S
   timeCells.setDataValidation(timeRule);
 };
 
-export const getRegistrationInfos = (
-  sheet: GoogleAppsScript.Spreadsheet.Sheet,
-  partTimerProfile: PartTimerProfile,
-): EventInfo[] => {
+export const getRegistrationInfos = (sheet: GoogleAppsScript.Spreadsheet.Sheet): RegistrationSheet[] => {
   const registrationInfos = sheet
     .getRange(5, 1, sheet.getLastRow() - 4, sheet.getLastColumn())
     .getValues()
@@ -63,20 +66,20 @@ export const getRegistrationInfos = (
         minutes: startTimeDate.getMinutes(),
       });
       const endTimeDate = eventInfo[2];
+      const restStartTime = eventInfo[3] === "" ? undefined : eventInfo[3];
+      const restEndTime = eventInfo[4] === "" ? undefined : eventInfo[4];
       const endTime = set(date, { hours: endTimeDate.getHours(), minutes: endTimeDate.getMinutes() });
       const nowTime = new Date();
       if (startTime < nowTime) throw new Error("過去の時間にシフト登録はできません");
       const workingStyle = eventInfo[5] as string;
       if (workingStyle === "") throw new Error("working style is not defined");
-      if (eventInfo[3] === "" || eventInfo[4] === "") {
-        const title = createTitleFromEventInfo({ workingStyle }, partTimerProfile);
-        return { title, date, startTime, endTime };
-      } else {
-        const restStartTime = eventInfo[3];
-        const restEndTime = eventInfo[4];
-        const title = createTitleFromEventInfo({ restStartTime, restEndTime, workingStyle }, partTimerProfile);
-        return { title, date, startTime, endTime };
-      }
+      return RegistrationSheet.parse({
+        startTime,
+        endTime,
+        restStartTime,
+        restEndTime,
+        workingStyle: eventInfo[5],
+      });
     });
   return registrationInfos;
 };

@@ -80,12 +80,28 @@ export const callRegistration = () => {
   const sheet = getSheet(sheetType, spreadsheetUrl);
   const operationType: OperationType = "registration";
   const comment = sheet.getRange("A2").getValue();
-  const registrationInfos = getRegistrationInfos(sheet, partTimerProfile);
+  const registrationInfos = getRegistrationInfos(sheet);
+  const registrationInfosTitle = registrationInfos.map((registrationInfo) => {
+    const title = createTitleFromEventInfo(
+      {
+        restStartTime: registrationInfo.restStartTime,
+        restEndTime: registrationInfo.restEndTime,
+        workingStyle: registrationInfo.workingStyle,
+      },
+      partTimerProfile,
+    );
+    return {
+      title: title,
+      date: registrationInfo.startTime,
+      startTime: registrationInfo.startTime,
+      endTime: registrationInfo.endTime,
+    };
+  });
   const payload = {
     apiId: "shift-changer",
     operationType: operationType,
     userEmail: userEmail,
-    registrationInfos: JSON.stringify(registrationInfos),
+    registrationInfos: JSON.stringify(registrationInfosTitle),
   };
   const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
     method: "post",
@@ -97,7 +113,7 @@ export const callRegistration = () => {
   if (response.getResponseCode() !== 200) {
     throw new Error(response.getContentText());
   }
-  const messageToNotify = createRegistrationMessage(registrationInfos, comment, partTimerProfile);
+  const messageToNotify = createRegistrationMessage(registrationInfosTitle, comment, partTimerProfile);
   postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, messageToNotify, partTimerProfile);
   sheet.clear();
   SpreadsheetApp.flush();
@@ -304,8 +320,8 @@ const getEventInfoFromTitle = (
 //TODO:循環参照を解決
 export const createTitleFromEventInfo = (
   eventInfo: {
-    restStartTime?: Date;
-    restEndTime?: Date;
+    restStartTime?: Date | undefined;
+    restEndTime?: Date | undefined;
     workingStyle: string;
   },
   partTimerProfile: PartTimerProfile,

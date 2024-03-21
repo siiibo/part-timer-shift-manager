@@ -32,8 +32,8 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
   const userEmail = e.parameter.userEmail;
   switch (operationType) {
     case "registration": {
-      const registrationInfos = EventInfo.array().parse(JSON.parse(e.parameter.registrationInfos));
-      registration(userEmail, registrationInfos);
+      const registrationSheetRows = EventInfo.array().parse(JSON.parse(e.parameter.registrationSheetRows));
+      registration(userEmail, registrationSheetRows);
       break;
     }
     case "modificationAndDeletion": {
@@ -85,7 +85,7 @@ const modification = (
     previousEventInfo: EventInfo;
     newEventInfo: EventInfo;
   }[],
-  userEmail: string
+  userEmail: string,
 ) => {
   const calendar = getCalendar();
   modificationInfos.forEach((eventInfo) => modifyEvent(eventInfo, calendar, userEmail));
@@ -97,7 +97,7 @@ const modifyEvent = (
     newEventInfo: EventInfo;
   },
   calendar: GoogleAppsScript.Calendar.Calendar,
-  userEmail: string
+  userEmail: string,
 ) => {
   const [startDate, endDate] = [eventInfo.previousEventInfo.startTime, eventInfo.previousEventInfo.endTime];
   const newTitle = eventInfo.newEventInfo.title;

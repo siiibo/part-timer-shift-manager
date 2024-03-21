@@ -80,28 +80,28 @@ export const callRegistration = () => {
   const sheet = getSheet(sheetType, spreadsheetUrl);
   const operationType: OperationType = "registration";
   const comment = sheet.getRange("A2").getValue();
-  const registrationInfos = getRegistrationSheetRows(sheet);
-  const registrationInfosTitle = registrationInfos.map((registrationInfo) => {
+  const registrationSheetRows = getRegistrationSheetRows(sheet);
+  const registrationInfos = registrationSheetRows.map((registrationSheetRow) => {
     const title = createTitleFromEventInfo(
       {
-        ...(registrationInfo.restStartTime && { restStartTime: registrationInfo.restStartTime }),
-        ...(registrationInfo.restEndTime && { restEndTime: registrationInfo.restEndTime }),
-        workingStyle: registrationInfo.workingStyle,
+        ...(registrationSheetRow.restStartTime && { restStartTime: registrationSheetRow.restStartTime }),
+        ...(registrationSheetRow.restEndTime && { restEndTime: registrationSheetRow.restEndTime }),
+        workingStyle: registrationSheetRow.workingStyle,
       },
       partTimerProfile,
     );
     return {
       title: title,
-      date: registrationInfo.startTime,
-      startTime: registrationInfo.startTime,
-      endTime: registrationInfo.endTime,
+      date: registrationSheetRow.startTime,
+      startTime: registrationSheetRow.startTime,
+      endTime: registrationSheetRow.endTime,
     };
   });
   const payload = {
     apiId: "shift-changer",
     operationType: operationType,
     userEmail: userEmail,
-    registrationInfos: JSON.stringify(registrationInfosTitle),
+    registrationSheetRows: JSON.stringify(registrationInfos),
   };
   const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
     method: "post",
@@ -113,7 +113,7 @@ export const callRegistration = () => {
   if (response.getResponseCode() !== 200) {
     throw new Error(response.getContentText());
   }
-  const messageToNotify = createRegistrationMessage(registrationInfosTitle, comment, partTimerProfile);
+  const messageToNotify = createRegistrationMessage(registrationInfos, comment, partTimerProfile);
   postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, messageToNotify, partTimerProfile);
   sheet.clear();
   SpreadsheetApp.flush();
@@ -121,11 +121,11 @@ export const callRegistration = () => {
 };
 
 const createRegistrationMessage = (
-  registrationInfos: EventInfo[],
+  registrationSheetRows: EventInfo[],
   comment: string,
   partTimerProfile: PartTimerProfile,
 ): string => {
-  const messages = registrationInfos.map(createMessageFromEventInfo);
+  const messages = registrationSheetRows.map(createMessageFromEventInfo);
   const { job, lastName } = partTimerProfile;
   const messageTitle = `${job}${lastName}さんの以下の予定が追加されました。`;
   return comment

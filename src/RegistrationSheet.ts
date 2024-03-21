@@ -54,7 +54,7 @@ export const setValuesRegistrationSheet = (sheet: GoogleAppsScript.Spreadsheet.S
 };
 
 export const getRegistrationSheetRows = (sheet: GoogleAppsScript.Spreadsheet.Sheet): RegistrationSheetRow[] => {
-  const registrationInfos = sheet
+  const registrationSheetRows = sheet
     .getRange(5, 1, sheet.getLastRow() - 4, sheet.getLastColumn())
     .getValues()
     .map((eventInfo) => {
@@ -78,5 +78,5 @@ export const getRegistrationSheetRows = (sheet: GoogleAppsScript.Spreadsheet.She
         workingStyle,
       });
     });
-  return registrationInfos;
+  return registrationSheetRows;
 };

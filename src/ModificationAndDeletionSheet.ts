@@ -112,7 +112,7 @@ const getModificationAndDeletionSheetValues = (
     .getRange(9, 1, sheet.getLastRow() - 8, sheet.getLastColumn())
     .getValues()
     .map((row) => {
-      const deletionFlag = z.boolean(row[10]);
+      const deletionFlag = row[10];
       if (deletionFlag) {
         const date = row[1];
         const startTime = set(date, {
@@ -174,58 +174,6 @@ export const getModificationOrDeletion = (sheet: GoogleAppsScript.Spreadsheet.Sh
   const sheetValues = getModificationAndDeletionSheetValues(sheet);
   return [getModification(sheetValues), getDeletion(sheetValues)];
 };
-/*
-export const getModificationInfos = (
-  sheetValues: Modification[],
-  partTimerProfile: PartTimerProfile,
-): {
-  previousEventInfo: EventInfo;
-  newEventInfo: EventInfo;
-}[] => {
-  const modificationInfos = sheetValues.map((row) => {
-    const title = row.title;
-    const date = row.date;
-    const startTime = set(date, {
-      hours: row.startTime.getHours(),
-      minutes: row.startTime.getMinutes(),
-    });
-    const endTime = set(date, { hours: row.endTime.getHours(), minutes: row.endTime.getMinutes() });
-    const newDate = row.newDate;
-    const newStartTime = set(newDate, {
-      hours: row.newStartTime.getHours(),
-      minutes: row.newStartTime.getMinutes(),
-    });
-    const newEndTime = set(newDate, {
-      hours: row.newEndTime.getHours(),
-      minutes: row.newEndTime.getMinutes(),
-    });
-    const nowTime = new Date();
-    //NOTE:条件文をzodに含めるためにはsheetValuesのところで日付情報を与えなくてはならない
-    if (startTime < nowTime) throw new Error("過去のシフトは変更できません");
-    if (newStartTime < nowTime) throw new Error("過去の時間にシフト変更はできません");
-    const newWorkingStyle = row.newWorkingStyle;
-    if (newWorkingStyle === undefined) throw new Error("new working style is not defined");
-    if (row.newRestStartTime === undefined || row.newRestEndTime === undefined) {
-      const newTitle = createTitleFromEventInfo({ workingStyle: newWorkingStyle }, partTimerProfile);
-      return {
-        previousEventInfo: { title, date, startTime, endTime },
-        newEventInfo: { title: newTitle, date: newDate, startTime: newStartTime, endTime: newEndTime },
-      };
-    } else {
-      const newTitle = createTitleFromEventInfo(
-        { restStartTime: row.newRestStartTime, restEndTime: row.newRestEndTime, workingStyle: newWorkingStyle },
-        partTimerProfile,
-      );
-      return {
-        previousEventInfo: { title, date, startTime, endTime },
-        newEventInfo: { title: newTitle, date: newDate, startTime: newStartTime, endTime: newEndTime },
-      };
-    }
-  });
-
-  return modificationInfos;
-};
-*/
 export const getDeletionInfos = (sheetValues: Deletion[]): EventInfo[] => {
   const deletionInfos = sheetValues.map((row) => {
     const title = row.title;

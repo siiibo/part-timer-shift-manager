@@ -2,11 +2,13 @@ import { set } from "date-fns";
 import { z } from "zod";
 
 const RegistrationSheetRow = z.object({
-  startTime: z.coerce.date(),
+  startTime: z.coerce.date().min(new Date(), { message: "過去の時間にシフト登録はできません" }),
   endTime: z.coerce.date(),
   restStartTime: z.coerce.date().optional(),
   restEndTime: z.coerce.date().optional(),
-  workingStyle: z.string(),
+  workingStyle: z
+    .string()
+    .refine((value) => value === "リモート" || value === "出社", { message: "リモート/出社 を選択してください。" }),
 });
 type RegistrationSheetRow = z.infer<typeof RegistrationSheetRow>;
 
@@ -61,19 +63,15 @@ export const getRegistrationInfos = (sheet: GoogleAppsScript.Spreadsheet.Sheet):
       //NOTE: セルの書式設定が日付になっている場合はDate型が渡ってくる
       const date = eventInfo[0];
       const startTimeDate = eventInfo[1];
-      const startTimeSchema = z.date().min(new Date());
-      const startTime = startTimeSchema.parse(
-        set(date, {
-          hours: startTimeDate.getHours(),
-          minutes: startTimeDate.getMinutes(),
-        }),
-      );
+      const startTime = set(date, {
+        hours: startTimeDate.getHours(),
+        minutes: startTimeDate.getMinutes(),
+      });
       const endTimeDate = eventInfo[2];
       const restStartTime = eventInfo[3] === "" ? undefined : eventInfo[3];
       const restEndTime = eventInfo[4] === "" ? undefined : eventInfo[4];
       const endTime = set(date, { hours: endTimeDate.getHours(), minutes: endTimeDate.getMinutes() });
-      const workingStyleSchema = z.enum(["リモート", "出社"]);
-      const workingStyle = workingStyleSchema.parse(eventInfo[5]);
+      const workingStyle = eventInfo[5];
       return RegistrationSheetRow.parse({
         startTime,
         endTime,

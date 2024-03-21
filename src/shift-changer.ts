@@ -336,7 +336,6 @@ const getEventInfoFromTitle = (
   const [restStartTime, restEndTime] = restTimeResult ? restTimeResult.split("~") : [];
   return { workingStyle, restStartTime, restEndTime };
 };
-//TODO:循環参照を解決
 const createTitleFromEventInfo = (
   eventInfo: {
     restStartTime?: Date;

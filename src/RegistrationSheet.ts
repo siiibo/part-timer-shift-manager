@@ -6,9 +6,7 @@ const RegistrationSheetRow = z.object({
   endTime: z.coerce.date(),
   restStartTime: z.coerce.date().optional(),
   restEndTime: z.coerce.date().optional(),
-  workingStyle: z
-    .string()
-    .refine((value) => value === "リモート" || value === "出社", { message: "リモート/出社 を選択してください。" }),
+  workingStyle: z.literal("出社").or(z.literal("リモート")),
 });
 type RegistrationSheetRow = z.infer<typeof RegistrationSheetRow>;
 
@@ -67,9 +65,9 @@ export const getRegistrationSheetRows = (sheet: GoogleAppsScript.Spreadsheet.She
         hours: startTimeDate.getHours(),
         minutes: startTimeDate.getMinutes(),
       });
-      const restStartTime = eventInfo[3] === "" ? undefined : eventInfo[3];
       const endTimeDate = eventInfo[2];
       const endTime = set(date, { hours: endTimeDate.getHours(), minutes: endTimeDate.getMinutes() });
+      const restStartTime = eventInfo[3] === "" ? undefined : eventInfo[3];
       const restEndTime = eventInfo[4] === "" ? undefined : eventInfo[4];
       const workingStyle = eventInfo[5];
       return RegistrationSheetRow.parse({

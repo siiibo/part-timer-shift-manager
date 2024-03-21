@@ -1,14 +1,14 @@
 import { set } from "date-fns";
 import { z } from "zod";
 
-const RegistrationSheet = z.object({
+const RegistrationSheetRow = z.object({
   startTime: z.coerce.date(),
   endTime: z.coerce.date(),
   restStartTime: z.coerce.date().optional(),
   restEndTime: z.coerce.date().optional(),
   workingStyle: z.string(),
 });
-type RegistrationSheet = z.infer<typeof RegistrationSheet>;
+type RegistrationSheetRow = z.infer<typeof RegistrationSheetRow>;
 
 export const insertRegistrationSheet = () => {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
@@ -53,7 +53,7 @@ export const setValuesRegistrationSheet = (sheet: GoogleAppsScript.Spreadsheet.S
   timeCells.setDataValidation(timeRule);
 };
 
-export const getRegistrationInfos = (sheet: GoogleAppsScript.Spreadsheet.Sheet): RegistrationSheet[] => {
+export const getRegistrationInfos = (sheet: GoogleAppsScript.Spreadsheet.Sheet): RegistrationSheetRow[] => {
   const registrationInfos = sheet
     .getRange(5, 1, sheet.getLastRow() - 4, sheet.getLastColumn())
     .getValues()
@@ -73,7 +73,7 @@ export const getRegistrationInfos = (sheet: GoogleAppsScript.Spreadsheet.Sheet):
       if (startTime < nowTime) throw new Error("過去の時間にシフト登録はできません");
       const workingStyle = eventInfo[5] as string;
       if (workingStyle === "") throw new Error("working style is not defined");
-      return RegistrationSheet.parse({
+      return RegistrationSheetRow.parse({
         startTime,
         endTime,
         restStartTime,

@@ -55,7 +55,7 @@ export const setValuesRegistrationSheet = (sheet: GoogleAppsScript.Spreadsheet.S
   timeCells.setDataValidation(timeRule);
 };
 
-export const getRegistrationInfos = (sheet: GoogleAppsScript.Spreadsheet.Sheet): RegistrationSheetRow[] => {
+export const getRegistrationSheetRows = (sheet: GoogleAppsScript.Spreadsheet.Sheet): RegistrationSheetRow[] => {
   const registrationInfos = sheet
     .getRange(5, 1, sheet.getLastRow() - 4, sheet.getLastColumn())
     .getValues()

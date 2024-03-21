@@ -1,8 +1,6 @@
 import { set } from "date-fns";
 import { z } from "zod";
 
-import { EventInfo } from "./shift-changer-api";
-
 export const insertModificationAndDeletionSheet = () => {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   let sheet;
@@ -31,7 +29,7 @@ export type Modification = z.infer<typeof Modification>;
 const Deletion = z.object({
   type: z.literal("deletion"),
   title: z.string(),
-  date: z.coerce.date(),
+  date: z.coerce.date().min(new Date(), { message: "過去の時間はシフト削除はできません" }),
   startTime: z.coerce.date(),
   endTime: z.coerce.date(),
 });
@@ -173,20 +171,4 @@ const getDeletion = (sheetValues: ModificationAndDeletionSheetRow[]): Deletion[]
 export const getModificationOrDeletion = (sheet: GoogleAppsScript.Spreadsheet.Sheet): [Modification[], Deletion[]] => {
   const sheetValues = getModificationAndDeletionSheetValues(sheet);
   return [getModification(sheetValues), getDeletion(sheetValues)];
-};
-export const getDeletionInfos = (sheetValues: Deletion[]): EventInfo[] => {
-  const deletionInfos = sheetValues.map((row) => {
-    const title = row.title;
-    const date = row.date;
-    const startTime = set(date, {
-      hours: row.startTime.getHours(),
-      minutes: row.startTime.getMinutes(),
-    });
-    const nowTime = new Date();
-    if (startTime < nowTime) throw new Error("過去のシフトは削除できません");
-    const endTime = set(date, { hours: row.endTime.getHours(), minutes: row.endTime.getMinutes() });
-    return { title, date, startTime, endTime };
-  });
-
-  return deletionInfos;
 };

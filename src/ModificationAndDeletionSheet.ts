@@ -1,7 +1,6 @@
 import { set } from "date-fns";
+import { z } from "zod";
 
-import { PartTimerProfile } from "./JobSheet";
-import { createTitleFromEventInfo } from "./shift-changer";
 import { EventInfo } from "./shift-changer-api";
 
 export const insertModificationAndDeletionSheet = () => {
@@ -15,6 +14,29 @@ export const insertModificationAndDeletionSheet = () => {
   sheet.addDeveloperMetadata(`part-timer-shift-manager-modificationAndDeletion`);
   setValuesModificationAndDeletionSheet(sheet);
 };
+export const Modification = z.object({
+  type: z.literal("modification"),
+  title: z.string(),
+  date: z.coerce.date(),
+  startTime: z.coerce.date().min(new Date(), { message: "過去の時間にシフト変更はできません" }),
+  endTime: z.coerce.date(),
+  newDate: z.coerce.date(),
+  newStartTime: z.coerce.date().min(new Date(), { message: "過去の時間にシフト変更はできません" }),
+  newEndTime: z.coerce.date(),
+  newRestStartTime: z.coerce.date().optional(),
+  newRestEndTime: z.coerce.date().optional(),
+  newWorkingStyle: z.literal("出社").or(z.literal("リモート")),
+});
+export type Modification = z.infer<typeof Modification>;
+const Deletion = z.object({
+  type: z.literal("deletion"),
+  title: z.string(),
+  date: z.coerce.date(),
+  startTime: z.coerce.date(),
+  endTime: z.coerce.date(),
+});
+type Deletion = z.infer<typeof Deletion>;
+export type ModificationAndDeletionSheetRow = Modification | Deletion;
 
 export const setValuesModificationAndDeletionSheet = (sheet: GoogleAppsScript.Spreadsheet.Sheet) => {
   const description1 = "コメント欄 (下の色付きセルに記入してください)";
@@ -83,137 +105,140 @@ export const setValuesModificationAndDeletionSheet = (sheet: GoogleAppsScript.Sp
 
   sheet.setColumnWidth(1, 370);
 };
-export const getModificationAndDeletionSheetValues = (
+const getModificationAndDeletionSheetValues = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
-): {
-  title: string;
-  date: Date;
-  startTime: Date;
-  endTime: Date;
-  newDate: Date;
-  newStartTime: Date;
-  newEndTime: Date;
-  newRestStartTime?: Date;
-  newRestEndTime?: Date;
-  newWorkingStyle: string;
-  deletionFlag: boolean;
-}[] => {
+): ModificationAndDeletionSheetRow[] => {
   const sheetValues = sheet
     .getRange(9, 1, sheet.getLastRow() - 8, sheet.getLastColumn())
     .getValues()
     .map((row) => {
-      return {
-        //NOTE: セルの書式設定が日付になっている場合はDate型が渡ってくる
-        title: row[0] as string,
-        date: row[1],
-        startTime: row[2],
-        endTime: row[3],
-        //TODO: 未入力の場合undefinedを返すようにする
-        newDate: row[4], // 未入力の場合は空文字、それ以外の場合はDate型が渡ってくる
-        newStartTime: row[5], // 未入力の場合は空文字、それ以外の場合はDate型が渡ってくる
-        newEndTime: row[6], // 未入力の場合は空文字、それ以外の場合はDate型が渡ってくる
-        newRestStartTime: row[7] === "" ? undefined : row[7],
-        newRestEndTime: row[8] === "" ? undefined : row[8],
-        newWorkingStyle: row[9] as string,
-        deletionFlag: row[10] as boolean,
-      };
+      const deletionFlag = z.boolean(row[10]);
+      if (deletionFlag) {
+        const date = row[1];
+        const startTime = set(date, {
+          hours: row[2].getHours(),
+          minutes: row[2].getMinutes(),
+        });
+        const endTime = set(date, { hours: row[3].getHours(), minutes: row[3].getMinutes() });
+        return Deletion.parse({
+          type: "deletion",
+          title: row[0],
+          date: row[1],
+          startTime: startTime,
+          endTime: endTime,
+        });
+      } else {
+        const date = row[1];
+        const startTime = set(date, {
+          hours: row[2].getHours(),
+          minutes: row[2].getMinutes(),
+        });
+        const endTime = set(date, { hours: row[3].getHours(), minutes: row[3].getMinutes() });
+        const newDate = row[4];
+        const newStartTime = set(newDate, {
+          hours: row[5].getHours(),
+          minutes: row[5].getMinutes(),
+        });
+        const newEndTime = set(newDate, {
+          hours: row[6].getHours(),
+          minutes: row[6].getMinutes(),
+        });
+        return Modification.parse({
+          type: "modification",
+          title: row[0],
+          date: row[1],
+          startTime: startTime,
+          endTime: endTime,
+          newDate: newDate,
+          newStartTime: newStartTime,
+          newEndTime: newEndTime,
+          newRestStartTime: row[7] === "" ? undefined : row[7],
+          newRestEndTime: row[8] === "" ? undefined : row[8],
+          newWorkingStyle: row[9],
+        });
+      }
     });
-
   return sheetValues;
 };
+const isModification = (row: ModificationAndDeletionSheetRow): row is Modification => row.type === "modification";
+const isDeletion = (row: ModificationAndDeletionSheetRow): row is Deletion => row.type === "deletion";
 
+const getModification = (sheetValues: ModificationAndDeletionSheetRow[]): Modification[] => {
+  return sheetValues.filter(isModification);
+};
+const getDeletion = (sheetValues: ModificationAndDeletionSheetRow[]): Deletion[] => {
+  return sheetValues.filter(isDeletion);
+};
+
+export const getModificationOrDeletion = (sheet: GoogleAppsScript.Spreadsheet.Sheet): [Modification[], Deletion[]] => {
+  const sheetValues = getModificationAndDeletionSheetValues(sheet);
+  return [getModification(sheetValues), getDeletion(sheetValues)];
+};
+/*
 export const getModificationInfos = (
-  sheetValues: {
-    title: string;
-    date: Date;
-    startTime: Date;
-    endTime: Date;
-    newDate: Date;
-    newStartTime: Date;
-    newEndTime: Date;
-    newRestStartTime?: Date;
-    newRestEndTime?: Date;
-    newWorkingStyle?: string;
-    deletionFlag: boolean;
-  }[],
+  sheetValues: Modification[],
   partTimerProfile: PartTimerProfile,
 ): {
   previousEventInfo: EventInfo;
   newEventInfo: EventInfo;
 }[] => {
-  const modificationInfos = sheetValues
-    .filter((row) => !row.deletionFlag)
-    .map((row) => {
-      const title = row.title;
-      const date = row.date;
-      const startTime = set(date, {
-        hours: row.startTime.getHours(),
-        minutes: row.startTime.getMinutes(),
-      });
-      const endTime = set(date, { hours: row.endTime.getHours(), minutes: row.endTime.getMinutes() });
-      const newDate = row.newDate;
-      const newStartTime = set(newDate, {
-        hours: row.newStartTime.getHours(),
-        minutes: row.newStartTime.getMinutes(),
-      });
-      const newEndTime = set(newDate, {
-        hours: row.newEndTime.getHours(),
-        minutes: row.newEndTime.getMinutes(),
-      });
-      const nowTime = new Date();
-      if (startTime < nowTime) throw new Error("過去のシフトは変更できません");
-      if (newStartTime < nowTime) throw new Error("過去の時間にシフト変更はできません");
-      const newWorkingStyle = row.newWorkingStyle;
-      if (newWorkingStyle === undefined) throw new Error("new working style is not defined");
-      if (row.newRestStartTime === undefined || row.newRestEndTime === undefined) {
-        const newTitle = createTitleFromEventInfo({ workingStyle: newWorkingStyle }, partTimerProfile);
-        return {
-          previousEventInfo: { title, date, startTime, endTime },
-          newEventInfo: { title: newTitle, date: newDate, startTime: newStartTime, endTime: newEndTime },
-        };
-      } else {
-        const newTitle = createTitleFromEventInfo(
-          { restStartTime: row.newRestStartTime, restEndTime: row.newRestEndTime, workingStyle: newWorkingStyle },
-          partTimerProfile,
-        );
-        return {
-          previousEventInfo: { title, date, startTime, endTime },
-          newEventInfo: { title: newTitle, date: newDate, startTime: newStartTime, endTime: newEndTime },
-        };
-      }
+  const modificationInfos = sheetValues.map((row) => {
+    const title = row.title;
+    const date = row.date;
+    const startTime = set(date, {
+      hours: row.startTime.getHours(),
+      minutes: row.startTime.getMinutes(),
     });
+    const endTime = set(date, { hours: row.endTime.getHours(), minutes: row.endTime.getMinutes() });
+    const newDate = row.newDate;
+    const newStartTime = set(newDate, {
+      hours: row.newStartTime.getHours(),
+      minutes: row.newStartTime.getMinutes(),
+    });
+    const newEndTime = set(newDate, {
+      hours: row.newEndTime.getHours(),
+      minutes: row.newEndTime.getMinutes(),
+    });
+    const nowTime = new Date();
+    //NOTE:条件文をzodに含めるためにはsheetValuesのところで日付情報を与えなくてはならない
+    if (startTime < nowTime) throw new Error("過去のシフトは変更できません");
+    if (newStartTime < nowTime) throw new Error("過去の時間にシフト変更はできません");
+    const newWorkingStyle = row.newWorkingStyle;
+    if (newWorkingStyle === undefined) throw new Error("new working style is not defined");
+    if (row.newRestStartTime === undefined || row.newRestEndTime === undefined) {
+      const newTitle = createTitleFromEventInfo({ workingStyle: newWorkingStyle }, partTimerProfile);
+      return {
+        previousEventInfo: { title, date, startTime, endTime },
+        newEventInfo: { title: newTitle, date: newDate, startTime: newStartTime, endTime: newEndTime },
+      };
+    } else {
+      const newTitle = createTitleFromEventInfo(
+        { restStartTime: row.newRestStartTime, restEndTime: row.newRestEndTime, workingStyle: newWorkingStyle },
+        partTimerProfile,
+      );
+      return {
+        previousEventInfo: { title, date, startTime, endTime },
+        newEventInfo: { title: newTitle, date: newDate, startTime: newStartTime, endTime: newEndTime },
+      };
+    }
+  });
 
   return modificationInfos;
 };
-export const getDeletionInfos = (
-  sheetValues: {
-    title: string;
-    date: Date;
-    startTime: Date;
-    endTime: Date;
-    newDate: Date;
-    newStartTime: Date;
-    newEndTime: Date;
-    newRestStartTime?: Date;
-    newRestEndTime?: Date;
-    newWorkingStyle: string;
-    deletionFlag: boolean;
-  }[],
-): EventInfo[] => {
-  const deletionInfos = sheetValues
-    .filter((row) => row.deletionFlag)
-    .map((row) => {
-      const title = row.title;
-      const date = row.date;
-      const startTime = set(date, {
-        hours: row.startTime.getHours(),
-        minutes: row.startTime.getMinutes(),
-      });
-      const nowTime = new Date();
-      if (startTime < nowTime) throw new Error("過去のシフトは削除できません");
-      const endTime = set(date, { hours: row.endTime.getHours(), minutes: row.endTime.getMinutes() });
-      return { title, date, startTime, endTime };
+*/
+export const getDeletionInfos = (sheetValues: Deletion[]): EventInfo[] => {
+  const deletionInfos = sheetValues.map((row) => {
+    const title = row.title;
+    const date = row.date;
+    const startTime = set(date, {
+      hours: row.startTime.getHours(),
+      minutes: row.startTime.getMinutes(),
     });
+    const nowTime = new Date();
+    if (startTime < nowTime) throw new Error("過去のシフトは削除できません");
+    const endTime = set(date, { hours: row.endTime.getHours(), minutes: row.endTime.getMinutes() });
+    return { title, date, startTime, endTime };
+  });
 
   return deletionInfos;
 };

@@ -5,9 +5,7 @@ import { getConfig } from "./config";
 import { PartTimerProfile } from "./JobSheet";
 import { getPartTimerProfile } from "./JobSheet";
 import {
-  getDeletionInfos,
-  getModificationAndDeletionSheetValues,
-  getModificationInfos,
+  getModificationOrDeletion,
   insertModificationAndDeletionSheet,
   setValuesModificationAndDeletionSheet,
 } from "./ModificationAndDeletionSheet";
@@ -190,16 +188,37 @@ export const callModificationAndDeletion = () => {
   const sheet = getSheet(sheetType, spreadsheetUrl);
   const comment = sheet.getRange("A2").getValue();
   const operationType: OperationType = "modificationAndDeletion";
-  const sheetValues = getModificationAndDeletionSheetValues(sheet);
-  const valuesForOperation = sheetValues.filter((row) => row.deletionFlag || row.newDate);
-  const modificationInfos = getModificationInfos(valuesForOperation, partTimerProfile);
-  const deletionInfos = getDeletionInfos(valuesForOperation);
+  const [modificationSheetRows, deletionSheetRows] = getModificationOrDeletion(sheet);
+  const modificationInfos = modificationSheetRows.map((modificationSheetRow) => {
+    const newTitle = createTitleFromEventInfo(
+      {
+        ...(modificationSheetRow.newRestStartTime && { restStartTime: modificationSheetRow.newRestStartTime }),
+        ...(modificationSheetRow.newRestEndTime && { restEndTime: modificationSheetRow.newRestEndTime }),
+        workingStyle: modificationSheetRow.newWorkingStyle,
+      },
+      partTimerProfile,
+    );
+    return {
+      previousEventInfo: EventInfo.parse({
+        title: modificationSheetRow.title,
+        date: modificationSheetRow.startTime,
+        startTime: modificationSheetRow.startTime,
+        endTime: modificationSheetRow.endTime,
+      }),
+      newEventInfo: EventInfo.parse({
+        title: newTitle,
+        date: modificationSheetRow.newDate,
+        startTime: modificationSheetRow.newStartTime,
+        endTime: modificationSheetRow.newEndTime,
+      }),
+    };
+  });
   const payload = {
     apiId: "shift-changer",
     operationType: operationType,
     userEmail: userEmail,
     modificationInfos: JSON.stringify(modificationInfos),
-    deletionInfos: JSON.stringify(deletionInfos),
+    deletionInfos: JSON.stringify(deletionSheetRows),
   };
   const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
     method: "post",
@@ -211,12 +230,12 @@ export const callModificationAndDeletion = () => {
   if (response.getResponseCode() !== 200) {
     throw new Error(response.getContentText());
   }
-  if (modificationInfos.length == 0 && deletionInfos.length == 0) {
+  if (modificationInfos.length == 0 && deletionSheetRows.length == 0) {
     throw new Error("変更・削除する予定がありません。");
   }
   const modificationAndDeletionMessageToNotify = [
     createModificationMessage(modificationInfos, partTimerProfile),
-    createDeletionMessage(deletionInfos, partTimerProfile),
+    createDeletionMessage(deletionSheetRows, partTimerProfile),
     comment ? `コメント: ${comment}` : undefined,
   ]
     .filter(Boolean)
@@ -318,7 +337,7 @@ const getEventInfoFromTitle = (
   return { workingStyle, restStartTime, restEndTime };
 };
 //TODO:循環参照を解決
-export const createTitleFromEventInfo = (
+const createTitleFromEventInfo = (
   eventInfo: {
     restStartTime?: Date;
     restEndTime?: Date;

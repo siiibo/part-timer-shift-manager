@@ -121,11 +121,11 @@ export const callRegistration = () => {
 };
 
 const createRegistrationMessage = (
-  registrationSheetRows: EventInfo[],
+  registrationInfos: EventInfo[],
   comment: string,
   partTimerProfile: PartTimerProfile,
 ): string => {
-  const messages = registrationSheetRows.map(createMessageFromEventInfo);
+  const messages = registrationInfos.map(createMessageFromEventInfo);
   const { job, lastName } = partTimerProfile;
   const messageTitle = `${job}${lastName}さんの以下の予定が追加されました。`;
   return comment

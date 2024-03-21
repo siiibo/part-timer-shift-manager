@@ -67,10 +67,10 @@ export const getRegistrationInfos = (sheet: GoogleAppsScript.Spreadsheet.Sheet):
         hours: startTimeDate.getHours(),
         minutes: startTimeDate.getMinutes(),
       });
-      const endTimeDate = eventInfo[2];
       const restStartTime = eventInfo[3] === "" ? undefined : eventInfo[3];
-      const restEndTime = eventInfo[4] === "" ? undefined : eventInfo[4];
+      const endTimeDate = eventInfo[2];
       const endTime = set(date, { hours: endTimeDate.getHours(), minutes: endTimeDate.getMinutes() });
+      const restEndTime = eventInfo[4] === "" ? undefined : eventInfo[4];
       const workingStyle = eventInfo[5];
       return RegistrationSheetRow.parse({
         startTime,

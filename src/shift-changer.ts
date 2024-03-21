@@ -84,8 +84,8 @@ export const callRegistration = () => {
   const registrationInfosTitle = registrationInfos.map((registrationInfo) => {
     const title = createTitleFromEventInfo(
       {
-        restStartTime: registrationInfo.restStartTime,
-        restEndTime: registrationInfo.restEndTime,
+        ...(registrationInfo.restStartTime && { restStartTime: registrationInfo.restStartTime }),
+        ...(registrationInfo.restEndTime && { restEndTime: registrationInfo.restEndTime }),
         workingStyle: registrationInfo.workingStyle,
       },
       partTimerProfile,
@@ -320,8 +320,8 @@ const getEventInfoFromTitle = (
 //TODO:循環参照を解決
 export const createTitleFromEventInfo = (
   eventInfo: {
-    restStartTime?: Date | undefined;
-    restEndTime?: Date | undefined;
+    restStartTime?: Date;
+    restEndTime?: Date;
     workingStyle: string;
   },
   partTimerProfile: PartTimerProfile,

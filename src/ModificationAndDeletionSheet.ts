@@ -116,6 +116,7 @@ export const setValuesModificationAndDeletionSheet = (sheet: GoogleAppsScript.Sp
 
   sheet.setColumnWidth(1, 370);
 };
+
 const getModificationOrDeletionSheetValues = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
 ): (ModificationSheetRow | DeletionSheetRow)[] => {
@@ -139,11 +140,8 @@ const getModificationOrDeletionSheetValues = (
     )
     .map((row) => {
       if (row.isDeletionTarget) {
-        const startTime = set(row.date, {
-          hours: row.startTime.getHours(),
-          minutes: row.startTime.getMinutes(),
-        });
-        const endTime = set(row.date, { hours: row.endTime.getHours(), minutes: row.endTime.getMinutes() });
+        const startTime = setTime(row.date, row.startTime);
+        const endTime = setTime(row.date, row.endTime);
         return DeletionSheetRow.parse({
           type: "deletion",
           title: row.title,
@@ -152,21 +150,12 @@ const getModificationOrDeletionSheetValues = (
           endTime: endTime,
         });
       } else {
-        const startTime = set(row.date, {
-          hours: row.startTime.getHours(),
-          minutes: row.startTime.getMinutes(),
-        });
-        const endTime = set(row.date, { hours: row.endTime.getHours(), minutes: row.endTime.getMinutes() });
+        const startTime = setTime(row.date, row.startTime);
+        const endTime = setTime(row.date, row.endTime);
         if (!row.newDate || !row.newStartTime || !row.newEndTime)
           throw new Error("変更後の日付、開始時刻、終了時刻は全て入力してください");
-        const newStartTime = set(row.newDate, {
-          hours: row.newStartTime.getHours(),
-          minutes: row.newStartTime.getMinutes(),
-        });
-        const newEndTime = set(row.newDate, {
-          hours: row.newEndTime.getHours(),
-          minutes: row.newEndTime.getMinutes(),
-        });
+        const newStartTime = setTime(row.newDate, row.newStartTime);
+        const newEndTime = setTime(row.newDate, row.newEndTime);
         return ModificationSheetRow.parse({
           type: "modification",
           title: row.title,
@@ -195,4 +184,8 @@ export const getModificationOrDeletion = (
     modificationSheetRows: sheetValues.filter(isModificationSheetRow),
     deletionSheetRows: sheetValues.filter(isDeletionSheetRow),
   };
+};
+//NOTE: 時間情報のみの変数に日付情報を与えるために用いる
+const setTime = (date: Date, time: Date): Date => {
+  return set(date, { hours: time.getHours(), minutes: time.getMinutes() });
 };

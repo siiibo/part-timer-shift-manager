@@ -1,6 +1,22 @@
 import { set } from "date-fns";
 import { z } from "zod";
 
+// NOTE: z.object内でz.literal("").or(z.date())を使うと型推論がおかしくなるので、preprocessを使っている
+const dateOrEmptyString = z.preprocess((val) => (val === "" ? undefined : val), z.date().optional());
+const ModificationOrDeletionSheetRow = z.object({
+  title: z.string(),
+  date: z.date(),
+  startTime: z.date(),
+  endTime: z.date(),
+  newDate: dateOrEmptyString,
+  newStartTime: dateOrEmptyString,
+  newEndTime: dateOrEmptyString,
+  newRestStartTime: dateOrEmptyString,
+  newRestEndTime: dateOrEmptyString,
+  newWorkingStyle: z.literal("出社").or(z.literal("リモート")),
+  isDeletionTarget: z.boolean(),
+});
+
 export const insertModificationAndDeletionSheet = () => {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   let sheet;
@@ -103,22 +119,6 @@ export const setValuesModificationAndDeletionSheet = (sheet: GoogleAppsScript.Sp
 const getModificationOrDeletionSheetValues = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
 ): (ModificationSheetRow | DeletionSheetRow)[] => {
-  // NOTE: z.object内でz.literal("").or(z.date())を使うと型推論がおかしくなるので、preprocessを使っている
-  const dateOrEmptyString = z.preprocess((val) => (val === "" ? undefined : val), z.date().optional());
-  const ModificationOrDeletionSheetRow = z.object({
-    title: z.string(),
-    date: z.date(),
-    startTime: z.date(),
-    endTime: z.date(),
-    newDate: dateOrEmptyString,
-    newStartTime: dateOrEmptyString,
-    newEndTime: dateOrEmptyString,
-    newRestStartTime: dateOrEmptyString,
-    newRestEndTime: dateOrEmptyString,
-    newWorkingStyle: z.literal("出社").or(z.literal("リモート")),
-    isDeletionTarget: z.boolean(),
-  });
-
   const sheetValues = sheet
     .getRange(9, 1, sheet.getLastRow() - 8, sheet.getLastColumn())
     .getValues()

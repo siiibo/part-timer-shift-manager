@@ -101,7 +101,7 @@ export const setValuesModificationAndDeletionSheet = (sheet: GoogleAppsScript.Sp
 
   sheet.setColumnWidth(1, 370);
 };
-const getModificationAndDeletionSheetValues = (
+const getModificationOrDeletionSheetValues = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
 ): ModificationOrDeletionSheetRow[] => {
   const sheetValues = sheet
@@ -161,7 +161,7 @@ const isDeletionSheetRow = (row: ModificationOrDeletionSheetRow): row is Deletio
 export const getModificationOrDeletion = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
 ): { modificationSheetRows: ModificationSheetRow[]; deletionSheetRows: DeletionSheetRow[] } => {
-  const sheetValues = getModificationAndDeletionSheetValues(sheet);
+  const sheetValues = getModificationOrDeletionSheetValues(sheet);
   return {
     modificationSheetRows: sheetValues.filter(isModificationSheetRow),
     deletionSheetRows: sheetValues.filter(isDeletionSheetRow),

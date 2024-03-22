@@ -12,7 +12,7 @@ export const insertModificationAndDeletionSheet = () => {
   sheet.addDeveloperMetadata(`part-timer-shift-manager-modificationAndDeletion`);
   setValuesModificationAndDeletionSheet(sheet);
 };
-const ModificationRow = z.object({
+const ModificationSheetRow = z.object({
   type: z.literal("modification"),
   title: z.string(),
   startTime: z.coerce.date().min(new Date(), { message: "過去の時間にシフト変更はできません" }),
@@ -23,16 +23,16 @@ const ModificationRow = z.object({
   newRestEndTime: z.coerce.date().optional(),
   newWorkingStyle: z.literal("出社").or(z.literal("リモート")),
 });
-type ModificationRow = z.infer<typeof ModificationRow>;
-const DeletionRow = z.object({
+type ModificationSheetRow = z.infer<typeof ModificationSheetRow>;
+const DeletionSheetRow = z.object({
   type: z.literal("deletion"),
   title: z.string(),
   date: z.coerce.date(), //TODO: 日付情報だけの変数dateを消去する
   startTime: z.coerce.date().min(new Date(), { message: "過去の時間はシフト削除はできません" }),
   endTime: z.coerce.date(),
 });
-type DeletionRow = z.infer<typeof DeletionRow>;
-type ModificationOrDeletionSheetRow = ModificationRow | DeletionRow;
+type DeletionSheetRow = z.infer<typeof DeletionSheetRow>;
+type ModificationOrDeletionSheetRow = ModificationSheetRow | DeletionSheetRow;
 
 export const setValuesModificationAndDeletionSheet = (sheet: GoogleAppsScript.Spreadsheet.Sheet) => {
   const description1 = "コメント欄 (下の色付きセルに記入してください)";
@@ -116,7 +116,7 @@ const getModificationAndDeletionSheetValues = (
           minutes: row[2].getMinutes(),
         });
         const endTime = set(date, { hours: row[3].getHours(), minutes: row[3].getMinutes() });
-        return DeletionRow.parse({
+        return DeletionSheetRow.parse({
           type: "deletion",
           title: row[0],
           date: row[1],
@@ -139,7 +139,7 @@ const getModificationAndDeletionSheetValues = (
           hours: row[6].getHours(),
           minutes: row[6].getMinutes(),
         });
-        return ModificationRow.parse({
+        return ModificationSheetRow.parse({
           type: "modification",
           title: row[0],
           startTime: startTime,
@@ -154,12 +154,13 @@ const getModificationAndDeletionSheetValues = (
     });
   return sheetValues;
 };
-const isModification = (row: ModificationOrDeletionSheetRow): row is ModificationRow => row.type === "modification";
-const isDeletion = (row: ModificationOrDeletionSheetRow): row is DeletionRow => row.type === "deletion";
+const isModification = (row: ModificationOrDeletionSheetRow): row is ModificationSheetRow =>
+  row.type === "modification";
+const isDeletion = (row: ModificationOrDeletionSheetRow): row is DeletionSheetRow => row.type === "deletion";
 
 export const getModificationOrDeletion = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
-): { modificationSheetRows: ModificationRow[]; deletionSheetRows: DeletionRow[] } => {
+): { modificationSheetRows: ModificationSheetRow[]; deletionSheetRows: DeletionSheetRow[] } => {
   const sheetValues = getModificationAndDeletionSheetValues(sheet);
   return {
     modificationSheetRows: sheetValues.filter(isModification),

@@ -157,14 +157,12 @@ const getModificationAndDeletionSheetValues = (
 const isModification = (row: ModificationAndDeletionSheetRow): row is Modification => row.type === "modification";
 const isDeletion = (row: ModificationAndDeletionSheetRow): row is Deletion => row.type === "deletion";
 
-const getModification = (sheetValues: ModificationAndDeletionSheetRow[]): Modification[] => {
-  return sheetValues.filter(isModification);
-};
-const getDeletion = (sheetValues: ModificationAndDeletionSheetRow[]): Deletion[] => {
-  return sheetValues.filter(isDeletion);
-};
-
-export const getModificationOrDeletion = (sheet: GoogleAppsScript.Spreadsheet.Sheet): [Modification[], Deletion[]] => {
+export const getModificationOrDeletion = (
+  sheet: GoogleAppsScript.Spreadsheet.Sheet,
+): { modificationSheetRows: Modification[]; deletionSheetRows: Deletion[] } => {
   const sheetValues = getModificationAndDeletionSheetValues(sheet);
-  return [getModification(sheetValues), getDeletion(sheetValues)];
+  return {
+    modificationSheetRows: sheetValues.filter(isModification),
+    deletionSheetRows: sheetValues.filter(isDeletion),
+  };
 };

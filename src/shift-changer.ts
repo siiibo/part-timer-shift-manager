@@ -188,7 +188,7 @@ export const callModificationAndDeletion = () => {
   const sheet = getSheet(sheetType, spreadsheetUrl);
   const comment = sheet.getRange("A2").getValue();
   const operationType: OperationType = "modificationAndDeletion";
-  const [modificationSheetRows, deletionSheetRows] = getModificationOrDeletion(sheet);
+  const { modificationSheetRows, deletionSheetRows } = getModificationOrDeletion(sheet);
   const modificationInfos = modificationSheetRows.map((modificationSheetRow) => {
     const newTitle = createTitleFromEventInfo(
       {

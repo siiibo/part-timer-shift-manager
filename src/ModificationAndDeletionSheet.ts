@@ -104,51 +104,80 @@ export const setValuesModificationAndDeletionSheet = (sheet: GoogleAppsScript.Sp
 const getModificationOrDeletionSheetValues = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
 ): ModificationOrDeletionSheetRow[] => {
+  // NOTE: z.object内でz.literal("").or(z.date())を使うと型推論がおかしくなるので、preprocessを使っている
+  const dateOrEmptyString = z.preprocess((val) => (val === "" ? undefined : val), z.date().optional());
+  const MDSheetRow = z.object({
+    title: z.string(),
+    date: z.date(),
+    startTime: z.date(),
+    endTime: z.date(),
+    newDate: dateOrEmptyString,
+    newStartTime: dateOrEmptyString,
+    newEndTime: dateOrEmptyString,
+    newRestStartTime: dateOrEmptyString,
+    newRestEndTime: dateOrEmptyString,
+    newWorkingStyle: z.literal("出社").or(z.literal("リモート")),
+    isDeletionTarget: z.boolean(),
+  });
+
   const sheetValues = sheet
     .getRange(9, 1, sheet.getLastRow() - 8, sheet.getLastColumn())
     .getValues()
+    .map((row) =>
+      MDSheetRow.parse({
+        title: row[0],
+        date: row[1],
+        startTime: row[2],
+        endTime: row[3],
+        newDate: row[4],
+        newStartTime: row[5],
+        newEndTime: row[6],
+        newRestStartTime: row[7],
+        newRestEndTime: row[8],
+        newWorkingStyle: row[9],
+        isDeletionTarget: row[10],
+      }),
+    )
     .map((row) => {
-      const deletionFlag = row[10];
-      if (deletionFlag) {
-        const date = row[1];
-        const startTime = set(date, {
-          hours: row[2].getHours(),
-          minutes: row[2].getMinutes(),
+      if (row.isDeletionTarget) {
+        const startTime = set(row.date, {
+          hours: row.startTime.getHours(),
+          minutes: row.startTime.getMinutes(),
         });
-        const endTime = set(date, { hours: row[3].getHours(), minutes: row[3].getMinutes() });
+        const endTime = set(row.date, { hours: row.endTime.getHours(), minutes: row.endTime.getMinutes() });
         return DeletionSheetRow.parse({
           type: "deletion",
-          title: row[0],
-          date: row[1],
+          title: row.title,
+          date: row.date,
           startTime: startTime,
           endTime: endTime,
         });
       } else {
-        const date = row[1];
-        const startTime = set(date, {
-          hours: row[2].getHours(),
-          minutes: row[2].getMinutes(),
+        const startTime = set(row.date, {
+          hours: row.startTime.getHours(),
+          minutes: row.startTime.getMinutes(),
         });
-        const endTime = set(date, { hours: row[3].getHours(), minutes: row[3].getMinutes() });
-        const newDate = row[4];
-        const newStartTime = set(newDate, {
-          hours: row[5].getHours(),
-          minutes: row[5].getMinutes(),
+        const endTime = set(row.date, { hours: row.endTime.getHours(), minutes: row.endTime.getMinutes() });
+        if (!row.newDate || !row.newStartTime || !row.newEndTime)
+          throw new Error("変更後の日付、開始時刻、終了時刻は全て入力してください");
+        const newStartTime = set(row.newDate, {
+          hours: row.newStartTime.getHours(),
+          minutes: row.newStartTime.getMinutes(),
         });
-        const newEndTime = set(newDate, {
-          hours: row[6].getHours(),
-          minutes: row[6].getMinutes(),
+        const newEndTime = set(row.newDate, {
+          hours: row.newEndTime.getHours(),
+          minutes: row.newEndTime.getMinutes(),
         });
         return ModificationSheetRow.parse({
           type: "modification",
-          title: row[0],
+          title: row.title,
           startTime: startTime,
           endTime: endTime,
           newStartTime: newStartTime,
           newEndTime: newEndTime,
-          newRestStartTime: row[7] === "" ? undefined : row[7],
-          newRestEndTime: row[8] === "" ? undefined : row[8],
-          newWorkingStyle: row[9],
+          newRestStartTime: row.newRestEndTime,
+          newRestEndTime: row.newRestEndTime,
+          newWorkingStyle: row.newWorkingStyle,
         });
       }
     });

@@ -15,10 +15,8 @@ export const insertModificationAndDeletionSheet = () => {
 const Modification = z.object({
   type: z.literal("modification"),
   title: z.string(),
-  date: z.coerce.date(),
   startTime: z.coerce.date().min(new Date(), { message: "過去の時間にシフト変更はできません" }),
   endTime: z.coerce.date(),
-  newDate: z.coerce.date(),
   newStartTime: z.coerce.date().min(new Date(), { message: "過去の時間にシフト変更はできません" }),
   newEndTime: z.coerce.date(),
   newRestStartTime: z.coerce.date().optional(),
@@ -144,10 +142,8 @@ const getModificationAndDeletionSheetValues = (
         return Modification.parse({
           type: "modification",
           title: row[0],
-          date: row[1],
           startTime: startTime,
           endTime: endTime,
-          newDate: newDate,
           newStartTime: newStartTime,
           newEndTime: newEndTime,
           newRestStartTime: row[7] === "" ? undefined : row[7],

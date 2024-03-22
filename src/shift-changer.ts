@@ -207,7 +207,7 @@ export const callModificationAndDeletion = () => {
       }),
       newEventInfo: EventInfo.parse({
         title: newTitle,
-        date: modificationSheetRow.newDate,
+        date: modificationSheetRow.newStartTime,
         startTime: modificationSheetRow.newStartTime,
         endTime: modificationSheetRow.newEndTime,
       }),

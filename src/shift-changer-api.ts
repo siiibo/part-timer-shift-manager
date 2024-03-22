@@ -32,8 +32,8 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
   const userEmail = e.parameter.userEmail;
   switch (operationType) {
     case "registration": {
-      const registrationSheetRows = EventInfo.array().parse(JSON.parse(e.parameter.registrationSheetRows));
-      registration(userEmail, registrationSheetRows);
+      const registrationInfos = EventInfo.array().parse(JSON.parse(e.parameter.registrationInfos));
+      registration(userEmail, registrationInfos);
       break;
     }
     case "modificationAndDeletion": {

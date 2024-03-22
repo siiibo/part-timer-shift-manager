@@ -29,8 +29,8 @@ export type Modification = z.infer<typeof Modification>;
 const Deletion = z.object({
   type: z.literal("deletion"),
   title: z.string(),
-  date: z.coerce.date().min(new Date(), { message: "過去の時間はシフト削除はできません" }),
-  startTime: z.coerce.date(),
+  date: z.coerce.date(),
+  startTime: z.coerce.date().min(new Date(), { message: "過去の時間はシフト削除はできません" }),
   endTime: z.coerce.date(),
 });
 type Deletion = z.infer<typeof Deletion>;

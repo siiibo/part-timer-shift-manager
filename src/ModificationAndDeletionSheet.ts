@@ -15,21 +15,21 @@ export const insertModificationAndDeletionSheet = () => {
 const ModificationSheetRow = z.object({
   type: z.literal("modification"),
   title: z.string(),
-  startTime: z.coerce.date().min(new Date(), { message: "過去の時間にシフト変更はできません" }),
-  endTime: z.coerce.date(),
-  newStartTime: z.coerce.date().min(new Date(), { message: "過去の時間にシフト変更はできません" }),
-  newEndTime: z.coerce.date(),
-  newRestStartTime: z.coerce.date().optional(),
-  newRestEndTime: z.coerce.date().optional(),
+  startTime: z.date().min(new Date(), { message: "過去の時間にシフト変更はできません" }),
+  endTime: z.date(),
+  newStartTime: z.date().min(new Date(), { message: "過去の時間にシフト変更はできません" }),
+  newEndTime: z.date(),
+  newRestStartTime: z.date().optional(),
+  newRestEndTime: z.date().optional(),
   newWorkingStyle: z.literal("出社").or(z.literal("リモート")),
 });
 type ModificationSheetRow = z.infer<typeof ModificationSheetRow>;
 const DeletionSheetRow = z.object({
   type: z.literal("deletion"),
   title: z.string(),
-  date: z.coerce.date(), //TODO: 日付情報だけの変数dateを消去する
-  startTime: z.coerce.date().min(new Date(), { message: "過去の時間はシフト削除はできません" }),
-  endTime: z.coerce.date(),
+  date: z.date(), //TODO: 日付情報だけの変数dateを消去する
+  startTime: z.date().min(new Date(), { message: "過去の時間はシフト削除はできません" }),
+  endTime: z.date(),
 });
 type DeletionSheetRow = z.infer<typeof DeletionSheetRow>;
 type ModificationOrDeletionSheetRow = ModificationSheetRow | DeletionSheetRow;

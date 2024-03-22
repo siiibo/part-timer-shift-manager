@@ -12,7 +12,7 @@ export const insertModificationAndDeletionSheet = () => {
   sheet.addDeveloperMetadata(`part-timer-shift-manager-modificationAndDeletion`);
   setValuesModificationAndDeletionSheet(sheet);
 };
-export const Modification = z.object({
+const Modification = z.object({
   type: z.literal("modification"),
   title: z.string(),
   date: z.coerce.date(),
@@ -25,7 +25,7 @@ export const Modification = z.object({
   newRestEndTime: z.coerce.date().optional(),
   newWorkingStyle: z.literal("出社").or(z.literal("リモート")),
 });
-export type Modification = z.infer<typeof Modification>;
+type Modification = z.infer<typeof Modification>;
 const Deletion = z.object({
   type: z.literal("deletion"),
   title: z.string(),
@@ -34,7 +34,7 @@ const Deletion = z.object({
   endTime: z.coerce.date(),
 });
 type Deletion = z.infer<typeof Deletion>;
-export type ModificationAndDeletionSheetRow = Modification | Deletion;
+type ModificationAndDeletionSheetRow = Modification | Deletion;
 
 export const setValuesModificationAndDeletionSheet = (sheet: GoogleAppsScript.Spreadsheet.Sheet) => {
   const description1 = "コメント欄 (下の色付きセルに記入してください)";

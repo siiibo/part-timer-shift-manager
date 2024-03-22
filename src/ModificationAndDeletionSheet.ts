@@ -27,7 +27,7 @@ type Modification = z.infer<typeof Modification>;
 const Deletion = z.object({
   type: z.literal("deletion"),
   title: z.string(),
-  date: z.coerce.date(),
+  date: z.coerce.date(), //TODO: 日付情報だけの変数dateを消去する
   startTime: z.coerce.date().min(new Date(), { message: "過去の時間はシフト削除はできません" }),
   endTime: z.coerce.date(),
 });

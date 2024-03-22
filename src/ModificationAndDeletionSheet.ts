@@ -14,7 +14,7 @@ const ModificationOrDeletionSheetRow = z.object({
   newRestStartTime: dateOrEmptyString,
   newRestEndTime: dateOrEmptyString,
   newWorkingStyle: z.literal("出社").or(z.literal("リモート")),
-  isDeletionTarget: z.boolean(),
+  isDeletionTarget: z.string(),
 });
 export const insertModificationAndDeletionSheet = () => {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();

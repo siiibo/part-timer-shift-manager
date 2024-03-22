@@ -217,8 +217,8 @@ export const callModificationAndDeletion = () => {
     apiId: "shift-changer",
     operationType: operationType,
     userEmail: userEmail,
-    modificationSheetRows: JSON.stringify(modificationInfos),
-    deletionSheetRows: JSON.stringify(deletionSheetRows),
+    modificationInfos: JSON.stringify(modificationInfos),
+    deletionInfos: JSON.stringify(deletionSheetRows),
   };
   const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
     method: "post",

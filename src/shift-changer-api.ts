@@ -37,8 +37,8 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
       break;
     }
     case "modificationAndDeletion": {
-      const modificationInfos = ModificationInfo.array().parse(JSON.parse(e.parameter.modificationSheetRows));
-      const deletionInfos = EventInfo.array().parse(JSON.parse(e.parameter.deletionSheetRows));
+      const modificationInfos = ModificationInfo.array().parse(JSON.parse(e.parameter.modificationInfos));
+      const deletionInfos = EventInfo.array().parse(JSON.parse(e.parameter.deletionInfos));
 
       modification(modificationInfos, userEmail);
       deletion(deletionInfos, userEmail);

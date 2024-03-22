@@ -32,7 +32,6 @@ const DeletionSheetRow = z.object({
   endTime: z.date(),
 });
 type DeletionSheetRow = z.infer<typeof DeletionSheetRow>;
-type ModificationOrDeletionSheetRow = ModificationSheetRow | DeletionSheetRow;
 
 export const setValuesModificationAndDeletionSheet = (sheet: GoogleAppsScript.Spreadsheet.Sheet) => {
   const description1 = "コメント欄 (下の色付きセルに記入してください)";
@@ -103,10 +102,10 @@ export const setValuesModificationAndDeletionSheet = (sheet: GoogleAppsScript.Sp
 };
 const getModificationOrDeletionSheetValues = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
-): ModificationOrDeletionSheetRow[] => {
+): (ModificationSheetRow | DeletionSheetRow)[] => {
   // NOTE: z.object内でz.literal("").or(z.date())を使うと型推論がおかしくなるので、preprocessを使っている
   const dateOrEmptyString = z.preprocess((val) => (val === "" ? undefined : val), z.date().optional());
-  const MDSheetRow = z.object({
+  const ModificationOrDeletionSheetRow = z.object({
     title: z.string(),
     date: z.date(),
     startTime: z.date(),
@@ -124,7 +123,7 @@ const getModificationOrDeletionSheetValues = (
     .getRange(9, 1, sheet.getLastRow() - 8, sheet.getLastColumn())
     .getValues()
     .map((row) =>
-      MDSheetRow.parse({
+      ModificationOrDeletionSheetRow.parse({
         title: row[0],
         date: row[1],
         startTime: row[2],
@@ -183,9 +182,10 @@ const getModificationOrDeletionSheetValues = (
     });
   return sheetValues;
 };
-const isModificationSheetRow = (row: ModificationOrDeletionSheetRow): row is ModificationSheetRow =>
+const isModificationSheetRow = (row: ModificationSheetRow | DeletionSheetRow): row is ModificationSheetRow =>
   row.type === "modification";
-const isDeletionSheetRow = (row: ModificationOrDeletionSheetRow): row is DeletionSheetRow => row.type === "deletion";
+const isDeletionSheetRow = (row: ModificationSheetRow | DeletionSheetRow): row is DeletionSheetRow =>
+  row.type === "deletion";
 
 export const getModificationOrDeletion = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet,

@@ -101,7 +101,7 @@ export const callRegistration = () => {
     apiId: "shift-changer",
     operationType: operationType,
     userEmail: userEmail,
-    registrationSheetRows: JSON.stringify(registrationInfos),
+    registrationInfos: JSON.stringify(registrationInfos),
   };
   const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
     method: "post",

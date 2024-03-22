@@ -32,7 +32,7 @@ const Deletion = z.object({
   endTime: z.coerce.date(),
 });
 type Deletion = z.infer<typeof Deletion>;
-type ModificationAndDeletionSheetRow = Modification | Deletion;
+type ModificationOrDeletionSheetRow = Modification | Deletion;
 
 export const setValuesModificationAndDeletionSheet = (sheet: GoogleAppsScript.Spreadsheet.Sheet) => {
   const description1 = "コメント欄 (下の色付きセルに記入してください)";
@@ -103,7 +103,7 @@ export const setValuesModificationAndDeletionSheet = (sheet: GoogleAppsScript.Sp
 };
 const getModificationAndDeletionSheetValues = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
-): ModificationAndDeletionSheetRow[] => {
+): ModificationOrDeletionSheetRow[] => {
   const sheetValues = sheet
     .getRange(9, 1, sheet.getLastRow() - 8, sheet.getLastColumn())
     .getValues()
@@ -154,8 +154,8 @@ const getModificationAndDeletionSheetValues = (
     });
   return sheetValues;
 };
-const isModification = (row: ModificationAndDeletionSheetRow): row is Modification => row.type === "modification";
-const isDeletion = (row: ModificationAndDeletionSheetRow): row is Deletion => row.type === "deletion";
+const isModification = (row: ModificationOrDeletionSheetRow): row is Modification => row.type === "modification";
+const isDeletion = (row: ModificationOrDeletionSheetRow): row is Deletion => row.type === "deletion";
 
 export const getModificationOrDeletion = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet,

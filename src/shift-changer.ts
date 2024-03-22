@@ -199,18 +199,18 @@ export const callModificationAndDeletion = () => {
       partTimerProfile,
     );
     return {
-      previousEventInfo: EventInfo.parse({
+      previousEventInfo: {
         title: modificationSheetRow.title,
         date: modificationSheetRow.startTime,
         startTime: modificationSheetRow.startTime,
         endTime: modificationSheetRow.endTime,
-      }),
-      newEventInfo: EventInfo.parse({
+      },
+      newEventInfo: {
         title: newTitle,
         date: modificationSheetRow.newStartTime,
         startTime: modificationSheetRow.newStartTime,
         endTime: modificationSheetRow.newEndTime,
-      }),
+      },
     };
   });
   const payload = {

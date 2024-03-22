@@ -16,7 +16,6 @@ const ModificationOrDeletionSheetRow = z.object({
   newWorkingStyle: z.literal("出社").or(z.literal("リモート")),
   isDeletionTarget: z.boolean(),
 });
-
 export const insertModificationAndDeletionSheet = () => {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   let sheet;
@@ -140,8 +139,8 @@ const getModificationOrDeletionSheetValues = (
     )
     .map((row) => {
       if (row.isDeletionTarget) {
-        const startTime = setTime(row.date, row.startTime);
-        const endTime = setTime(row.date, row.endTime);
+        const startTime = mergeTimeToDate(row.date, row.startTime);
+        const endTime = mergeTimeToDate(row.date, row.endTime);
         return DeletionSheetRow.parse({
           type: "deletion",
           title: row.title,
@@ -150,12 +149,12 @@ const getModificationOrDeletionSheetValues = (
           endTime: endTime,
         });
       } else {
-        const startTime = setTime(row.date, row.startTime);
-        const endTime = setTime(row.date, row.endTime);
+        const startTime = mergeTimeToDate(row.date, row.startTime);
+        const endTime = mergeTimeToDate(row.date, row.endTime);
         if (!row.newDate || !row.newStartTime || !row.newEndTime)
           throw new Error("変更後の日付、開始時刻、終了時刻は全て入力してください");
-        const newStartTime = setTime(row.newDate, row.newStartTime);
-        const newEndTime = setTime(row.newDate, row.newEndTime);
+        const newStartTime = mergeTimeToDate(row.newDate, row.newStartTime);
+        const newEndTime = mergeTimeToDate(row.newDate, row.newEndTime);
         return ModificationSheetRow.parse({
           type: "modification",
           title: row.title,
@@ -186,6 +185,6 @@ export const getModificationOrDeletion = (
   };
 };
 //NOTE: 時間情報のみの変数に日付情報を与えるために用いる
-const setTime = (date: Date, time: Date): Date => {
+const mergeTimeToDate = (date: Date, time: Date): Date => {
   return set(date, { hours: time.getHours(), minutes: time.getMinutes() });
 };

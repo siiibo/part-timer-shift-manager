@@ -1,21 +1,6 @@
 import { set } from "date-fns";
 import { z } from "zod";
 
-// NOTE: z.object内でz.literal("").or(z.date())を使うと型推論がおかしくなるので、preprocessを使っている
-const dateOrEmptyString = z.preprocess((val) => (val === "" ? undefined : val), z.date().optional());
-const ModificationOrDeletionSheetRow = z.object({
-  title: z.string(),
-  date: z.date(),
-  startTime: z.date(),
-  endTime: z.date(),
-  newDate: dateOrEmptyString,
-  newStartTime: dateOrEmptyString,
-  newEndTime: dateOrEmptyString,
-  newRestStartTime: dateOrEmptyString,
-  newRestEndTime: dateOrEmptyString,
-  newWorkingStyle: z.literal("出社").or(z.literal("リモート")),
-  isDeletionTarget: z.string(),
-});
 export const insertModificationAndDeletionSheet = () => {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   let sheet;
@@ -47,6 +32,21 @@ const DeletionSheetRow = z.object({
   endTime: z.date(),
 });
 type DeletionSheetRow = z.infer<typeof DeletionSheetRow>;
+// NOTE: z.object内でz.literal("").or(z.date())を使うと型推論がおかしくなるので、preprocessを使っている
+const dateOrEmptyString = z.preprocess((val) => (val === "" ? undefined : val), z.date().optional());
+const ModificationOrDeletionSheetRow = z.object({
+  title: z.string(),
+  date: z.date(),
+  startTime: z.date(),
+  endTime: z.date(),
+  newDate: dateOrEmptyString,
+  newStartTime: dateOrEmptyString,
+  newEndTime: dateOrEmptyString,
+  newRestStartTime: dateOrEmptyString,
+  newRestEndTime: dateOrEmptyString,
+  newWorkingStyle: z.literal("出社").or(z.literal("リモート")),
+  isDeletionTarget: z.string(),
+});
 
 export const setValuesModificationAndDeletionSheet = (sheet: GoogleAppsScript.Spreadsheet.Sheet) => {
   const description1 = "コメント欄 (下の色付きセルに記入してください)";
@@ -184,7 +184,7 @@ export const getModificationOrDeletion = (
     deletionSheetRows: sheetValues.filter(isDeletionSheetRow),
   };
 };
-//NOTE: 時間情報のみの変数に日付情報を与えるために用いる
+//NOTE: 時間情報の変数だと日付情報が1899/12/30になってしまうので適切な日付情報に更新するために用いる
 const mergeTimeToDate = (date: Date, time: Date): Date => {
   return set(date, { hours: time.getHours(), minutes: time.getMinutes() });
 };

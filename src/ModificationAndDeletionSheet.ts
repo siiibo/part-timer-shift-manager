@@ -12,6 +12,10 @@ export const insertModificationAndDeletionSheet = () => {
   sheet.addDeveloperMetadata(`part-timer-shift-manager-modificationAndDeletion`);
   setValuesModificationAndDeletionSheet(sheet);
 };
+const workingStyleOrEmptyString = z.preprocess(
+  (val) => (val === "" ? undefined : val),
+  z.literal("出社").or(z.literal("リモート")).optional(),
+);
 const ModificationSheetRow = z.object({
   type: z.literal("modification"),
   title: z.string(),
@@ -21,7 +25,7 @@ const ModificationSheetRow = z.object({
   newEndTime: z.date(),
   newRestStartTime: z.date().optional(),
   newRestEndTime: z.date().optional(),
-  newWorkingStyle: z.literal("出社").or(z.literal("リモート")),
+  newWorkingStyle: workingStyleOrEmptyString,
 });
 type ModificationSheetRow = z.infer<typeof ModificationSheetRow>;
 const DeletionSheetRow = z.object({
@@ -44,8 +48,8 @@ const ModificationOrDeletionSheetRow = z.object({
   newEndTime: dateOrEmptyString,
   newRestStartTime: dateOrEmptyString,
   newRestEndTime: dateOrEmptyString,
-  newWorkingStyle: z.literal("出社").or(z.literal("リモート")),
-  isDeletionTarget: z.string(),
+  newWorkingStyle: workingStyleOrEmptyString,
+  isDeletionTarget: z.literal(true).or(z.literal("")),
 });
 
 export const setValuesModificationAndDeletionSheet = (sheet: GoogleAppsScript.Spreadsheet.Sheet) => {
@@ -139,6 +143,7 @@ const getModificationOrDeletionSheetValues = (
     )
     .map((row) => {
       if (row.isDeletionTarget) {
+        console.log(row.isDeletionTarget);
         const startTime = mergeTimeToDate(row.date, row.startTime);
         const endTime = mergeTimeToDate(row.date, row.endTime);
         return DeletionSheetRow.parse({
@@ -149,6 +154,7 @@ const getModificationOrDeletionSheetValues = (
           endTime: endTime,
         });
       } else {
+        console.log(row.isDeletionTarget);
         const startTime = mergeTimeToDate(row.date, row.startTime);
         const endTime = mergeTimeToDate(row.date, row.endTime);
         if (!row.newDate || !row.newStartTime || !row.newEndTime)

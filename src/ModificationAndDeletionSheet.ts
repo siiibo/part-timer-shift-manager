@@ -190,7 +190,7 @@ export const getModificationOrDeletion = (
     deletionSheetRows: sheetValues.filter(isDeletionSheetRow),
   };
 };
-//NOTE: 時間情報の変数だと日付情報が1899/12/30になってしまうので適切な日付情報に更新するために用いる
+//NOTE: Googleスプレッドシートでは時間のみの入力がDate型として取得される際、日付部分はデフォルトで1899/12/30となるため適切な日付情報に更新するために用いる
 const mergeTimeToDate = (date: Date, time: Date): Date => {
   return set(date, { hours: time.getHours(), minutes: time.getMinutes() });
 };

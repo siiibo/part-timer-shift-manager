@@ -142,6 +142,9 @@ const getModificationOrDeletionSheetValues = (
         isDeletionTarget: row[10],
       }),
     )
+    .filter((row) => {
+      return row.newDate || row.newStartTime || row.newEndTime;
+    })
     .map((row) => {
       if (row.isDeletionTarget) {
         console.log(row.isDeletionTarget);
@@ -159,7 +162,7 @@ const getModificationOrDeletionSheetValues = (
         const startTime = mergeTimeToDate(row.date, row.startTime);
         const endTime = mergeTimeToDate(row.date, row.endTime);
         if (!row.newDate || !row.newStartTime || !row.newEndTime)
-          throw new Error("変更後の日付、開始時刻、終了時刻は全て入力してください");
+          throw new Error("変更後の日付、開始時刻、終了時刻は必須です");
         const newStartTime = mergeTimeToDate(row.newDate, row.newStartTime);
         const newEndTime = mergeTimeToDate(row.newDate, row.newEndTime);
         return ModificationSheetRow.parse({

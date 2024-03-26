@@ -27,7 +27,6 @@ const workingStyleOrEmptyString = z.preprocess(
   (val) => (val === "" ? undefined : val),
   z.literal("出社").or(z.literal("リモート")).optional(),
 );
-const booleanOrEmptyString = z.preprocess((val) => (val === "" ? false : val), z.boolean());
 const ModificationOrDeletionSheetRow = z.object({
   title: z.string(),
   date: z.date(),
@@ -39,7 +38,7 @@ const ModificationOrDeletionSheetRow = z.object({
   newRestStartTime: dateOrEmptyString,
   newRestEndTime: dateOrEmptyString,
   newWorkingStyle: workingStyleOrEmptyString,
-  isDeletionTarget: booleanOrEmptyString,
+  isDeletionTarget: z.coerce.boolean(),
 });
 
 export const insertModificationAndDeletionSheet = () => {

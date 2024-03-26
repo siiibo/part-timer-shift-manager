@@ -143,7 +143,7 @@ const getModificationOrDeletionSheetValues = (
       }),
     )
     .filter((row) => {
-      return row.newDate || row.newStartTime || row.newEndTime;
+      return !row.isDeletionTarget && (row.newDate || row.newStartTime || row.newEndTime);
     })
     .map((row) => {
       if (row.isDeletionTarget) {

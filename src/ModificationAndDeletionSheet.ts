@@ -12,10 +12,6 @@ export const insertModificationAndDeletionSheet = () => {
   sheet.addDeveloperMetadata(`part-timer-shift-manager-modificationAndDeletion`);
   setValuesModificationAndDeletionSheet(sheet);
 };
-const workingStyleOrEmptyString = z.preprocess(
-  (val) => (val === "" ? undefined : val),
-  z.literal("出社").or(z.literal("リモート")).optional(),
-);
 const ModificationSheetRow = z.object({
   type: z.literal("modification"),
   title: z.string(),
@@ -25,7 +21,7 @@ const ModificationSheetRow = z.object({
   newEndTime: z.date(),
   newRestStartTime: z.date().optional(),
   newRestEndTime: z.date().optional(),
-  newWorkingStyle: workingStyleOrEmptyString,
+  newWorkingStyle: z.literal("出社").or(z.literal("リモート")),
 });
 type ModificationSheetRow = z.infer<typeof ModificationSheetRow>;
 const DeletionSheetRow = z.object({
@@ -38,6 +34,10 @@ const DeletionSheetRow = z.object({
 type DeletionSheetRow = z.infer<typeof DeletionSheetRow>;
 // NOTE: z.object内でz.literal("").or(z.date())を使うと型推論がおかしくなるので、preprocessを使っている
 const dateOrEmptyString = z.preprocess((val) => (val === "" ? undefined : val), z.date().optional());
+const workingStyleOrEmptyString = z.preprocess(
+  (val) => (val === "" ? undefined : val),
+  z.literal("出社").or(z.literal("リモート")).optional(),
+);
 const ModificationOrDeletionSheetRow = z.object({
   title: z.string(),
   date: z.date(),

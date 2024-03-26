@@ -1,17 +1,6 @@
 import { set } from "date-fns";
 import { z } from "zod";
 
-export const insertModificationAndDeletionSheet = () => {
-  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-  let sheet;
-  try {
-    sheet = spreadsheet.insertSheet(`変更・削除`, 0);
-  } catch {
-    throw new Error("既存の「変更・削除」シートを使用してください");
-  }
-  sheet.addDeveloperMetadata(`part-timer-shift-manager-modificationAndDeletion`);
-  setValuesModificationAndDeletionSheet(sheet);
-};
 const ModificationSheetRow = z.object({
   type: z.literal("modification"),
   title: z.string(),
@@ -51,6 +40,18 @@ const ModificationOrDeletionSheetRow = z.object({
   newWorkingStyle: workingStyleOrEmptyString,
   isDeletionTarget: z.literal(true).or(z.literal("")),
 });
+
+export const insertModificationAndDeletionSheet = () => {
+  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet;
+  try {
+    sheet = spreadsheet.insertSheet(`変更・削除`, 0);
+  } catch {
+    throw new Error("既存の「変更・削除」シートを使用してください");
+  }
+  sheet.addDeveloperMetadata(`part-timer-shift-manager-modificationAndDeletion`);
+  setValuesModificationAndDeletionSheet(sheet);
+};
 
 export const setValuesModificationAndDeletionSheet = (sheet: GoogleAppsScript.Spreadsheet.Sheet) => {
   const description1 = "コメント欄 (下の色付きセルに記入してください)";

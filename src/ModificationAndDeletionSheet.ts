@@ -192,7 +192,7 @@ export const getModificationOrDeletion = (
     deletionSheetRows: sheetValues.filter(isDeletionSheetRow),
   };
 };
-//NOTE: Googleスプレッドシートでは時間のみの入力がDate型として取得される際、日付部分はデフォルトで1899/12/30となるため適切な日付情報に更新するために用いる
+//NOTE: Googleスプレッドシートでは時間のみの入力がDate型として取得される際、日付部分はデフォルトで1899/12/30となるため適切な日付情報に更新する必要がある
 const mergeTimeToDate = (date: Date, time: Date): Date => {
   return set(date, { hours: time.getHours(), minutes: time.getMinutes() });
 };

@@ -275,10 +275,11 @@ const postMessageToSlackChannel = (
   const { HR_MANAGER_SLACK_ID } = getConfig();
   const { managerEmails } = partTimerProfile;
   const managerSlackIds = getManagerSlackIds(managerEmails, client);
-  const mentionMessageToManagers = [HR_MANAGER_SLACK_ID, ...managerSlackIds].map(slackIdToMention).join(" ");
+  const mentionMessageToManagers = HR_MANAGER_SLACK_ID ? [HR_MANAGER_SLACK_ID, ...managerSlackIds] : managerSlackIds;
+  const mentionMessage = mentionMessageToManagers.map(slackIdToMention).join(" ");
   client.chat.postMessage({
     channel: slackChannelToPost,
-    text: `${mentionMessageToManagers}\n${messageToNotify}`,
+    text: `${mentionMessage}\n${messageToNotify}`,
   });
 };
 const getManagerSlackIds = (managerEmails: string[], client: SlackClient): string[] => {

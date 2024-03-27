@@ -147,7 +147,6 @@ const getModificationOrDeletionSheetValues = (
     })
     .map((row) => {
       if (row.isDeletionTarget) {
-        console.log(row.isDeletionTarget);
         const startTime = mergeTimeToDate(row.date, row.startTime);
         const endTime = mergeTimeToDate(row.date, row.endTime);
         return DeletionSheetRow.parse({
@@ -158,7 +157,6 @@ const getModificationOrDeletionSheetValues = (
           endTime: endTime,
         });
       } else {
-        console.log(row.isDeletionTarget);
         const startTime = mergeTimeToDate(row.date, row.startTime);
         const endTime = mergeTimeToDate(row.date, row.endTime);
         if (!row.newDate || !row.newStartTime || !row.newEndTime)

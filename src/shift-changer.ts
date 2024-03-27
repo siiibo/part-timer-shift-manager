@@ -9,7 +9,7 @@ import {
   insertModificationAndDeletionSheet,
   setValuesModificationAndDeletionSheet,
 } from "./ModificationAndDeletionSheet";
-import { getRegistrationSheetRows, insertRegistrationSheet, setValuesRegistrationSheet } from "./RegistrationSheet";
+import { getRegistrationRows, insertRegistrationSheet, setValuesRegistrationSheet } from "./RegistrationSheet";
 import { EventInfo, shiftChanger } from "./shift-changer-api";
 
 type SheetType = "registration" | "modificationAndDeletion";
@@ -78,21 +78,21 @@ export const callRegistration = () => {
   const sheet = getSheet(sheetType, spreadsheetUrl);
   const operationType: OperationType = "registration";
   const comment = sheet.getRange("A2").getValue();
-  const registrationSheetRows = getRegistrationSheetRows(sheet);
-  const registrationInfos = registrationSheetRows.map((registrationSheetRow) => {
+  const registrationRows = getRegistrationRows(sheet);
+  const registrationInfos = registrationRows.map((registrationRow) => {
     const title = createTitleFromEventInfo(
       {
-        ...(registrationSheetRow.restStartTime && { restStartTime: registrationSheetRow.restStartTime }),
-        ...(registrationSheetRow.restEndTime && { restEndTime: registrationSheetRow.restEndTime }),
-        workingStyle: registrationSheetRow.workingStyle,
+        ...(registrationRow.restStartTime && { restStartTime: registrationRow.restStartTime }),
+        ...(registrationRow.restEndTime && { restEndTime: registrationRow.restEndTime }),
+        workingStyle: registrationRow.workingStyle,
       },
       partTimerProfile,
     );
     return {
       title: title,
-      date: registrationSheetRow.startTime,
-      startTime: registrationSheetRow.startTime,
-      endTime: registrationSheetRow.endTime,
+      date: registrationRow.startTime,
+      startTime: registrationRow.startTime,
+      endTime: registrationRow.endTime,
     };
   });
   const payload = {
@@ -188,28 +188,28 @@ export const callModificationAndDeletion = () => {
   const sheet = getSheet(sheetType, spreadsheetUrl);
   const comment = sheet.getRange("A2").getValue();
   const operationType: OperationType = "modificationAndDeletion";
-  const { modificationSheetRows, deletionSheetRows } = getModificationOrDeletion(sheet);
-  const modificationInfos = modificationSheetRows.map((modificationSheetRow) => {
+  const { modificationRows, deletionRows } = getModificationOrDeletion(sheet);
+  const modificationInfos = modificationRows.map((modificationRow) => {
     const newTitle = createTitleFromEventInfo(
       {
-        ...(modificationSheetRow.newRestStartTime && { restStartTime: modificationSheetRow.newRestStartTime }),
-        ...(modificationSheetRow.newRestEndTime && { restEndTime: modificationSheetRow.newRestEndTime }),
-        workingStyle: modificationSheetRow.newWorkingStyle,
+        ...(modificationRow.newRestStartTime && { restStartTime: modificationRow.newRestStartTime }),
+        ...(modificationRow.newRestEndTime && { restEndTime: modificationRow.newRestEndTime }),
+        workingStyle: modificationRow.newWorkingStyle,
       },
       partTimerProfile,
     );
     return {
       previousEventInfo: {
-        title: modificationSheetRow.title,
-        date: modificationSheetRow.startTime,
-        startTime: modificationSheetRow.startTime,
-        endTime: modificationSheetRow.endTime,
+        title: modificationRow.title,
+        date: modificationRow.startTime,
+        startTime: modificationRow.startTime,
+        endTime: modificationRow.endTime,
       },
       newEventInfo: {
         title: newTitle,
-        date: modificationSheetRow.newStartTime,
-        startTime: modificationSheetRow.newStartTime,
-        endTime: modificationSheetRow.newEndTime,
+        date: modificationRow.newStartTime,
+        startTime: modificationRow.newStartTime,
+        endTime: modificationRow.newEndTime,
       },
     };
   });
@@ -218,7 +218,7 @@ export const callModificationAndDeletion = () => {
     operationType: operationType,
     userEmail: userEmail,
     modificationInfos: JSON.stringify(modificationInfos),
-    deletionInfos: JSON.stringify(deletionSheetRows),
+    deletionInfos: JSON.stringify(deletionRows),
   };
   const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
     method: "post",
@@ -230,12 +230,12 @@ export const callModificationAndDeletion = () => {
   if (response.getResponseCode() !== 200) {
     throw new Error(response.getContentText());
   }
-  if (modificationInfos.length == 0 && deletionSheetRows.length == 0) {
+  if (modificationInfos.length == 0 && deletionRows.length == 0) {
     throw new Error("変更・削除する予定がありません。");
   }
   const modificationAndDeletionMessageToNotify = [
     createModificationMessage(modificationInfos, partTimerProfile),
-    createDeletionMessage(deletionSheetRows, partTimerProfile),
+    createDeletionMessage(deletionRows, partTimerProfile),
     comment ? `コメント: ${comment}` : undefined,
   ]
     .filter(Boolean)

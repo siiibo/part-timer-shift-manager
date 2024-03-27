@@ -9,7 +9,7 @@ const workingStyleOrEmptyString = z.preprocess(
 );
 const dateAfterNow = z.date().min(new Date(), { message: "過去の時間にシフト変更はできません" });
 
-const ModificationSheetRow = z.object({
+const ModificationRow = z.object({
   type: z.literal("modification"),
   title: z.string(),
   startTime: dateAfterNow,
@@ -20,17 +20,17 @@ const ModificationSheetRow = z.object({
   newRestEndTime: z.date().optional(),
   newWorkingStyle: z.literal("出社").or(z.literal("リモート")),
 });
-type ModificationSheetRow = z.infer<typeof ModificationSheetRow>;
-const DeletionSheetRow = z.object({
+type ModificationRow = z.infer<typeof ModificationRow>;
+const DeletionRow = z.object({
   type: z.literal("deletion"),
   title: z.string(),
   date: dateAfterNow, //TODO: 日付情報だけの変数dateを消去する
   startTime: dateAfterNow,
   endTime: dateAfterNow,
 });
-type DeletionSheetRow = z.infer<typeof DeletionSheetRow>;
+type DeletionRow = z.infer<typeof DeletionRow>;
 
-const ModificationOrDeletionSheetRow = z.object({
+const ModificationOrDeletionRow = z.object({
   title: z.string(),
   date: z.date(),
   startTime: z.date(),
@@ -43,7 +43,7 @@ const ModificationOrDeletionSheetRow = z.object({
   newWorkingStyle: workingStyleOrEmptyString,
   isDeletionTarget: z.coerce.boolean(),
 });
-type ModificationOrDeletionSheetRow = z.infer<typeof ModificationOrDeletionSheetRow>;
+type ModificationOrDeletionRow = z.infer<typeof ModificationOrDeletionRow>;
 
 const NoOperationRow = z.object({
   type: z.literal("no-operation"),
@@ -132,12 +132,12 @@ export const setValuesModificationAndDeletionSheet = (sheet: GoogleAppsScript.Sp
 
 const getModificationOrDeletionSheetValues = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
-): (ModificationSheetRow | DeletionSheetRow | NoOperationRow)[] => {
+): (ModificationRow | DeletionRow | NoOperationRow)[] => {
   const sheetValues = sheet
     .getRange(9, 1, sheet.getLastRow() - 8, sheet.getLastColumn())
     .getValues()
     .map((row) =>
-      ModificationOrDeletionSheetRow.parse({
+      ModificationOrDeletionRow.parse({
         title: row[0],
         date: row[1],
         startTime: row[2],
@@ -155,7 +155,7 @@ const getModificationOrDeletionSheetValues = (
       if (row.isDeletionTarget) {
         const startTime = mergeTimeToDate(row.date, row.startTime);
         const endTime = mergeTimeToDate(row.date, row.endTime);
-        return DeletionSheetRow.parse({
+        return DeletionRow.parse({
           type: "deletion",
           title: row.title,
           date: startTime,
@@ -167,7 +167,7 @@ const getModificationOrDeletionSheetValues = (
         const endTime = mergeTimeToDate(row.date, row.endTime);
         const newStartTime = mergeTimeToDate(row.newDate, row.newStartTime);
         const newEndTime = mergeTimeToDate(row.newDate, row.newEndTime);
-        return ModificationSheetRow.parse({
+        return ModificationRow.parse({
           type: "modification",
           title: row.title,
           startTime: startTime,
@@ -186,19 +186,18 @@ const getModificationOrDeletionSheetValues = (
     });
   return sheetValues;
 };
-const isModificationSheetRow = (
-  row: ModificationSheetRow | DeletionSheetRow | NoOperationRow,
-): row is ModificationSheetRow => row.type === "modification";
-const isDeletionSheetRow = (row: ModificationSheetRow | DeletionSheetRow | NoOperationRow): row is DeletionSheetRow =>
+const isModificationRow = (row: ModificationRow | DeletionRow | NoOperationRow): row is ModificationRow =>
+  row.type === "modification";
+const isDeletionRow = (row: ModificationRow | DeletionRow | NoOperationRow): row is DeletionRow =>
   row.type === "deletion";
 
 export const getModificationOrDeletion = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
-): { modificationSheetRows: ModificationSheetRow[]; deletionSheetRows: DeletionSheetRow[] } => {
+): { modificationRows: ModificationRow[]; deletionRows: DeletionRow[] } => {
   const sheetValues = getModificationOrDeletionSheetValues(sheet);
   return {
-    modificationSheetRows: sheetValues.filter(isModificationSheetRow),
-    deletionSheetRows: sheetValues.filter(isDeletionSheetRow),
+    modificationRows: sheetValues.filter(isModificationRow),
+    deletionRows: sheetValues.filter(isDeletionRow),
   };
 };
 //NOTE: Googleスプレッドシートでは時間のみの入力がDate型として取得される際、日付部分はデフォルトで1899/12/30となるため適切な日付情報に更新する必要がある

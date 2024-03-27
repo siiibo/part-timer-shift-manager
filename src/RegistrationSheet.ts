@@ -2,14 +2,14 @@ import { set } from "date-fns";
 import { z } from "zod";
 
 const dateAfterNow = z.date().min(new Date(), { message: "過去の時間にシフト変更はできません" });
-const RegistrationSheetRow = z.object({
+const RegistrationRow = z.object({
   startTime: dateAfterNow,
   endTime: dateAfterNow,
   restStartTime: z.coerce.date().optional(),
   restEndTime: z.coerce.date().optional(),
   workingStyle: z.literal("出社").or(z.literal("リモート")),
 });
-type RegistrationSheetRow = z.infer<typeof RegistrationSheetRow>;
+type RegistrationRow = z.infer<typeof RegistrationRow>;
 
 export const insertRegistrationSheet = () => {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
@@ -54,8 +54,8 @@ export const setValuesRegistrationSheet = (sheet: GoogleAppsScript.Spreadsheet.S
   timeCells.setDataValidation(timeRule);
 };
 
-export const getRegistrationSheetRows = (sheet: GoogleAppsScript.Spreadsheet.Sheet): RegistrationSheetRow[] => {
-  const registrationSheetRows = sheet
+export const getRegistrationRows = (sheet: GoogleAppsScript.Spreadsheet.Sheet): RegistrationRow[] => {
+  const registrationRows = sheet
     .getRange(5, 1, sheet.getLastRow() - 4, sheet.getLastColumn())
     .getValues()
     .map((eventInfo) => {
@@ -71,7 +71,7 @@ export const getRegistrationSheetRows = (sheet: GoogleAppsScript.Spreadsheet.She
       const restStartTime = eventInfo[3] === "" ? undefined : eventInfo[3];
       const restEndTime = eventInfo[4] === "" ? undefined : eventInfo[4];
       const workingStyle = eventInfo[5];
-      return RegistrationSheetRow.parse({
+      return RegistrationRow.parse({
         startTime,
         endTime,
         restStartTime,
@@ -79,5 +79,5 @@ export const getRegistrationSheetRows = (sheet: GoogleAppsScript.Spreadsheet.She
         workingStyle,
       });
     });
-  return registrationSheetRows;
+  return registrationRows;
 };

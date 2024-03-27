@@ -1,13 +1,14 @@
 import { set } from "date-fns";
 import { z } from "zod";
 
+const dateAfterNow = z.date().min(new Date(), { message: "過去の時間にシフト変更はできません" });
 const ModificationSheetRow = z.object({
   type: z.literal("modification"),
   title: z.string(),
-  startTime: z.date().min(new Date(), { message: "過去の時間にシフト変更はできません" }),
-  endTime: z.date(),
-  newStartTime: z.date().min(new Date(), { message: "過去の時間にシフト変更はできません" }),
-  newEndTime: z.date(),
+  startTime: dateAfterNow,
+  endTime: dateAfterNow,
+  newStartTime: dateAfterNow,
+  newEndTime: dateAfterNow,
   newRestStartTime: z.date().optional(),
   newRestEndTime: z.date().optional(),
   newWorkingStyle: z.literal("出社").or(z.literal("リモート")),
@@ -16,9 +17,9 @@ type ModificationSheetRow = z.infer<typeof ModificationSheetRow>;
 const DeletionSheetRow = z.object({
   type: z.literal("deletion"),
   title: z.string(),
-  date: z.date(), //TODO: 日付情報だけの変数dateを消去する
-  startTime: z.date().min(new Date(), { message: "過去の時間はシフト削除はできません" }),
-  endTime: z.date(),
+  date: dateAfterNow, //TODO: 日付情報だけの変数dateを消去する
+  startTime: dateAfterNow,
+  endTime: dateAfterNow,
 });
 type DeletionSheetRow = z.infer<typeof DeletionSheetRow>;
 // NOTE: z.object内でz.literal("").or(z.date())を使うと型推論がおかしくなるので、preprocessを使っている
@@ -155,7 +156,7 @@ const getModificationOrDeletionSheetValues = (
         return DeletionSheetRow.parse({
           type: "deletion",
           title: row.title,
-          date: row.date,
+          date: startTime,
           startTime: startTime,
           endTime: endTime,
         });

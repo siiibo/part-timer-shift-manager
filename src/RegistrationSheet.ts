@@ -1,9 +1,10 @@
 import { set } from "date-fns";
 import { z } from "zod";
 
+const dateAfterNow = z.date().min(new Date(), { message: "過去の時間にシフト変更はできません" });
 const RegistrationSheetRow = z.object({
-  startTime: z.coerce.date().min(new Date(), { message: "過去の時間にシフト登録はできません" }),
-  endTime: z.coerce.date(),
+  startTime: dateAfterNow,
+  endTime: dateAfterNow,
   restStartTime: z.coerce.date().optional(),
   restEndTime: z.coerce.date().optional(),
   workingStyle: z.literal("出社").or(z.literal("リモート")),

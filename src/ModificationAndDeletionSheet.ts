@@ -162,15 +162,9 @@ const getModificationOrDeletionSheetValues = (
           startTime: startTime,
           endTime: endTime,
         });
-      } else if (!row.isDeletionTarget && (!row.newDate || !row.newStartTime || !row.newEndTime)) {
-        return NoOperationRow.parse({
-          type: "no-operation",
-        });
-      } else {
+      } else if (row.newDate && row.newStartTime && row.newEndTime) {
         const startTime = mergeTimeToDate(row.date, row.startTime);
         const endTime = mergeTimeToDate(row.date, row.endTime);
-        if (!row.newDate || !row.newStartTime || !row.newEndTime)
-          throw new Error("変更後の日付、開始時刻、終了時刻は必須です");
         const newStartTime = mergeTimeToDate(row.newDate, row.newStartTime);
         const newEndTime = mergeTimeToDate(row.newDate, row.newEndTime);
         return ModificationSheetRow.parse({
@@ -183,6 +177,10 @@ const getModificationOrDeletionSheetValues = (
           newRestStartTime: row.newRestEndTime,
           newRestEndTime: row.newRestEndTime,
           newWorkingStyle: row.newWorkingStyle,
+        });
+      } else {
+        return NoOperationRow.parse({
+          type: "no-operation",
         });
       }
     });

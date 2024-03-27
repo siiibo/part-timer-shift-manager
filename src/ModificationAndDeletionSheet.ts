@@ -40,6 +40,12 @@ const ModificationOrDeletionSheetRow = z.object({
   newWorkingStyle: workingStyleOrEmptyString,
   isDeletionTarget: z.coerce.boolean(),
 });
+type ModificationOrDeletionSheetRow = z.infer<typeof ModificationOrDeletionSheetRow>;
+
+const NoOperationRow = z.object({
+  type: z.literal("no-operation"),
+});
+type NoOperationRow = z.infer<typeof NoOperationRow>;
 
 export const insertModificationAndDeletionSheet = () => {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
@@ -123,7 +129,7 @@ export const setValuesModificationAndDeletionSheet = (sheet: GoogleAppsScript.Sp
 
 const getModificationOrDeletionSheetValues = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
-): (ModificationSheetRow | DeletionSheetRow)[] => {
+): (ModificationSheetRow | DeletionSheetRow | NoOperationRow)[] => {
   const sheetValues = sheet
     .getRange(9, 1, sheet.getLastRow() - 8, sheet.getLastColumn())
     .getValues()
@@ -142,9 +148,6 @@ const getModificationOrDeletionSheetValues = (
         isDeletionTarget: row[10],
       }),
     )
-    .filter((row) => {
-      return !row.isDeletionTarget && (row.newDate || row.newStartTime || row.newEndTime);
-    })
     .map((row) => {
       if (row.isDeletionTarget) {
         const startTime = mergeTimeToDate(row.date, row.startTime);
@@ -155,6 +158,10 @@ const getModificationOrDeletionSheetValues = (
           date: row.date,
           startTime: startTime,
           endTime: endTime,
+        });
+      } else if (!row.isDeletionTarget && (!row.newDate || !row.newStartTime || !row.newEndTime)) {
+        return NoOperationRow.parse({
+          type: "no-operation",
         });
       } else {
         const startTime = mergeTimeToDate(row.date, row.startTime);
@@ -178,9 +185,10 @@ const getModificationOrDeletionSheetValues = (
     });
   return sheetValues;
 };
-const isModificationSheetRow = (row: ModificationSheetRow | DeletionSheetRow): row is ModificationSheetRow =>
-  row.type === "modification";
-const isDeletionSheetRow = (row: ModificationSheetRow | DeletionSheetRow): row is DeletionSheetRow =>
+const isModificationSheetRow = (
+  row: ModificationSheetRow | DeletionSheetRow | NoOperationRow,
+): row is ModificationSheetRow => row.type === "modification";
+const isDeletionSheetRow = (row: ModificationSheetRow | DeletionSheetRow | NoOperationRow): row is DeletionSheetRow =>
   row.type === "deletion";
 
 export const getModificationOrDeletion = (

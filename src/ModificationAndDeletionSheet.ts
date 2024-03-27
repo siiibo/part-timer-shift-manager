@@ -1,7 +1,14 @@
 import { set } from "date-fns";
 import { z } from "zod";
 
+// NOTE: z.object内でz.literal("").or(z.date())を使うと型推論がおかしくなるので、preprocessを使っている
+const dateOrEmptyString = z.preprocess((val) => (val === "" ? undefined : val), z.date().optional());
+const workingStyleOrEmptyString = z.preprocess(
+  (val) => (val === "" ? undefined : val),
+  z.literal("出社").or(z.literal("リモート")).optional(),
+);
 const dateAfterNow = z.date().min(new Date(), { message: "過去の時間にシフト変更はできません" });
+
 const ModificationSheetRow = z.object({
   type: z.literal("modification"),
   title: z.string(),
@@ -22,12 +29,7 @@ const DeletionSheetRow = z.object({
   endTime: dateAfterNow,
 });
 type DeletionSheetRow = z.infer<typeof DeletionSheetRow>;
-// NOTE: z.object内でz.literal("").or(z.date())を使うと型推論がおかしくなるので、preprocessを使っている
-const dateOrEmptyString = z.preprocess((val) => (val === "" ? undefined : val), z.date().optional());
-const workingStyleOrEmptyString = z.preprocess(
-  (val) => (val === "" ? undefined : val),
-  z.literal("出社").or(z.literal("リモート")).optional(),
-);
+
 const ModificationOrDeletionSheetRow = z.object({
   title: z.string(),
   date: z.date(),

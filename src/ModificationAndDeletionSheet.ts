@@ -30,7 +30,7 @@ const DeletionRow = z.object({
 });
 type DeletionRow = z.infer<typeof DeletionRow>;
 
-const ModificationOrDeletionRow = z.object({
+const ModificationOrDeletionSheetRow = z.object({
   title: z.string(),
   date: z.date(),
   startTime: z.date(),
@@ -43,7 +43,7 @@ const ModificationOrDeletionRow = z.object({
   newWorkingStyle: workingStyleOrEmptyString,
   isDeletionTarget: z.coerce.boolean(),
 });
-type ModificationOrDeletionRow = z.infer<typeof ModificationOrDeletionRow>;
+type ModificationOrDeletionSheetRow = z.infer<typeof ModificationOrDeletionSheetRow>;
 
 const NoOperationRow = z.object({
   type: z.literal("no-operation"),
@@ -137,7 +137,7 @@ const getModificationOrDeletionSheetValues = (
     .getRange(9, 1, sheet.getLastRow() - 8, sheet.getLastColumn())
     .getValues()
     .map((row) =>
-      ModificationOrDeletionRow.parse({
+      ModificationOrDeletionSheetRow.parse({
         title: row[0],
         date: row[1],
         startTime: row[2],

@@ -5,8 +5,8 @@ const dateAfterNow = z.date().min(new Date(), { message: "過去の時間にシ�
 const RegistrationRow = z.object({
   startTime: dateAfterNow,
   endTime: dateAfterNow,
-  restStartTime: z.coerce.date().optional(),
-  restEndTime: z.coerce.date().optional(),
+  restStartTime: z.date().optional(),
+  restEndTime: z.date().optional(),
   workingStyle: z.literal("出社").or(z.literal("リモート")),
 });
 type RegistrationRow = z.infer<typeof RegistrationRow>;

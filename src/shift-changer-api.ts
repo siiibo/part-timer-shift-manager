@@ -5,7 +5,7 @@ import { getConfig } from "./config";
 
 export const EventInfo = z.object({
   title: z.string(),
-  date: z.coerce.date(),
+  date: z.coerce.date(), //TODO: 日付情報だけの変数dateを消去する
   startTime: z.coerce.date(),
   endTime: z.coerce.date(),
 });

@@ -15,6 +15,7 @@ const ModificationRow = z.object({
   newWorkingStyle: z.literal("出社").or(z.literal("リモート")),
 });
 type ModificationRow = z.infer<typeof ModificationRow>;
+
 const DeletionRow = z.object({
   type: z.literal("deletion"),
   title: z.string(),

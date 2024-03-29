@@ -4,10 +4,6 @@ import { z } from "zod";
 // NOTE: z.object内でz.literal("").or(z.date())を使うと型推論がおかしくなるので、preprocessを使っている
 const dateOrEmptyString = z.preprocess((val) => (val === "" ? undefined : val), z.date().optional());
 const dateAfterNow = z.date().min(new Date(), { message: "過去の時間にシフト変更はできません" });
-const workingStyleOrEmptyString = z.preprocess(
-  (val) => (val === "" ? undefined : val),
-  z.literal("出社").or(z.literal("リモート")).optional(),
-);
 
 const ModificationRow = z.object({
   type: z.literal("modification"),
@@ -41,7 +37,7 @@ const ModificationOrDeletionSheetRow = z.object({
   newEndTime: dateOrEmptyString,
   newRestStartTime: dateOrEmptyString,
   newRestEndTime: dateOrEmptyString,
-  newWorkingStyle: workingStyleOrEmptyString,
+  newWorkingStyle: z.literal("出社").or(z.literal("リモート")).or(z.literal("")),
   isDeletionTarget: z.coerce.boolean(),
 });
 type ModificationOrDeletionSheetRow = z.infer<typeof ModificationOrDeletionSheetRow>;

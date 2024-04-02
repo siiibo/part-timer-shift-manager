@@ -1,5 +1,6 @@
 import { GasWebClient as SlackClient } from "@hi-se/web-api";
 import { format } from "date-fns";
+// import { z } from "zod";
 
 import { getConfig } from "./config";
 import { PartTimerProfile } from "./JobSheet";
@@ -13,6 +14,17 @@ import { getRegistrationRows, insertRegistrationSheet, setValuesRegistrationShee
 import { getRepeatScheduleModificationOrDeletionOrRegistration } from "./RepeatScheduleSheet";
 import { insertRepeatScheduleSheet } from "./RepeatScheduleSheet";
 import { EventInfo, shiftChanger } from "./shift-changer-api";
+
+// const RecurringEventNotification= z.object({
+//   type:z.string(),
+//   title:z.string().optional(),
+//   startOrEndDate:z.date(),
+//   oldDayOfWeek:z.literal("月曜日").or(z.literal("火曜日")).or(z.literal("水曜日")).or(z.literal("木曜日")).or(z.literal("金曜日")).optional(),
+//   newDayOfWeek:z.literal("月曜日").or(z.literal("火曜日")).or(z.literal("水曜日")).or(z.literal("木曜日")).or(z.literal("金曜日")).optional(),
+//   startTime:z.date().optional(),
+//   endTime:z.date().optional(),
+// });
+// type RecurringEventNotification = z.infer<typeof RecurringEventNotification>;
 
 type SheetType = "registration" | "modificationAndDeletion" | "repeatSchedule";
 type OperationType = "registration" | "modificationAndDeletion" | "showEvents" | "repeatSchedule";
@@ -305,33 +317,31 @@ export const callRepeatSchedule = () => {
       partTimerProfile,
     );
     return {
-      statDate: registrationRow.startDate,
+      type: "registration",
       title: title,
+      startOrEndDate: registrationRow.startDate,
+      newDayOfWeek: registrationRow.newDayOfWeek,
       startTime: registrationRow.startTime,
       endTime: registrationRow.endTime,
     };
   });
   const modificationInfos = modificationRows.map((modificationRow) => {
-    const newTitle = createTitleFromEventInfo(
+    const title = createTitleFromEventInfo(
       {
-        ...(modificationRow.newRestStartTime && { restStartTime: modificationRow.newRestStartTime }),
-        ...(modificationRow.newRestEndTime && { restEndTime: modificationRow.newRestEndTime }),
-        workingStyle: modificationRow.newWorkingStyle,
+        ...(modificationRow.restStartTime && { restStartTime: modificationRow.restStartTime }),
+        ...(modificationRow.restEndTime && { restEndTime: modificationRow.restEndTime }),
+        workingStyle: modificationRow.workingStyle,
       },
       partTimerProfile,
     );
     return {
-      previousEventInfo: {
-        title: modificationRow.title,
-        startTime: modificationRow.startTime,
-        endTime: modificationRow.endTime,
-      },
-      newEventInfo: {
-        startDate: modificationRow.startDate,
-        title: newTitle,
-        newStartTime: modificationRow.newStartTime,
-        newEndTime: modificationRow.newEndTime,
-      },
+      type: "modification",
+      title: title,
+      startOrEndDate: modificationRow.startDate,
+      oldDayOfWeek: modificationRow.oldDayOfWeek,
+      newDayOfWeek: modificationRow.newDayOfWeek,
+      startTime: modificationRow.startTime,
+      endTime: modificationRow.endTime,
     };
   });
   console.log(registrationInfos, modificationInfos, deletionRows);
@@ -357,7 +367,9 @@ export const callRepeatSchedule = () => {
     throw new Error("変更・削除する予定がありません。");
   }
   const repeatScheduleMessageToNotify = [
-    // createRepeatScheduleMessage(registrationInfos,modificationInfos,deletionRows,comment, partTimerProfile),
+    // createRepeatScheduleMessage(registrationInfos, partTimerProfile),
+    // createRepeatScheduleMessage(modificationInfos, partTimerProfile),
+    // createRepeatScheduleMessage(deletionRows, partTimerProfile),
     comment ? `コメント: ${comment}` : undefined,
   ]
     .filter(Boolean)
@@ -368,10 +380,23 @@ export const callRepeatSchedule = () => {
   SpreadsheetApp.flush();
   setValuesModificationAndDeletionSheet(sheet);
 };
-// const createRepeatScheduleMessage = (RegistrationRepeatScheduleRows: RegistrationRepeatScheduleRow[],ModificationRepeatScheduleRow:ModificationRepeatScheduleRow[],DeleteRepeatScheduleRow:DeleteRepeatScheduleRow[], comment: string, partTimerProfile: PartTimerProfile): string => {
-//   const messages = RegistrationRepeatScheduleRows.map(createMessageFromEventInfo);
+//TODO: メッセージを作成する関数の作成
+// const createRepeatScheduleMessage = (RegistrationRepeatScheduleRows:RecurringEventNotification[], partTimerProfile: PartTimerProfile): string => {
 //   const { job, lastName } = partTimerProfile;
-//   const messageTitle = `${job}${lastName}さんの以下の予定が追加されました。`;
+//   const messages = RegistrationRepeatScheduleRows.map((RegistrationRepeatScheduleRows) =>{
+//     switch (RegistrationRepeatScheduleRows.type) {
+//       case "registration":
+//         const messageTitle = `${job}${lastName}さんの以下の予定が追加されました。`;
+
+//         return messageTitle;
+
+//       case "modification":
+//         break;
+//       case "deletion":
+//         break;
+//     }
+//   });
+
 //   return comment ? `${messageTitle}\n${messages.join("\n")}\n\nコメント: ${comment}` : `${messageTitle}\n${messages.join("\n")}`;
 // }
 

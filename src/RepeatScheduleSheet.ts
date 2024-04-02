@@ -1,52 +1,58 @@
 import { z } from "zod";
 
 const dateOrEmptyString = z.preprocess((val) => (val === "" ? undefined : val), z.date().optional());
-const stringOrEmptyString = z.preprocess((val) => (val === "" ? undefined : val), z.string().optional());
-//TODO: 型に曜日情報を含める
-export const DeleteRepeatScheduleRow = z.object({
-  type: z.literal("delete"),
-  endDate: z.date(),
-  title: z.string(),
-  startTime: z.date(),
-  endTime: z.date(),
-});
-export type DeleteRepeatScheduleRow = z.infer<typeof DeleteRepeatScheduleRow>;
+const dayOfWeekOrEmptyString = z.preprocess(
+  (val) => (val === "" ? undefined : val),
+  z
+    .literal("月曜日")
+    .or(z.literal("火曜日"))
+    .or(z.literal("水曜日"))
+    .or(z.literal("木曜日"))
+    .or(z.literal("金曜日"))
+    .optional(),
+);
 
-export const ModificationRepeatScheduleRow = z.object({
+const DeleteRepeatScheduleRow = z.object({
+  type: z.literal("delete"),
+  startOrEndDate: z.date(),
+  dayOfWeek: dayOfWeekOrEmptyString,
+});
+type DeleteRepeatScheduleRow = z.infer<typeof DeleteRepeatScheduleRow>;
+
+const ModificationRepeatScheduleRow = z.object({
   type: z.literal("modification"),
   startDate: z.date(),
-  title: z.string(),
-  startTime: z.date(),
-  endTime: z.date(),
-  newStartTime: z.date(),
-  newEndTime: z.date(),
-  newRestStartTime: z.date().optional(),
-  newRestEndTime: z.date().optional(),
-  newWorkingStyle: z.literal("リモート").or(z.literal("出社")),
-});
-export type ModificationRepeatScheduleRow = z.infer<typeof ModificationRepeatScheduleRow>;
-
-export const RegistrationRepeatScheduleRow = z.object({
-  type: z.literal("registration"),
-  startDate: z.date(),
+  oldDayOfWeek: dayOfWeekOrEmptyString,
+  newDayOfWeek: dayOfWeekOrEmptyString,
   startTime: z.date(),
   endTime: z.date(),
   restStartTime: z.date().optional(),
   restEndTime: z.date().optional(),
-  workingStyle: z.literal("リモート").or(z.literal("出社")),
+  workingStyle: z.any(),
 });
-export type RegistrationRepeatScheduleRow = z.infer<typeof RegistrationRepeatScheduleRow>;
+type ModificationRepeatScheduleRow = z.infer<typeof ModificationRepeatScheduleRow>;
+
+const RegistrationRepeatScheduleRow = z.object({
+  type: z.literal("registration"),
+  startDate: z.date(),
+  newDayOfWeek: dayOfWeekOrEmptyString,
+  startTime: z.date(),
+  endTime: z.date(),
+  restStartTime: z.date().optional(),
+  restEndTime: z.date().optional(),
+  workingStyle: z.any(),
+});
+type RegistrationRepeatScheduleRow = z.infer<typeof RegistrationRepeatScheduleRow>;
 
 const RepeatScheduleSheetRow = z.object({
   startDate: z.date(),
-  title: stringOrEmptyString,
+  oldDayOfWeek: dayOfWeekOrEmptyString,
+  newDayOfWeek: dayOfWeekOrEmptyString,
   startTime: dateOrEmptyString,
   endTime: dateOrEmptyString,
-  newStartTime: dateOrEmptyString,
-  newEndTime: dateOrEmptyString,
-  newRestStartTime: dateOrEmptyString,
-  newRestEndTime: dateOrEmptyString,
-  newWorkingStyle: z.literal("リモート").or(z.literal("出社")).or(z.literal("")),
+  restStartTime: dateOrEmptyString,
+  restEndTime: dateOrEmptyString,
+  workingStyle: z.any(),
   isDelete: z.coerce.boolean(),
 });
 type RepeatScheduleSheetRow = z.infer<typeof RepeatScheduleSheetRow>;
@@ -84,14 +90,12 @@ const setValuesRepeatScheduleSheet = (sheet: GoogleAppsScript.Spreadsheet.Sheet)
   dateCell.setBackground("#f0f8ff");
   dateCell.setDataValidation(dateRule);
   const description3 = "【固定シフト変更】";
-  sheet.getRange("A9").setValue("曜日").setFontWeight("bold");
-  sheet.getRange("B7").setValue(description3).setFontWeight("bold");
-  sheet.getRange("B8").setValue("固定シフト変更前").setFontWeight("bold");
-  sheet.getRange("E8").setValue("固定シフト変更後").setFontWeight("bold");
-  sheet.getRange("J8").setValue("【削除】削除したい固定シフトを選択してください").setFontWeight("bold");
+  sheet.getRange("A7").setValue(description3).setFontWeight("bold");
+  sheet.getRange("B8").setValue("固定シフト変更後").setFontWeight("bold");
+  sheet.getRange("H8").setValue("【削除】削除したい固定シフトを選択してください").setFontWeight("bold");
   const header2 = [
-    "開始時間",
-    "終了時間",
+    "追加・変更・消去する曜日を選択",
+    "変更後の曜日",
     "開始時刻",
     "終了時刻",
     "休憩開始時刻",
@@ -99,20 +103,26 @@ const setValuesRepeatScheduleSheet = (sheet: GoogleAppsScript.Spreadsheet.Sheet)
     "勤務形態",
     "消去対象",
   ];
-  sheet.getRange(9, 3, 1, header2.length).setValues([header2]).setFontWeight("bold");
+  sheet.getRange(9, 1, 1, header2.length).setValues([header2]).setFontWeight("bold");
 
-  const daysOfWeekCells = sheet.getRange("A10:A14");
-  daysOfWeekCells
-    .setValues([["月曜日"], ["火曜日"], ["水曜日"], ["木曜日"], ["金曜日"]])
-    .setHorizontalAlignment("right");
-  const workingStyleCells = sheet.getRange("I10:I14");
+  const dayOfWeekCells = sheet.getRange("A10:B14");
+  const dayOfWeekRule = SpreadsheetApp.newDataValidation()
+    .requireValueInList(["月曜日", "火曜日", "水曜日", "木曜日", "金曜日"])
+    .setAllowInvalid(false)
+    .setHelpText("曜日を選択さしてください")
+    .build();
+  dayOfWeekCells.setDataValidation(dayOfWeekRule);
+
+  const workingStyleCells = sheet.getRange("G10:G14");
   const workingStyleRule = SpreadsheetApp.newDataValidation()
-    .requireValueInList(["リモート", "出社"], true)
+    .requireValueInList(["リモート", "出勤"], true)
     .setAllowInvalid(false)
     .setHelpText("リモート/出社 を選択してください。")
     .build();
   workingStyleCells.setDataValidation(workingStyleRule);
-  const checkboxCells = sheet.getRange("J10:J14");
+
+  workingStyleCells.setDataValidation(workingStyleRule);
+  const checkboxCells = sheet.getRange("H10:H14");
   const checkboxRule = SpreadsheetApp.newDataValidation()
     .requireCheckbox()
     .setAllowInvalid(false)
@@ -127,53 +137,51 @@ const getRepeatScheduleReSheetValues = (
 ): (DeleteRepeatScheduleRow | ModificationRepeatScheduleRow | RegistrationRepeatScheduleRow | NoOperationRow)[] => {
   const startDate = sheet.getRange("A5").getValue();
   const sheetValues = sheet
-    .getRange("B10:J14")
+    .getRange("A10:H14")
     .getValues()
     .map((row) =>
       RepeatScheduleSheetRow.parse({
         startDate: startDate,
-        title: row[0],
-        startTime: row[1],
-        endTime: row[2],
-        newStartTime: row[3],
-        newEndTime: row[4],
-        newRestStartTime: row[5],
-        newRestEndTime: row[6],
-        newWorkingStyle: row[7],
-        isDelete: row[8],
+        oldDayOfWeek: row[0],
+        newDayOfWeek: row[1],
+        newStartTime: row[2],
+        newEndTime: row[3],
+        newRestStartTime: row[4],
+        newRestEndTime: row[5],
+        newWorkingStyle: row[6],
+        isDelete: row[7],
       }),
     )
     .map((row) => {
       if (row.isDelete) {
         return DeleteRepeatScheduleRow.parse({
           type: "delete",
-          endDate: row.startDate,
-          title: row.title,
-          startTime: row.startTime,
-          endTime: row.endTime,
+          startOrEndDate: row.startDate,
+          dayOfWeek: row.oldDayOfWeek,
         });
-      } else if (!row.title && row.startDate && row.newStartTime && row.newEndTime) {
+      } else if (!row.oldDayOfWeek && row.startTime && row.endTime) {
+        //TODO: 日付情報をstartTime,endTimeに与える
         return RegistrationRepeatScheduleRow.parse({
           type: "registration",
           startDate: row.startDate,
-          startTime: row.newStartTime,
-          endTime: row.newEndTime,
-          restStartTime: row.newRestStartTime,
-          restEndTime: row.newRestEndTime,
-          workingStyle: row.newWorkingStyle,
+          newDayOfWeek: row.newDayOfWeek,
+          startTime: row.startTime,
+          endTime: row.endTime,
+          restStartTime: row.restStartTime,
+          restEndTime: row.restEndTime,
+          workingStyle: row.workingStyle,
         });
-      } else if (row.title && row.startDate && row.newStartTime && row.newEndTime) {
+      } else if (row.oldDayOfWeek) {
         return ModificationRepeatScheduleRow.parse({
           type: "modification",
           startDate: row.startDate,
-          title: row.title,
-          startTime: row.startTime,
-          endTime: row.endTime,
-          newStartTime: row.newStartTime,
-          newEndTime: row.newEndTime,
-          newRestStartTime: row.newRestStartTime,
-          newRestEndTime: row.newRestEndTime,
-          newWorkingStyle: row.newWorkingStyle,
+          oldDayOfWeek: row.oldDayOfWeek,
+          newDayOfWeek: row.newDayOfWeek,
+          newStartTime: row.startTime,
+          newEndTime: row.endTime,
+          newRestStartTime: row.restStartTime,
+          newRestEndTime: row.restEndTime,
+          newWorkingStyle: row.workingStyle,
         });
       } else {
         return NoOperationRow.parse({
@@ -181,6 +189,7 @@ const getRepeatScheduleReSheetValues = (
         });
       }
     });
+  console.log(sheetValues);
   return sheetValues;
 };
 

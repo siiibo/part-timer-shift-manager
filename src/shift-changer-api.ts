@@ -15,7 +15,7 @@ const ModificationInfo = z.object({
   previousEventInfo: EventInfo,
   newEventInfo: EventInfo,
 });
-const adjustmentInfo = z.object({
+const repeatScheduleInfo = z.object({
   dayOfWeek: z
     .literal("月曜日")
     .or(z.literal("火曜日"))
@@ -27,7 +27,7 @@ const adjustmentInfo = z.object({
   startTime: z.coerce.date(),
   endTime: z.coerce.date(),
 });
-type adjustmentInfo = z.infer<typeof adjustmentInfo>;
+type repeatScheduleInfo = z.infer<typeof repeatScheduleInfo>;
 
 const getCalendar = () => {
   const { CALENDAR_ID } = getConfig();
@@ -62,9 +62,12 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
       const eventInfos = showEvents(userEmail, startDate);
       return JSON.stringify(eventInfos);
     }
-    case "adjustment": {
-      const adjustmentRegistrationInfos = adjustmentInfo.array().parse(JSON.parse(e.parameter.adjustmentModification));
-      adjustmentRegistration(adjustmentRegistrationInfos, userEmail);
+    case "repeatSchedule": {
+      const repeatScheduleRegistrationInfos = repeatScheduleInfo
+        .array()
+        .parse(JSON.parse(e.parameter.repeatScheduleModification));
+
+      repeatScheduleRegistration(repeatScheduleRegistrationInfos, userEmail);
     }
   }
   return;
@@ -107,10 +110,11 @@ const modification = (
   const calendar = getCalendar();
   modificationInfos.forEach((eventInfo) => modifyEvent(eventInfo, calendar, userEmail));
 };
-const adjustmentRegistration = (adjustmentRegistrationInfos: adjustmentInfo[], userEmail: string) => {
+const repeatScheduleRegistration = (repeatScheduleRegistrationInfos: repeatScheduleInfo[], userEmail: string) => {
   const calendar = getCalendar();
   const untilDate = addYears(new Date(), 4);
-  adjustmentRegistrationInfos.forEach((eventInfo) => {
+
+  repeatScheduleRegistrationInfos.forEach((eventInfo) => {
     const dayOfWeek = convertJapaneseToEnglishDayOfWeek(eventInfo.dayOfWeek);
     const recurrence = CalendarApp.newRecurrence().addWeeklyRule().onlyOnWeekday(dayOfWeek).until(new Date(untilDate));
     calendar.createEventSeries(eventInfo.title, eventInfo.startTime, eventInfo.endTime, recurrence, {

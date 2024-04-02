@@ -3,16 +3,16 @@ import { z } from "zod";
 const dateOrEmptyString = z.preprocess((val) => (val === "" ? undefined : val), z.date().optional());
 const stringOrEmptyString = z.preprocess((val) => (val === "" ? undefined : val), z.string().optional());
 //TODO: 型に曜日情報を含める
-export const DeleteAdjustmentRow = z.object({
+export const DeleteRepeatScheduleRow = z.object({
   type: z.literal("delete"),
   endDate: z.date(),
   title: z.string(),
   startTime: z.date(),
   endTime: z.date(),
 });
-export type DeleteAdjustmentRow = z.infer<typeof DeleteAdjustmentRow>;
+export type DeleteRepeatScheduleRow = z.infer<typeof DeleteRepeatScheduleRow>;
 
-export const ModificationAdjustmentRow = z.object({
+export const ModificationRepeatScheduleRow = z.object({
   type: z.literal("modification"),
   startDate: z.date(),
   title: z.string(),
@@ -24,9 +24,9 @@ export const ModificationAdjustmentRow = z.object({
   newRestEndTime: z.date().optional(),
   newWorkingStyle: z.literal("リモート").or(z.literal("出社")),
 });
-export type ModificationAdjustmentRow = z.infer<typeof ModificationAdjustmentRow>;
+export type ModificationRepeatScheduleRow = z.infer<typeof ModificationRepeatScheduleRow>;
 
-export const RegistrationAdjustmentRow = z.object({
+export const RegistrationRepeatScheduleRow = z.object({
   type: z.literal("registration"),
   startDate: z.date(),
   startTime: z.date(),
@@ -35,9 +35,9 @@ export const RegistrationAdjustmentRow = z.object({
   restEndTime: z.date().optional(),
   workingStyle: z.literal("リモート").or(z.literal("出社")),
 });
-export type RegistrationAdjustmentRow = z.infer<typeof RegistrationAdjustmentRow>;
+export type RegistrationRepeatScheduleRow = z.infer<typeof RegistrationRepeatScheduleRow>;
 
-const AdjustmentSheetRow = z.object({
+const RepeatScheduleSheetRow = z.object({
   startDate: z.date(),
   title: stringOrEmptyString,
   startTime: dateOrEmptyString,
@@ -49,14 +49,14 @@ const AdjustmentSheetRow = z.object({
   newWorkingStyle: z.literal("リモート").or(z.literal("出社")).or(z.literal("")),
   isDelete: z.coerce.boolean(),
 });
-type AdjustmentSheetRow = z.infer<typeof AdjustmentSheetRow>;
+type RepeatScheduleSheetRow = z.infer<typeof RepeatScheduleSheetRow>;
 
 const NoOperationRow = z.object({
   type: z.literal("no-operation"),
 });
 type NoOperationRow = z.infer<typeof NoOperationRow>;
 
-export const insertAdjustmentSheet = () => {
+export const insertRepeatScheduleSheet = () => {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   let sheet;
   try {
@@ -64,10 +64,10 @@ export const insertAdjustmentSheet = () => {
   } catch {
     throw new Error("既存の「固定シフト」シートを使用してください");
   }
-  sheet.addDeveloperMetadata(`part-timer-shift-manager-adjustment`);
-  setValuesAdjustmentSheet(sheet);
+  sheet.addDeveloperMetadata(`part-timer-shift-manager-repeatSchedule`);
+  setValuesRepeatScheduleSheet(sheet);
 };
-const setValuesAdjustmentSheet = (sheet: GoogleAppsScript.Spreadsheet.Sheet) => {
+const setValuesRepeatScheduleSheet = (sheet: GoogleAppsScript.Spreadsheet.Sheet) => {
   const description1 = "コメント欄 (下の色付きセルに記入してください)";
   sheet.getRange("A1").setValue(description1).setFontWeight("bold");
   const commentCell = sheet.getRange("A2");
@@ -122,15 +122,15 @@ const setValuesAdjustmentSheet = (sheet: GoogleAppsScript.Spreadsheet.Sheet) => 
   sheet.setColumnWidth(1, 370);
   sheet.setColumnWidth(2, 150);
 };
-const getAdjustmentReSheetValues = (
+const getRepeatScheduleReSheetValues = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
-): (DeleteAdjustmentRow | ModificationAdjustmentRow | RegistrationAdjustmentRow | NoOperationRow)[] => {
+): (DeleteRepeatScheduleRow | ModificationRepeatScheduleRow | RegistrationRepeatScheduleRow | NoOperationRow)[] => {
   const startDate = sheet.getRange("A5").getValue();
   const sheetValues = sheet
     .getRange("B10:J14")
     .getValues()
     .map((row) =>
-      AdjustmentSheetRow.parse({
+      RepeatScheduleSheetRow.parse({
         startDate: startDate,
         title: row[0],
         startTime: row[1],
@@ -145,7 +145,7 @@ const getAdjustmentReSheetValues = (
     )
     .map((row) => {
       if (row.isDelete) {
-        return DeleteAdjustmentRow.parse({
+        return DeleteRepeatScheduleRow.parse({
           type: "delete",
           endDate: row.startDate,
           title: row.title,
@@ -153,7 +153,7 @@ const getAdjustmentReSheetValues = (
           endTime: row.endTime,
         });
       } else if (!row.title && row.startDate && row.newStartTime && row.newEndTime) {
-        return RegistrationAdjustmentRow.parse({
+        return RegistrationRepeatScheduleRow.parse({
           type: "registration",
           startDate: row.startDate,
           startTime: row.newStartTime,
@@ -163,7 +163,7 @@ const getAdjustmentReSheetValues = (
           workingStyle: row.newWorkingStyle,
         });
       } else if (row.title && row.startDate && row.newStartTime && row.newEndTime) {
-        return ModificationAdjustmentRow.parse({
+        return ModificationRepeatScheduleRow.parse({
           type: "modification",
           startDate: row.startDate,
           title: row.title,
@@ -185,23 +185,23 @@ const getAdjustmentReSheetValues = (
 };
 
 const isModificationRow = (
-  row: ModificationAdjustmentRow | DeleteAdjustmentRow | RegistrationAdjustmentRow | NoOperationRow,
-): row is ModificationAdjustmentRow => row.type === "modification";
+  row: ModificationRepeatScheduleRow | DeleteRepeatScheduleRow | RegistrationRepeatScheduleRow | NoOperationRow,
+): row is ModificationRepeatScheduleRow => row.type === "modification";
 const isDeletionRow = (
-  row: ModificationAdjustmentRow | DeleteAdjustmentRow | RegistrationAdjustmentRow | NoOperationRow,
-): row is DeleteAdjustmentRow => row.type === "delete";
+  row: ModificationRepeatScheduleRow | DeleteRepeatScheduleRow | RegistrationRepeatScheduleRow | NoOperationRow,
+): row is DeleteRepeatScheduleRow => row.type === "delete";
 const isRegistrationRow = (
-  row: ModificationAdjustmentRow | DeleteAdjustmentRow | RegistrationAdjustmentRow | NoOperationRow,
-): row is RegistrationAdjustmentRow => row.type === "registration";
+  row: ModificationRepeatScheduleRow | DeleteRepeatScheduleRow | RegistrationRepeatScheduleRow | NoOperationRow,
+): row is RegistrationRepeatScheduleRow => row.type === "registration";
 
-export const getAdjustmentModificationOrDeletionOrRegistration = (
+export const getRepeatScheduleModificationOrDeletionOrRegistration = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
 ): {
-  registrationRows: RegistrationAdjustmentRow[];
-  modificationRows: ModificationAdjustmentRow[];
-  deletionRows: DeleteAdjustmentRow[];
+  registrationRows: RegistrationRepeatScheduleRow[];
+  modificationRows: ModificationRepeatScheduleRow[];
+  deletionRows: DeleteRepeatScheduleRow[];
 } => {
-  const sheetValues = getAdjustmentReSheetValues(sheet);
+  const sheetValues = getRepeatScheduleReSheetValues(sheet);
   return {
     registrationRows: sheetValues.filter(isRegistrationRow),
     modificationRows: sheetValues.filter(isModificationRow),

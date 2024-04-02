@@ -1,8 +1,6 @@
 import { GasWebClient as SlackClient } from "@hi-se/web-api";
 import { format } from "date-fns";
 
-import { insertAdjustmentSheet } from "./AdjustmentSheet";
-import { getAdjustmentModificationOrDeletionOrRegistration } from "./AdjustmentSheet";
 import { getConfig } from "./config";
 import { PartTimerProfile } from "./JobSheet";
 import { getPartTimerProfile } from "./JobSheet";
@@ -12,10 +10,12 @@ import {
   setValuesModificationAndDeletionSheet,
 } from "./ModificationAndDeletionSheet";
 import { getRegistrationRows, insertRegistrationSheet, setValuesRegistrationSheet } from "./RegistrationSheet";
+import { getRepeatScheduleModificationOrDeletionOrRegistration } from "./RepeatScheduleSheet";
+import { insertRepeatScheduleSheet } from "./RepeatScheduleSheet";
 import { EventInfo, shiftChanger } from "./shift-changer-api";
 
-type SheetType = "registration" | "modificationAndDeletion" | "adjustment";
-type OperationType = "registration" | "modificationAndDeletion" | "showEvents" | "adjustment";
+type SheetType = "registration" | "modificationAndDeletion" | "repeatSchedule";
+type OperationType = "registration" | "modificationAndDeletion" | "showEvents" | "repeatSchedule";
 export const doGet = () => {
   return ContentService.createTextOutput("ok");
 };
@@ -65,10 +65,9 @@ const createMenu = (ui: GoogleAppsScript.Base.Ui, menu: GoogleAppsScript.Base.Me
     .addSubMenu(
       ui
         .createMenu("固定シフト変更")
-        .addItem("シートの追加", insertAdjustmentSheet.name)
+        .addItem("シートの追加", insertRepeatScheduleSheet.name)
         .addSeparator()
-        .addItem("予定を表示", callShowAdjustmentEvents.name)
-        .addItem("提出", callAdjustment.name),
+        .addItem("提出", callRepeatSchedule.name),
     )
     .addToUi();
 };
@@ -280,10 +279,7 @@ const createDeletionMessage = (deletionInfos: EventInfo[], partTimerProfile: Par
   return `${messageTitle}\n${messages.join("\n")}`;
 };
 
-export const callShowAdjustmentEvents = () => {
-  console.log("あとでやる");
-};
-export const callAdjustment = () => {
+export const callRepeatSchedule = () => {
   const lock = LockService.getUserLock();
   if (!lock.tryLock(0)) {
     throw new Error("すでに処理を実行中です。そのままお待ちください");
@@ -293,11 +289,12 @@ export const callAdjustment = () => {
   const { SLACK_ACCESS_TOKEN } = getConfig();
   const client = getSlackClient(SLACK_ACCESS_TOKEN);
   const partTimerProfile = getPartTimerProfile(userEmail);
-  const sheetType: SheetType = "adjustment";
+  const sheetType: SheetType = "repeatSchedule";
   const sheet = getSheet(sheetType, spreadsheetUrl);
   const comment = sheet.getRange("A2").getValue();
-  const operationType: OperationType = "adjustment";
-  const { registrationRows, modificationRows, deletionRows } = getAdjustmentModificationOrDeletionOrRegistration(sheet);
+  const operationType: OperationType = "repeatSchedule";
+  const { registrationRows, modificationRows, deletionRows } =
+    getRepeatScheduleModificationOrDeletionOrRegistration(sheet);
   const registrationInfos = registrationRows.map((registrationRow) => {
     const title = createTitleFromEventInfo(
       {
@@ -359,20 +356,20 @@ export const callAdjustment = () => {
   if (modificationInfos.length == 0 && deletionRows.length == 0) {
     throw new Error("変更・削除する予定がありません。");
   }
-  const adjustmentMessageToNotify = [
-    // createAdjustmentMessage(registrationInfos,modificationInfos,deletionRows,comment, partTimerProfile),
+  const repeatScheduleMessageToNotify = [
+    // createRepeatScheduleMessage(registrationInfos,modificationInfos,deletionRows,comment, partTimerProfile),
     comment ? `コメント: ${comment}` : undefined,
   ]
     .filter(Boolean)
     .join("\n---\n");
 
-  postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, adjustmentMessageToNotify, partTimerProfile);
+  postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, repeatScheduleMessageToNotify, partTimerProfile);
   sheet.clear();
   SpreadsheetApp.flush();
   setValuesModificationAndDeletionSheet(sheet);
 };
-// const createAdjustmentMessage = (RegistrationAdjustmentRows: RegistrationAdjustmentRow[],ModificationAdjustmentRow:ModificationAdjustmentRow[],DeleteAdjustmentRow:DeleteAdjustmentRow[], comment: string, partTimerProfile: PartTimerProfile): string => {
-//   const messages = RegistrationAdjustmentRows.map(createMessageFromEventInfo);
+// const createRepeatScheduleMessage = (RegistrationRepeatScheduleRows: RegistrationRepeatScheduleRow[],ModificationRepeatScheduleRow:ModificationRepeatScheduleRow[],DeleteRepeatScheduleRow:DeleteRepeatScheduleRow[], comment: string, partTimerProfile: PartTimerProfile): string => {
+//   const messages = RegistrationRepeatScheduleRows.map(createMessageFromEventInfo);
 //   const { job, lastName } = partTimerProfile;
 //   const messageTitle = `${job}${lastName}さんの以下の予定が追加されました。`;
 //   return comment ? `${messageTitle}\n${messages.join("\n")}\n\nコメント: ${comment}` : `${messageTitle}\n${messages.join("\n")}`;

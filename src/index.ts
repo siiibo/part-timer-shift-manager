@@ -1,3 +1,4 @@
+import { insertAdjustmentSheet } from "./AdjustmentSheet";
 import { insertModificationAndDeletionSheet } from "./ModificationAndDeletionSheet";
 import { initNotifyDailyShift, notifyDailyShift } from "./notify-daily-shift";
 import { insertRegistrationSheet } from "./RegistrationSheet";
@@ -29,3 +30,4 @@ global.callShowEvents = callShowEvents;
 global.callModificationAndDeletion = callModificationAndDeletion;
 global.insertRegistrationSheet = insertRegistrationSheet;
 global.insertModificationAndDeletionSheet = insertModificationAndDeletionSheet;
+global.insertAdjustmentSheet = insertAdjustmentSheet;

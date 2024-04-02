@@ -1,6 +1,8 @@
 import { GasWebClient as SlackClient } from "@hi-se/web-api";
 import { format } from "date-fns";
 
+import { insertAdjustmentSheet } from "./AdjustmentSheet";
+import { getAdjustmentModificationOrDeletionOrRegistration } from "./AdjustmentSheet";
 import { getConfig } from "./config";
 import { PartTimerProfile } from "./JobSheet";
 import { getPartTimerProfile } from "./JobSheet";
@@ -12,8 +14,8 @@ import {
 import { getRegistrationRows, insertRegistrationSheet, setValuesRegistrationSheet } from "./RegistrationSheet";
 import { EventInfo, shiftChanger } from "./shift-changer-api";
 
-type SheetType = "registration" | "modificationAndDeletion";
-type OperationType = "registration" | "modificationAndDeletion" | "showEvents";
+type SheetType = "registration" | "modificationAndDeletion" | "adjustment";
+type OperationType = "registration" | "modificationAndDeletion" | "showEvents" | "adjustment";
 export const doGet = () => {
   return ContentService.createTextOutput("ok");
 };
@@ -59,6 +61,14 @@ const createMenu = (ui: GoogleAppsScript.Base.Ui, menu: GoogleAppsScript.Base.Me
         .addSeparator()
         .addItem("予定を表示", callShowEvents.name)
         .addItem("提出", callModificationAndDeletion.name),
+    )
+    .addSubMenu(
+      ui
+        .createMenu("固定シフト変更")
+        .addItem("シートの追加", insertAdjustmentSheet.name)
+        .addSeparator()
+        .addItem("予定を表示", callShowAdjustmentEvents.name)
+        .addItem("提出", callAdjustment.name),
     )
     .addToUi();
 };
@@ -269,6 +279,103 @@ const createDeletionMessage = (deletionInfos: EventInfo[], partTimerProfile: Par
   const messageTitle = `${job}${lastName}さんの以下の予定が削除されました。`;
   return `${messageTitle}\n${messages.join("\n")}`;
 };
+
+export const callShowAdjustmentEvents = () => {
+  console.log("あとでやる");
+};
+export const callAdjustment = () => {
+  const lock = LockService.getUserLock();
+  if (!lock.tryLock(0)) {
+    throw new Error("すでに処理を実行中です。そのままお待ちください");
+  }
+  const userEmail = Session.getActiveUser().getEmail();
+  const spreadsheetUrl = SpreadsheetApp.getActiveSpreadsheet().getUrl();
+  const { SLACK_ACCESS_TOKEN } = getConfig();
+  const client = getSlackClient(SLACK_ACCESS_TOKEN);
+  const partTimerProfile = getPartTimerProfile(userEmail);
+  const sheetType: SheetType = "adjustment";
+  const sheet = getSheet(sheetType, spreadsheetUrl);
+  const comment = sheet.getRange("A2").getValue();
+  const operationType: OperationType = "adjustment";
+  const { registrationRows, modificationRows, deletionRows } = getAdjustmentModificationOrDeletionOrRegistration(sheet);
+  const registrationInfos = registrationRows.map((registrationRow) => {
+    const title = createTitleFromEventInfo(
+      {
+        ...(registrationRow.restStartTime && { restStartTime: registrationRow.restStartTime }),
+        ...(registrationRow.restEndTime && { restEndTime: registrationRow.restEndTime }),
+        workingStyle: registrationRow.workingStyle,
+      },
+      partTimerProfile,
+    );
+    return {
+      statDate: registrationRow.startDate,
+      title: title,
+      startTime: registrationRow.startTime,
+      endTime: registrationRow.endTime,
+    };
+  });
+  const modificationInfos = modificationRows.map((modificationRow) => {
+    const newTitle = createTitleFromEventInfo(
+      {
+        ...(modificationRow.newRestStartTime && { restStartTime: modificationRow.newRestStartTime }),
+        ...(modificationRow.newRestEndTime && { restEndTime: modificationRow.newRestEndTime }),
+        workingStyle: modificationRow.newWorkingStyle,
+      },
+      partTimerProfile,
+    );
+    return {
+      previousEventInfo: {
+        title: modificationRow.title,
+        startTime: modificationRow.startTime,
+        endTime: modificationRow.endTime,
+      },
+      newEventInfo: {
+        startDate: modificationRow.startDate,
+        title: newTitle,
+        newStartTime: modificationRow.newStartTime,
+        newEndTime: modificationRow.newEndTime,
+      },
+    };
+  });
+  const payload = {
+    apiId: "shift-changer",
+    operationType: operationType,
+    userEmail: userEmail,
+    registrationInfos: JSON.stringify(registrationInfos),
+    modificationInfos: JSON.stringify(modificationInfos),
+    deletionInfos: JSON.stringify(deletionRows),
+  };
+  const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
+    method: "post",
+    payload: payload,
+    muteHttpExceptions: true,
+  };
+  const { API_URL, SLACK_CHANNEL_TO_POST } = getConfig();
+  const response = UrlFetchApp.fetch(API_URL, options);
+  if (response.getResponseCode() !== 200) {
+    throw new Error(response.getContentText());
+  }
+  if (modificationInfos.length == 0 && deletionRows.length == 0) {
+    throw new Error("変更・削除する予定がありません。");
+  }
+  const adjustmentMessageToNotify = [
+    // createAdjustmentMessage(registrationInfos,modificationInfos,deletionRows,comment, partTimerProfile),
+    comment ? `コメント: ${comment}` : undefined,
+  ]
+    .filter(Boolean)
+    .join("\n---\n");
+
+  postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, adjustmentMessageToNotify, partTimerProfile);
+  sheet.clear();
+  SpreadsheetApp.flush();
+  setValuesModificationAndDeletionSheet(sheet);
+};
+// const createAdjustmentMessage = (RegistrationAdjustmentRows: RegistrationAdjustmentRow[],ModificationAdjustmentRow:ModificationAdjustmentRow[],DeleteAdjustmentRow:DeleteAdjustmentRow[], comment: string, partTimerProfile: PartTimerProfile): string => {
+//   const messages = RegistrationAdjustmentRows.map(createMessageFromEventInfo);
+//   const { job, lastName } = partTimerProfile;
+//   const messageTitle = `${job}${lastName}さんの以下の予定が追加されました。`;
+//   return comment ? `${messageTitle}\n${messages.join("\n")}\n\nコメント: ${comment}` : `${messageTitle}\n${messages.join("\n")}`;
+// }
 
 const getSlackClient = (slackToken: string): SlackClient => {
   return new SlackClient(slackToken);

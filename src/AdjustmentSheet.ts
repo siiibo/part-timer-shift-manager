@@ -2,7 +2,7 @@ import { z } from "zod";
 
 const dateOrEmptyString = z.preprocess((val) => (val === "" ? undefined : val), z.date().optional());
 const stringOrEmptyString = z.preprocess((val) => (val === "" ? undefined : val), z.string().optional());
-
+//TODO: 型に曜日情報を含める
 export const DeleteAdjustmentRow = z.object({
   type: z.literal("delete"),
   endDate: z.date(),

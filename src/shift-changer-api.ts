@@ -16,7 +16,6 @@ const ModificationInfo = z.object({
   newEventInfo: EventInfo,
 });
 const adjustmentInfo = z.object({
-  type: z.literal("registration").or(z.literal("modification")).or(z.literal("deletion")),
   dayOfWeek: z
     .literal("月曜日")
     .or(z.literal("火曜日"))

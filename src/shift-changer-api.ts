@@ -1,4 +1,4 @@
-import { addWeeks, addYears } from "date-fns";
+import { addWeeks } from "date-fns";
 import { z } from "zod";
 
 import { getConfig } from "./config";
@@ -15,7 +15,7 @@ const ModificationInfo = z.object({
   previousEventInfo: EventInfo,
   newEventInfo: EventInfo,
 });
-const repeatScheduleInfo = z.object({
+const RepeatScheduleInfo = z.object({
   dayOfWeek: z
     .literal("月曜日")
     .or(z.literal("火曜日"))
@@ -27,7 +27,7 @@ const repeatScheduleInfo = z.object({
   startTime: z.coerce.date(),
   endTime: z.coerce.date(),
 });
-type repeatScheduleInfo = z.infer<typeof repeatScheduleInfo>;
+type RepeatScheduleInfo = z.infer<typeof RepeatScheduleInfo>;
 
 const getCalendar = () => {
   const { CALENDAR_ID } = getConfig();
@@ -63,9 +63,9 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
       return JSON.stringify(eventInfos);
     }
     case "repeatSchedule": {
-      const repeatScheduleRegistrationInfos = repeatScheduleInfo
-        .array()
-        .parse(JSON.parse(e.parameter.repeatScheduleModification));
+      const repeatScheduleRegistrationInfos = RepeatScheduleInfo.array().parse(
+        JSON.parse(e.parameter.repeatScheduleModification),
+      );
 
       repeatScheduleRegistration(repeatScheduleRegistrationInfos, userEmail);
     }
@@ -110,13 +110,12 @@ const modification = (
   const calendar = getCalendar();
   modificationInfos.forEach((eventInfo) => modifyEvent(eventInfo, calendar, userEmail));
 };
-const repeatScheduleRegistration = (repeatScheduleRegistrationInfos: repeatScheduleInfo[], userEmail: string) => {
+const repeatScheduleRegistration = (repeatScheduleRegistrationInfos: RepeatScheduleInfo[], userEmail: string) => {
   const calendar = getCalendar();
-  const untilDate = addYears(new Date(), 4);
 
   repeatScheduleRegistrationInfos.forEach((eventInfo) => {
     const dayOfWeek = convertJapaneseToEnglishDayOfWeek(eventInfo.dayOfWeek);
-    const recurrence = CalendarApp.newRecurrence().addWeeklyRule().onlyOnWeekday(dayOfWeek).until(new Date(untilDate));
+    const recurrence = CalendarApp.newRecurrence().addWeeklyRule().onlyOnWeekday(dayOfWeek);
     calendar.createEventSeries(eventInfo.title, eventInfo.startTime, eventInfo.endTime, recurrence, {
       guests: userEmail,
     });

@@ -5,6 +5,7 @@ const stringOrEmptyString = z.preprocess((val) => (val === "" ? undefined : val)
 
 export const DeleteAdjustmentRow = z.object({
   type: z.literal("delete"),
+  endDate: z.date(),
   title: z.string(),
   startTime: z.date(),
   endTime: z.date(),
@@ -21,7 +22,7 @@ export const ModificationAdjustmentRow = z.object({
   newEndTime: z.date(),
   newRestStartTime: z.date().optional(),
   newRestEndTime: z.date().optional(),
-  newWorkingStyle: z.literal("出社").or(z.literal("リモート")),
+  newWorkingStyle: z.literal("リモート").or(z.literal("出社")),
 });
 export type ModificationAdjustmentRow = z.infer<typeof ModificationAdjustmentRow>;
 
@@ -32,7 +33,7 @@ export const RegistrationAdjustmentRow = z.object({
   endTime: z.date(),
   restStartTime: z.date().optional(),
   restEndTime: z.date().optional(),
-  workingStyle: z.literal("出社").or(z.literal("リモート")),
+  workingStyle: z.literal("リモート").or(z.literal("出社")),
 });
 export type RegistrationAdjustmentRow = z.infer<typeof RegistrationAdjustmentRow>;
 
@@ -45,7 +46,7 @@ const AdjustmentSheetRow = z.object({
   newEndTime: dateOrEmptyString,
   newRestStartTime: dateOrEmptyString,
   newRestEndTime: dateOrEmptyString,
-  newWorkingStyle: z.literal("出社").or(z.literal("リモート")).or(z.literal("")),
+  newWorkingStyle: z.literal("リモート").or(z.literal("出社")).or(z.literal("")),
   isDelete: z.coerce.boolean(),
 });
 type AdjustmentSheetRow = z.infer<typeof AdjustmentSheetRow>;
@@ -63,7 +64,7 @@ export const insertAdjustmentSheet = () => {
   } catch {
     throw new Error("既存の「固定シフト」シートを使用してください");
   }
-  sheet.addDeveloperMetadata(`part-timer-shift-manager-registration`);
+  sheet.addDeveloperMetadata(`part-timer-shift-manager-adjustment`);
   setValuesAdjustmentSheet(sheet);
 };
 const setValuesAdjustmentSheet = (sheet: GoogleAppsScript.Spreadsheet.Sheet) => {
@@ -126,7 +127,7 @@ const getAdjustmentReSheetValues = (
 ): (DeleteAdjustmentRow | ModificationAdjustmentRow | RegistrationAdjustmentRow | NoOperationRow)[] => {
   const startDate = sheet.getRange("A5").getValue();
   const sheetValues = sheet
-    .getRange(10, 2, 5, 5)
+    .getRange("B10:J14")
     .getValues()
     .map((row) =>
       AdjustmentSheetRow.parse({
@@ -146,21 +147,22 @@ const getAdjustmentReSheetValues = (
       if (row.isDelete) {
         return DeleteAdjustmentRow.parse({
           type: "delete",
+          endDate: row.startDate,
           title: row.title,
           startTime: row.startTime,
           endTime: row.endTime,
         });
-      } else if (row.title === "" && row.startDate && row.startTime && row.endTime) {
+      } else if (!row.title && row.startDate && row.newStartTime && row.newEndTime) {
         return RegistrationAdjustmentRow.parse({
           type: "registration",
           startDate: row.startDate,
-          startTime: row.startTime,
-          endTime: row.endTime,
+          startTime: row.newStartTime,
+          endTime: row.newEndTime,
           restStartTime: row.newRestStartTime,
           restEndTime: row.newRestEndTime,
           workingStyle: row.newWorkingStyle,
         });
-      } else if (row.title !== "" && row.startDate && row.newStartTime && row.newEndTime && row.newWorkingStyle) {
+      } else if (row.title && row.startDate && row.newStartTime && row.newEndTime) {
         return ModificationAdjustmentRow.parse({
           type: "modification",
           startDate: row.startDate,

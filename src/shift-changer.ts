@@ -337,6 +337,7 @@ export const callAdjustment = () => {
       },
     };
   });
+  console.log(registrationInfos, modificationInfos, deletionRows);
   const payload = {
     apiId: "shift-changer",
     operationType: operationType,

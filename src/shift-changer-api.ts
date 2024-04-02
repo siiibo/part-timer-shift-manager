@@ -1,4 +1,4 @@
-import { addWeeks } from "date-fns";
+import { addWeeks, addYears } from "date-fns";
 import { z } from "zod";
 
 import { getConfig } from "./config";
@@ -15,6 +15,20 @@ const ModificationInfo = z.object({
   previousEventInfo: EventInfo,
   newEventInfo: EventInfo,
 });
+const adjustmentInfo = z.object({
+  type: z.literal("registration").or(z.literal("modification")).or(z.literal("deletion")),
+  dayOfWeek: z
+    .literal("月曜日")
+    .or(z.literal("火曜日"))
+    .or(z.literal("水曜日"))
+    .or(z.literal("木曜日"))
+    .or(z.literal("金曜日")),
+  startOrEndDate: z.coerce.date(),
+  title: z.string(),
+  startTime: z.coerce.date(),
+  endTime: z.coerce.date(),
+});
+type adjustmentInfo = z.infer<typeof adjustmentInfo>;
 
 const getCalendar = () => {
   const { CALENDAR_ID } = getConfig();
@@ -48,6 +62,10 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
       const startDate = new Date(e.parameter.startDate);
       const eventInfos = showEvents(userEmail, startDate);
       return JSON.stringify(eventInfos);
+    }
+    case "adjustment": {
+      const adjustmentRegistrationInfos = adjustmentInfo.array().parse(JSON.parse(e.parameter.adjustmentModification));
+      adjustmentRegistration(adjustmentRegistrationInfos, userEmail);
     }
   }
   return;
@@ -90,7 +108,17 @@ const modification = (
   const calendar = getCalendar();
   modificationInfos.forEach((eventInfo) => modifyEvent(eventInfo, calendar, userEmail));
 };
-
+const adjustmentRegistration = (adjustmentRegistrationInfos: adjustmentInfo[], userEmail: string) => {
+  const calendar = getCalendar();
+  const untilDate = addYears(new Date(), 4);
+  adjustmentRegistrationInfos.forEach((eventInfo) => {
+    const dayOfWeek = convertJapaneseToEnglishDayOfWeek(eventInfo.dayOfWeek);
+    const recurrence = CalendarApp.newRecurrence().addWeeklyRule().onlyOnWeekday(dayOfWeek).until(new Date(untilDate));
+    calendar.createEventSeries(eventInfo.title, eventInfo.startTime, eventInfo.endTime, recurrence, {
+      guests: userEmail,
+    });
+  });
+};
 const modifyEvent = (
   eventInfo: {
     previousEventInfo: EventInfo;
@@ -118,4 +146,20 @@ const deleteEvent = (eventInfo: EventInfo, calendar: GoogleAppsScript.Calendar.C
   const event = calendar.getEvents(startDate, endDate).find((event) => isEventGuest(event, userEmail));
   if (!event) return;
   event.deleteEvent();
+};
+const convertJapaneseToEnglishDayOfWeek = (dayOfWeek: string) => {
+  switch (dayOfWeek) {
+    case "月曜日":
+      return CalendarApp.Weekday.MONDAY;
+    case "火曜日":
+      return CalendarApp.Weekday.TUESDAY;
+    case "水曜日":
+      return CalendarApp.Weekday.WEDNESDAY;
+    case "木曜日":
+      return CalendarApp.Weekday.THURSDAY;
+    case "金曜日":
+      return CalendarApp.Weekday.FRIDAY;
+    default:
+      throw new Error("Invalid day of the week");
+  }
 };

@@ -144,15 +144,16 @@ const getRepeatScheduleReSheetValues = (
         startDate: startDate,
         oldDayOfWeek: row[0],
         newDayOfWeek: row[1],
-        newStartTime: row[2],
-        newEndTime: row[3],
-        newRestStartTime: row[4],
-        newRestEndTime: row[5],
-        newWorkingStyle: row[6],
+        startTime: row[2],
+        endTime: row[3],
+        restStartTime: row[4],
+        restEndTime: row[5],
+        workingStyle: row[6],
         isDelete: row[7],
       }),
     )
     .map((row) => {
+      console.log(row);
       if (row.isDelete) {
         return DeleteRepeatScheduleRow.parse({
           type: "delete",
@@ -177,11 +178,11 @@ const getRepeatScheduleReSheetValues = (
           startDate: row.startDate,
           oldDayOfWeek: row.oldDayOfWeek,
           newDayOfWeek: row.newDayOfWeek,
-          newStartTime: row.startTime,
-          newEndTime: row.endTime,
-          newRestStartTime: row.restStartTime,
-          newRestEndTime: row.restEndTime,
-          newWorkingStyle: row.workingStyle,
+          startTime: row.startTime,
+          endTime: row.endTime,
+          restStartTime: row.restStartTime,
+          restEndTime: row.restEndTime,
+          workingStyle: row.workingStyle,
         });
       } else {
         return NoOperationRow.parse({

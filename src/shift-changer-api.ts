@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { getConfig } from "./config";
 
-const dayOfWeekOrEmptyString = z
+const dayOfWeek = z
   .literal("月曜日")
   .or(z.literal("火曜日"))
   .or(z.literal("水曜日"))
@@ -24,7 +24,7 @@ const ModificationInfo = z.object({
 });
 
 const RegistrationRepeatScheduleRow = z.object({
-  dayOfWeek: dayOfWeekOrEmptyString,
+  dayOfWeek: dayOfWeek,
   startOrEndDate: z.coerce.date(),
   title: z.string(),
   startTime: z.coerce.date(),

@@ -356,14 +356,22 @@ export const callRepeatSchedule = () => {
       endTime: modificationRow.endTime,
     };
   });
-  console.log(registrationInfos, modificationInfos, deletionRows);
+  //NOTE: typeをstring型にするために再定義を行っている
+  const deletionInfos = deletionRows.map((deletionRow) => {
+    return {
+      type: "deletion",
+      startOrEndDate: deletionRow.startOrEndDate,
+      oldDayOfWeek: deletionRow.oldDayOfWeek,
+    };
+  });
+  console.log(registrationInfos, modificationInfos, deletionInfos);
   const payload = {
     apiId: "shift-changer",
     operationType: operationType,
     userEmail: userEmail,
     registrationInfos: JSON.stringify(registrationInfos),
     modificationInfos: JSON.stringify(modificationInfos),
-    deletionInfos: JSON.stringify(deletionRows),
+    deletionInfos: JSON.stringify(deletionInfos),
   };
   const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
     method: "post",
@@ -375,13 +383,16 @@ export const callRepeatSchedule = () => {
   if (response.getResponseCode() !== 200) {
     throw new Error(response.getContentText());
   }
-  if (modificationInfos.length == 0 && deletionRows.length == 0) {
+  if (modificationInfos.length == 0 && deletionRows.length == 0 && registrationInfos.length == 0) {
     throw new Error("変更・削除する予定がありません。");
   }
+  const { job, lastName } = partTimerProfile;
+  const messageTitle = `${job}${lastName}さんの以下の繰り返し予定が変更されました`;
   const repeatScheduleMessageToNotify = [
-    createRepeatScheduleMessage(registrationInfos, partTimerProfile),
-    createRepeatScheduleMessage(modificationInfos, partTimerProfile),
-    createRepeatScheduleMessage(deletionRows, partTimerProfile),
+    `${messageTitle}`,
+    createRepeatScheduleMessage(registrationInfos),
+    createRepeatScheduleMessage(modificationInfos),
+    createRepeatScheduleMessage(deletionInfos),
     comment ? `コメント: ${comment}` : undefined,
   ]
     .filter(Boolean)
@@ -392,29 +403,37 @@ export const callRepeatSchedule = () => {
   // SpreadsheetApp.flush();
   // setValuesModificationAndDeletionSheet(sheet);
 };
-// TODO: メッセージを作成する関数の作成
-const createRepeatScheduleMessage = (
-  RegistrationRepeatScheduleRows: RecurringEventNotification[],
-  partTimerProfile: PartTimerProfile,
-): string => {
-  const { job, lastName } = partTimerProfile;
-  if (RegistrationRepeatScheduleRows.length === 0) return "";
-  const messageTitle: string = (() => {
-    switch (RegistrationRepeatScheduleRows[0].type) {
-      case "registration":
-        return `${job}${lastName}さんの以下の予定が追加されました。`;
-      case "modification":
-        return `${job}${lastName}さんの以下の予定が変更されました。`;
-      case "deletion":
-        return `${job}${lastName}さんの以下の予定が削除されました。`;
-      default:
-        return "";
+const createRepeatScheduleMessage = (registrationRepeatScheduleRows: RecurringEventNotification[]): string => {
+  if (registrationRepeatScheduleRows.length === 0) return "";
+  const messageTitle = {
+    modification: "以下の繰り返し予定が変更されました",
+    registration: "以下の繰り返し予定が追加されました",
+    deletion: "以下の繰り返し予定が削除されました",
+  };
+  const messages = registrationRepeatScheduleRows.map((registrationRepeatScheduleRow) => {
+    if (registrationRepeatScheduleRow.type === "registration") {
+      const startTime = format(registrationRepeatScheduleRow.startTime ?? "", "HH:mm");
+      const endTime = format(registrationRepeatScheduleRow.endTime ?? "", "HH:mm");
+      const dayOfWeek = registrationRepeatScheduleRow.newDayOfWeek;
+      const selectMessageTitle = messageTitle[registrationRepeatScheduleRow.type];
+      const title = registrationRepeatScheduleRow.title;
+      return `${selectMessageTitle}\n${dayOfWeek} : ${title} ${startTime}~${endTime}`;
+    } else if (registrationRepeatScheduleRow.type === "modification") {
+      const startTime = format(registrationRepeatScheduleRow.startTime ?? "", "HH:mm");
+      const endTime = format(registrationRepeatScheduleRow.endTime ?? "", "HH:mm");
+      const oldDayOfWeek = registrationRepeatScheduleRow.oldDayOfWeek;
+      const newDayOfWeek = registrationRepeatScheduleRow.newDayOfWeek;
+      const title = registrationRepeatScheduleRow.title;
+      const selectMessageTitle = messageTitle[registrationRepeatScheduleRow.type];
+      return `${selectMessageTitle}\n${oldDayOfWeek} → ${newDayOfWeek} : ${title} ${startTime}~${endTime}`;
+    } else if (registrationRepeatScheduleRow.type === "deletion") {
+      const dayOfWeek = registrationRepeatScheduleRow.oldDayOfWeek;
+      const selectMessageTitle = messageTitle[registrationRepeatScheduleRow.type];
+      return `${selectMessageTitle}\n${dayOfWeek}`;
     }
-  })();
-  const messages = RegistrationRepeatScheduleRows.map(
-    (RegistrationRepeatScheduleRow) => RegistrationRepeatScheduleRow.title,
-  );
-  return `${messageTitle}\n${messages.join("\n")}`;
+  });
+
+  return `${messages.join("\n")}`;
 };
 
 const getSlackClient = (slackToken: string): SlackClient => {

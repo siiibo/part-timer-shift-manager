@@ -15,7 +15,7 @@ const dayOfWeekOrEmptyString = z.preprocess(
 const DeleteRepeatScheduleRow = z.object({
   type: z.literal("delete"),
   startOrEndDate: z.date(),
-  dayOfWeek: dayOfWeekOrEmptyString,
+  oldDayOfWeek: dayOfWeekOrEmptyString,
 });
 type DeleteRepeatScheduleRow = z.infer<typeof DeleteRepeatScheduleRow>;
 
@@ -158,7 +158,7 @@ const getRepeatScheduleReSheetValues = (
         return DeleteRepeatScheduleRow.parse({
           type: "delete",
           startOrEndDate: row.startDate,
-          dayOfWeek: row.oldDayOfWeek,
+          oldDayOfWeek: row.oldDayOfWeek,
         });
       } else if (!row.oldDayOfWeek && row.startTime && row.endTime) {
         //TODO: 日付情報をstartTime,endTimeに与える

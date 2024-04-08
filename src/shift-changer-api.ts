@@ -23,14 +23,14 @@ const ModificationInfo = z.object({
   newEventInfo: EventInfo,
 });
 
-const RegistrationRecurringEventInfo = z.object({
+const RegistrationRecurringEvent = z.object({
   dayOfWeek: dayOfWeek,
   startOrEndDate: z.coerce.date(),
   title: z.string(),
   startTime: z.coerce.date(),
   endTime: z.coerce.date(),
 });
-type RegistrationRecurringEventInfo = z.infer<typeof RegistrationRecurringEventInfo>;
+type RegistrationRecurringEvent = z.infer<typeof RegistrationRecurringEvent>;
 
 const getCalendar = () => {
   const { CALENDAR_ID } = getConfig();
@@ -65,8 +65,8 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
       const eventInfos = showEvents(userEmail, startDate);
       return JSON.stringify(eventInfos);
     }
-    case "registrationRecurringEvent": {
-      const repeatScheduleRegistrationInfos = RegistrationRecurringEventInfo.array().parse(
+    case "registerRecurringEvent": {
+      const repeatScheduleRegistrationInfos = RegistrationRecurringEvent.array().parse(
         JSON.parse(e.parameter.repeatScheduleModification),
       );
 
@@ -115,7 +115,7 @@ const modification = (
 };
 
 const repeatScheduleRegistration = (
-  repeatScheduleRegistrationInfos: RegistrationRecurringEventInfo[],
+  repeatScheduleRegistrationInfos: RegistrationRecurringEvent[],
   userEmail: string,
 ) => {
   const calendar = getCalendar();

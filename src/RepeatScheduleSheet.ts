@@ -47,7 +47,7 @@ const RegistrationRepeatScheduleRow = z.object({
 type RegistrationRepeatScheduleRow = z.infer<typeof RegistrationRepeatScheduleRow>;
 
 const RepeatScheduleSheetRow = z.object({
-  startDate: z.date(),
+  startDate: z.date(), //TODO: 入力した日付の曜日とnewDayOfWeekの曜日が一致しない場合エラーをはくようにする
   oldDayOfWeek: dayOfWeekOrEmptyString,
   newDayOfWeek: dayOfWeekOrEmptyString,
   startTime: dateOrEmptyString,

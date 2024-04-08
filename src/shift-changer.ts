@@ -375,7 +375,8 @@ export const callRepeatSchedule = () => {
     throw new Error("変更・削除する予定がありません。");
   }
   const { job, lastName } = partTimerProfile;
-  const messageTitle = `${job}${lastName}さんの以下の繰り返し予定が変更されました`;
+  const messageTitle = `${job}${lastName}さんの以下の繰り返し予定が変更されました`; //NOTE: ここに記述することで1回のみ通知される
+  //TODO: 予定の最初の日付を取得して、それを通知メッセージに含める
   const repeatScheduleMessageToNotify = [
     `${messageTitle}`,
     createRepeatScheduleMessage(registrationInfos, "registration"),
@@ -387,41 +388,6 @@ export const callRepeatSchedule = () => {
     .join("\n---\n");
 
   postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, repeatScheduleMessageToNotify, partTimerProfile);
-};
-const createRepeatScheduleMessage = (
-  registrationRepeatScheduleRows: RecurringEventNotification[],
-  type: "registration" | "modification" | "deletion",
-): string => {
-  if (registrationRepeatScheduleRows.length === 0) return "";
-  const messageTitle = {
-    modification: "以下の繰り返し予定が変更されました",
-    registration: "以下の繰り返し予定が追加されました",
-    deletion: "以下の繰り返し予定が削除されました",
-  };
-  const messages = registrationRepeatScheduleRows.map((registrationRepeatScheduleRow) => {
-    if (type === "registration") {
-      const startTime = format(registrationRepeatScheduleRow.startTime ?? "", "HH:mm");
-      const endTime = format(registrationRepeatScheduleRow.endTime ?? "", "HH:mm");
-      const dayOfWeek = registrationRepeatScheduleRow.newDayOfWeek;
-      const selectMessageTitle = messageTitle[type];
-      const title = registrationRepeatScheduleRow.title;
-      return `${selectMessageTitle}\n${dayOfWeek} : ${title} ${startTime}~${endTime}`;
-    } else if (type === "modification") {
-      const startTime = format(registrationRepeatScheduleRow.startTime ?? "", "HH:mm");
-      const endTime = format(registrationRepeatScheduleRow.endTime ?? "", "HH:mm");
-      const oldDayOfWeek = registrationRepeatScheduleRow.oldDayOfWeek;
-      const newDayOfWeek = registrationRepeatScheduleRow.newDayOfWeek;
-      const title = registrationRepeatScheduleRow.title;
-      const selectMessageTitle = messageTitle[type];
-      return `${selectMessageTitle}\n${oldDayOfWeek} → ${newDayOfWeek} : ${title} ${startTime}~${endTime}`;
-    } else if (type === "deletion") {
-      const dayOfWeek = registrationRepeatScheduleRow.oldDayOfWeek;
-      const selectMessageTitle = messageTitle[type];
-      return `${selectMessageTitle}\n${dayOfWeek}`;
-    }
-  });
-
-  return `${messages.join("\n")}`;
 };
 
 const getSlackClient = (slackToken: string): SlackClient => {
@@ -512,4 +478,38 @@ const createTitleFromEventInfo = (
     const title = `【${workingStyle}】${job}${lastName}さん (休憩: ${restStartTime}~${restEndTime})`;
     return title;
   }
+};
+const createRepeatScheduleMessage = (
+  registrationRepeatScheduleRows: RecurringEventNotification[],
+  type: "registration" | "modification" | "deletion",
+): string => {
+  if (registrationRepeatScheduleRows.length === 0) return "";
+  const messageTitle = {
+    modification: "以下の繰り返し予定が変更されました",
+    registration: "以下の繰り返し予定が追加されました",
+    deletion: "以下の繰り返し予定が削除されました",
+  };
+  const messages = registrationRepeatScheduleRows.map((registrationRepeatScheduleRow) => {
+    if (type === "registration") {
+      const startTime = format(registrationRepeatScheduleRow.startTime ?? "", "HH:mm");
+      const endTime = format(registrationRepeatScheduleRow.endTime ?? "", "HH:mm");
+      const dayOfWeek = registrationRepeatScheduleRow.newDayOfWeek;
+      const selectMessageTitle = messageTitle[type];
+      const title = registrationRepeatScheduleRow.title;
+      return `${selectMessageTitle}\n${dayOfWeek} : ${title} ${startTime}~${endTime}`;
+    } else if (type === "modification") {
+      const startTime = format(registrationRepeatScheduleRow.startTime ?? "", "HH:mm");
+      const endTime = format(registrationRepeatScheduleRow.endTime ?? "", "HH:mm");
+      const oldDayOfWeek = registrationRepeatScheduleRow.oldDayOfWeek;
+      const newDayOfWeek = registrationRepeatScheduleRow.newDayOfWeek;
+      const title = registrationRepeatScheduleRow.title;
+      const selectMessageTitle = messageTitle[type];
+      return `${selectMessageTitle}\n${oldDayOfWeek} → ${newDayOfWeek} : ${title} ${startTime}~${endTime}`;
+    } else if (type === "deletion") {
+      const dayOfWeek = registrationRepeatScheduleRow.oldDayOfWeek;
+      const selectMessageTitle = messageTitle[type];
+      return `${selectMessageTitle}\n${dayOfWeek}`;
+    }
+  });
+  return `${messages.join("\n")}`;
 };

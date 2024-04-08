@@ -3,6 +3,13 @@ import { z } from "zod";
 
 import { getConfig } from "./config";
 
+const dayOfWeekOrEmptyString = z
+  .literal("月曜日")
+  .or(z.literal("火曜日"))
+  .or(z.literal("水曜日"))
+  .or(z.literal("木曜日"))
+  .or(z.literal("金曜日"));
+
 export const EventInfo = z.object({
   title: z.string(),
   date: z.coerce.date(), //TODO: 日付情報だけの変数dateを消去する
@@ -15,19 +22,15 @@ const ModificationInfo = z.object({
   previousEventInfo: EventInfo,
   newEventInfo: EventInfo,
 });
-const RepeatScheduleInfo = z.object({
-  dayOfWeek: z
-    .literal("月曜日")
-    .or(z.literal("火曜日"))
-    .or(z.literal("水曜日"))
-    .or(z.literal("木曜日"))
-    .or(z.literal("金曜日")),
+
+const RegistrationRepeatScheduleRow = z.object({
+  dayOfWeek: dayOfWeekOrEmptyString,
   startOrEndDate: z.coerce.date(),
   title: z.string(),
   startTime: z.coerce.date(),
   endTime: z.coerce.date(),
 });
-type RepeatScheduleInfo = z.infer<typeof RepeatScheduleInfo>;
+type RegistrationRepeatScheduleRow = z.infer<typeof RegistrationRepeatScheduleRow>;
 
 const getCalendar = () => {
   const { CALENDAR_ID } = getConfig();
@@ -63,7 +66,7 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
       return JSON.stringify(eventInfos);
     }
     case "repeatSchedule": {
-      const repeatScheduleRegistrationInfos = RepeatScheduleInfo.array().parse(
+      const repeatScheduleRegistrationInfos = RegistrationRepeatScheduleRow.array().parse(
         JSON.parse(e.parameter.repeatScheduleModification),
       );
 
@@ -110,9 +113,12 @@ const modification = (
   const calendar = getCalendar();
   modificationInfos.forEach((eventInfo) => modifyEvent(eventInfo, calendar, userEmail));
 };
-const repeatScheduleRegistration = (repeatScheduleRegistrationInfos: RepeatScheduleInfo[], userEmail: string) => {
-  const calendar = getCalendar();
 
+const repeatScheduleRegistration = (
+  repeatScheduleRegistrationInfos: RegistrationRepeatScheduleRow[],
+  userEmail: string,
+) => {
+  const calendar = getCalendar();
   repeatScheduleRegistrationInfos.forEach((eventInfo) => {
     const dayOfWeek = convertJapaneseToEnglishDayOfWeek(eventInfo.dayOfWeek);
     const recurrence = CalendarApp.newRecurrence().addWeeklyRule().onlyOnWeekday(dayOfWeek);
@@ -121,6 +127,7 @@ const repeatScheduleRegistration = (repeatScheduleRegistrationInfos: RepeatSched
     });
   });
 };
+
 const modifyEvent = (
   eventInfo: {
     previousEventInfo: EventInfo;

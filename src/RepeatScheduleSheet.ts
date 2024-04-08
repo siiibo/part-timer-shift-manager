@@ -161,12 +161,13 @@ const getRepeatScheduleReSheetValues = (
           startOrEndDate: row.startDate,
           oldDayOfWeek: row.oldDayOfWeek,
         });
-      } else if (!row.oldDayOfWeek && row.startTime && row.endTime) {
-        const startTime = mergeTimeToDate(row.startDate, row.startTime);
-        const endTime = mergeTimeToDate(row.startDate, row.endTime);
+      } else if (!row.oldDayOfWeek && row.startTime && row.endTime && row.newDayOfWeek) {
+        const nextDate = getNextDayOfWeek(row.startDate, row.newDayOfWeek);
+        const startTime = mergeTimeToDate(nextDate, row.startTime);
+        const endTime = mergeTimeToDate(nextDate, row.endTime);
         return RegistrationRepeatScheduleRow.parse({
           type: "registration",
-          startDate: row.startDate,
+          startDate: nextDate,
           newDayOfWeek: row.newDayOfWeek,
           startTime: startTime,
           endTime: endTime,
@@ -174,12 +175,13 @@ const getRepeatScheduleReSheetValues = (
           restEndTime: row.restEndTime,
           workingStyle: row.workingStyle,
         });
-      } else if (row.oldDayOfWeek && row.startTime && row.endTime) {
-        const startTime = mergeTimeToDate(row.startDate, row.startTime);
-        const endTime = mergeTimeToDate(row.startDate, row.endTime);
+      } else if (row.oldDayOfWeek && row.startTime && row.endTime && row.newDayOfWeek) {
+        const nextDate = getNextDayOfWeek(row.startDate, row.newDayOfWeek);
+        const startTime = mergeTimeToDate(nextDate, row.startTime);
+        const endTime = mergeTimeToDate(nextDate, row.endTime);
         return ModificationRepeatScheduleRow.parse({
           type: "modification",
-          startDate: row.startDate,
+          startDate: nextDate,
           oldDayOfWeek: row.oldDayOfWeek,
           newDayOfWeek: row.newDayOfWeek,
           startTime: startTime,
@@ -224,4 +226,18 @@ export const getRepeatScheduleModificationOrDeletionOrRegistration = (
 //NOTE: Googleスプレッドシートでは時間のみの入力がDate型として取得される際、日付部分はデフォルトで1899/12/30となるため適切な日付情報に更新する必要がある
 const mergeTimeToDate = (date: Date, time: Date): Date => {
   return set(date, { hours: time.getHours(), minutes: time.getMinutes() });
+};
+//NOTE: 仕様的にstartTimeの日付に最初の予定が指定されるため、指定された日付の後で、一番近い指定曜日の日付に変更する
+const getNextDayOfWeek = (startDate: Date, newDayOfWeek: string): Date => {
+  const daysOfWeek = ["日曜日", "月曜日", "火曜日", "水曜日", "木曜日", "金曜日", "土曜日"];
+  const targetDayOfWeek = daysOfWeek.indexOf(newDayOfWeek.toLowerCase());
+  if (targetDayOfWeek === -1) {
+    throw new Error("Invalid day of week specified");
+  }
+
+  const currentDayOfWeek = startDate.getDay();
+  const daysToAdd = (targetDayOfWeek + 7 - currentDayOfWeek) % 7;
+  const nextDate = new Date(startDate);
+  nextDate.setDate(startDate.getDate() + daysToAdd);
+  return nextDate;
 };

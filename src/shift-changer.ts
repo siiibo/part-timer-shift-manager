@@ -376,6 +376,7 @@ export const callRepeatSchedule = () => {
   }
   const { job, lastName } = partTimerProfile;
   const messageTitle = `${job}${lastName}さんの以下の繰り返し予定が変更されました`; //NOTE: ここに記述することで1回のみ通知される
+
   //TODO: 予定の最初の日付を取得して、それを通知メッセージに含める
   const repeatScheduleMessageToNotify = [
     `${messageTitle}`,

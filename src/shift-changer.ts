@@ -1,6 +1,6 @@
 import { GasWebClient as SlackClient } from "@hi-se/web-api";
 import { format } from "date-fns";
-// import { z } from "zod";
+import { z } from "zod";
 
 import { getConfig } from "./config";
 import { PartTimerProfile } from "./JobSheet";
@@ -15,16 +15,28 @@ import { getRepeatScheduleModificationOrDeletionOrRegistration } from "./RepeatS
 import { insertRepeatScheduleSheet } from "./RepeatScheduleSheet";
 import { EventInfo, shiftChanger } from "./shift-changer-api";
 
-// const RecurringEventNotification= z.object({
-//   type:z.string(),
-//   title:z.string().optional(),
-//   startOrEndDate:z.date(),
-//   oldDayOfWeek:z.literal("月曜日").or(z.literal("火曜日")).or(z.literal("水曜日")).or(z.literal("木曜日")).or(z.literal("金曜日")).optional(),
-//   newDayOfWeek:z.literal("月曜日").or(z.literal("火曜日")).or(z.literal("水曜日")).or(z.literal("木曜日")).or(z.literal("金曜日")).optional(),
-//   startTime:z.date().optional(),
-//   endTime:z.date().optional(),
-// });
-// type RecurringEventNotification = z.infer<typeof RecurringEventNotification>;
+const RecurringEventNotification = z.object({
+  type: z.string(),
+  title: z.string().optional(),
+  startOrEndDate: z.date(),
+  oldDayOfWeek: z
+    .literal("月曜日")
+    .or(z.literal("火曜日"))
+    .or(z.literal("水曜日"))
+    .or(z.literal("木曜日"))
+    .or(z.literal("金曜日"))
+    .optional(),
+  newDayOfWeek: z
+    .literal("月曜日")
+    .or(z.literal("火曜日"))
+    .or(z.literal("水曜日"))
+    .or(z.literal("木曜日"))
+    .or(z.literal("金曜日"))
+    .optional(),
+  startTime: z.date().optional(),
+  endTime: z.date().optional(),
+});
+type RecurringEventNotification = z.infer<typeof RecurringEventNotification>;
 
 type SheetType = "registration" | "modificationAndDeletion" | "repeatSchedule";
 type OperationType = "registration" | "modificationAndDeletion" | "showEvents" | "repeatSchedule";
@@ -367,38 +379,43 @@ export const callRepeatSchedule = () => {
     throw new Error("変更・削除する予定がありません。");
   }
   const repeatScheduleMessageToNotify = [
-    // createRepeatScheduleMessage(registrationInfos, partTimerProfile),
-    // createRepeatScheduleMessage(modificationInfos, partTimerProfile),
-    // createRepeatScheduleMessage(deletionRows, partTimerProfile),
+    createRepeatScheduleMessage(registrationInfos, partTimerProfile),
+    createRepeatScheduleMessage(modificationInfos, partTimerProfile),
+    createRepeatScheduleMessage(deletionRows, partTimerProfile),
     comment ? `コメント: ${comment}` : undefined,
   ]
     .filter(Boolean)
     .join("\n---\n");
 
   postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, repeatScheduleMessageToNotify, partTimerProfile);
-  sheet.clear();
-  SpreadsheetApp.flush();
-  setValuesModificationAndDeletionSheet(sheet);
+  // sheet.clear();
+  // SpreadsheetApp.flush();
+  // setValuesModificationAndDeletionSheet(sheet);
 };
-//TODO: メッセージを作成する関数の作成
-// const createRepeatScheduleMessage = (RegistrationRepeatScheduleRows:RecurringEventNotification[], partTimerProfile: PartTimerProfile): string => {
-//   const { job, lastName } = partTimerProfile;
-//   const messages = RegistrationRepeatScheduleRows.map((RegistrationRepeatScheduleRows) =>{
-//     switch (RegistrationRepeatScheduleRows.type) {
-//       case "registration":
-//         const messageTitle = `${job}${lastName}さんの以下の予定が追加されました。`;
-
-//         return messageTitle;
-
-//       case "modification":
-//         break;
-//       case "deletion":
-//         break;
-//     }
-//   });
-
-//   return comment ? `${messageTitle}\n${messages.join("\n")}\n\nコメント: ${comment}` : `${messageTitle}\n${messages.join("\n")}`;
-// }
+// TODO: メッセージを作成する関数の作成
+const createRepeatScheduleMessage = (
+  RegistrationRepeatScheduleRows: RecurringEventNotification[],
+  partTimerProfile: PartTimerProfile,
+): string => {
+  const { job, lastName } = partTimerProfile;
+  if (RegistrationRepeatScheduleRows.length === 0) return "";
+  const messageTitle: string = (() => {
+    switch (RegistrationRepeatScheduleRows[0].type) {
+      case "registration":
+        return `${job}${lastName}さんの以下の予定が追加されました。`;
+      case "modification":
+        return `${job}${lastName}さんの以下の予定が変更されました。`;
+      case "deletion":
+        return `${job}${lastName}さんの以下の予定が削除されました。`;
+      default:
+        return "";
+    }
+  })();
+  const messages = RegistrationRepeatScheduleRows.map(
+    (RegistrationRepeatScheduleRow) => RegistrationRepeatScheduleRow.title,
+  );
+  return `${messageTitle}\n${messages.join("\n")}`;
+};
 
 const getSlackClient = (slackToken: string): SlackClient => {
   return new SlackClient(slackToken);

@@ -155,7 +155,6 @@ const getRepeatScheduleReSheetValues = (
       }),
     )
     .map((row) => {
-      console.log(row);
       if (row.isDelete) {
         return DeleteRepeatScheduleRow.parse({
           type: "delete",
@@ -195,7 +194,6 @@ const getRepeatScheduleReSheetValues = (
         });
       }
     });
-  console.log(sheetValues);
   return sheetValues;
 };
 

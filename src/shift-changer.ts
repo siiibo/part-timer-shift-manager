@@ -16,7 +16,6 @@ import { insertRepeatScheduleSheet } from "./RepeatScheduleSheet";
 import { EventInfo, shiftChanger } from "./shift-changer-api";
 
 const RecurringEventNotification = z.object({
-  type: z.string(),
   title: z.string().optional(),
   startOrEndDate: z.date(),
   oldDayOfWeek: z
@@ -329,7 +328,6 @@ export const callRepeatSchedule = () => {
       partTimerProfile,
     );
     return {
-      type: "registration",
       title: title,
       startOrEndDate: registrationRow.startDate,
       newDayOfWeek: registrationRow.newDayOfWeek,
@@ -347,7 +345,6 @@ export const callRepeatSchedule = () => {
       partTimerProfile,
     );
     return {
-      type: "modification",
       title: title,
       startOrEndDate: modificationRow.startDate,
       oldDayOfWeek: modificationRow.oldDayOfWeek,
@@ -359,7 +356,6 @@ export const callRepeatSchedule = () => {
   //NOTE: typeをstring型にするために再定義を行っている
   const deletionInfos = deletionRows.map((deletionRow) => {
     return {
-      type: "deletion",
       startOrEndDate: deletionRow.startOrEndDate,
       oldDayOfWeek: deletionRow.oldDayOfWeek,
     };
@@ -390,9 +386,9 @@ export const callRepeatSchedule = () => {
   const messageTitle = `${job}${lastName}さんの以下の繰り返し予定が変更されました`;
   const repeatScheduleMessageToNotify = [
     `${messageTitle}`,
-    createRepeatScheduleMessage(registrationInfos),
-    createRepeatScheduleMessage(modificationInfos),
-    createRepeatScheduleMessage(deletionInfos),
+    createRepeatScheduleMessage(registrationInfos, "registration"),
+    createRepeatScheduleMessage(modificationInfos, "modification"),
+    createRepeatScheduleMessage(deletionInfos, "deletion"),
     comment ? `コメント: ${comment}` : undefined,
   ]
     .filter(Boolean)
@@ -403,7 +399,10 @@ export const callRepeatSchedule = () => {
   // SpreadsheetApp.flush();
   // setValuesModificationAndDeletionSheet(sheet);
 };
-const createRepeatScheduleMessage = (registrationRepeatScheduleRows: RecurringEventNotification[]): string => {
+const createRepeatScheduleMessage = (
+  registrationRepeatScheduleRows: RecurringEventNotification[],
+  type: "registration" | "modification" | "deletion",
+): string => {
   if (registrationRepeatScheduleRows.length === 0) return "";
   const messageTitle = {
     modification: "以下の繰り返し予定が変更されました",
@@ -411,24 +410,24 @@ const createRepeatScheduleMessage = (registrationRepeatScheduleRows: RecurringEv
     deletion: "以下の繰り返し予定が削除されました",
   };
   const messages = registrationRepeatScheduleRows.map((registrationRepeatScheduleRow) => {
-    if (registrationRepeatScheduleRow.type === "registration") {
+    if (type === "registration") {
       const startTime = format(registrationRepeatScheduleRow.startTime ?? "", "HH:mm");
       const endTime = format(registrationRepeatScheduleRow.endTime ?? "", "HH:mm");
       const dayOfWeek = registrationRepeatScheduleRow.newDayOfWeek;
-      const selectMessageTitle = messageTitle[registrationRepeatScheduleRow.type];
+      const selectMessageTitle = messageTitle[type];
       const title = registrationRepeatScheduleRow.title;
       return `${selectMessageTitle}\n${dayOfWeek} : ${title} ${startTime}~${endTime}`;
-    } else if (registrationRepeatScheduleRow.type === "modification") {
+    } else if (type === "modification") {
       const startTime = format(registrationRepeatScheduleRow.startTime ?? "", "HH:mm");
       const endTime = format(registrationRepeatScheduleRow.endTime ?? "", "HH:mm");
       const oldDayOfWeek = registrationRepeatScheduleRow.oldDayOfWeek;
       const newDayOfWeek = registrationRepeatScheduleRow.newDayOfWeek;
       const title = registrationRepeatScheduleRow.title;
-      const selectMessageTitle = messageTitle[registrationRepeatScheduleRow.type];
+      const selectMessageTitle = messageTitle[type];
       return `${selectMessageTitle}\n${oldDayOfWeek} → ${newDayOfWeek} : ${title} ${startTime}~${endTime}`;
-    } else if (registrationRepeatScheduleRow.type === "deletion") {
+    } else if (type === "deletion") {
       const dayOfWeek = registrationRepeatScheduleRow.oldDayOfWeek;
-      const selectMessageTitle = messageTitle[registrationRepeatScheduleRow.type];
+      const selectMessageTitle = messageTitle[type];
       return `${selectMessageTitle}\n${dayOfWeek}`;
     }
   });

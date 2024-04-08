@@ -24,6 +24,7 @@ const ModificationInfo = z.object({
 });
 
 const RegistrationRecurringEvent = z.object({
+  type: z.string(),
   dayOfWeek: dayOfWeek,
   startOrEndDate: z.coerce.date(),
   title: z.string(),

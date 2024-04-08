@@ -1,3 +1,4 @@
+import { set } from "date-fns";
 import { z } from "zod";
 
 const dateOrEmptyString = z.preprocess((val) => (val === "" ? undefined : val), z.date().optional());
@@ -11,6 +12,7 @@ const dayOfWeekOrEmptyString = z.preprocess(
     .or(z.literal("金曜日"))
     .optional(),
 );
+const workingStyleOrEmptyString = z.preprocess((val) => (val === "" ? undefined : val), z.string().optional());
 
 const DeleteRepeatScheduleRow = z.object({
   type: z.literal("delete"),
@@ -28,7 +30,7 @@ const ModificationRepeatScheduleRow = z.object({
   endTime: z.date(),
   restStartTime: z.date().optional(),
   restEndTime: z.date().optional(),
-  workingStyle: z.any(),
+  workingStyle: z.literal("リモート").or(z.literal("出勤")),
 });
 type ModificationRepeatScheduleRow = z.infer<typeof ModificationRepeatScheduleRow>;
 
@@ -40,7 +42,7 @@ const RegistrationRepeatScheduleRow = z.object({
   endTime: z.date(),
   restStartTime: z.date().optional(),
   restEndTime: z.date().optional(),
-  workingStyle: z.any(),
+  workingStyle: z.literal("リモート").or(z.literal("出勤")),
 });
 type RegistrationRepeatScheduleRow = z.infer<typeof RegistrationRepeatScheduleRow>;
 
@@ -52,7 +54,7 @@ const RepeatScheduleSheetRow = z.object({
   endTime: dateOrEmptyString,
   restStartTime: dateOrEmptyString,
   restEndTime: dateOrEmptyString,
-  workingStyle: z.any(),
+  workingStyle: workingStyleOrEmptyString,
   isDelete: z.coerce.boolean(),
 });
 type RepeatScheduleSheetRow = z.infer<typeof RepeatScheduleSheetRow>;
@@ -161,25 +163,28 @@ const getRepeatScheduleReSheetValues = (
           oldDayOfWeek: row.oldDayOfWeek,
         });
       } else if (!row.oldDayOfWeek && row.startTime && row.endTime) {
-        //TODO: 日付情報をstartTime,endTimeに与える
+        const startTime = mergeTimeToDate(row.startDate, row.startTime);
+        const endTime = mergeTimeToDate(row.startDate, row.endTime);
         return RegistrationRepeatScheduleRow.parse({
           type: "registration",
           startDate: row.startDate,
           newDayOfWeek: row.newDayOfWeek,
-          startTime: row.startTime,
-          endTime: row.endTime,
+          startTime: startTime,
+          endTime: endTime,
           restStartTime: row.restStartTime,
           restEndTime: row.restEndTime,
           workingStyle: row.workingStyle,
         });
-      } else if (row.oldDayOfWeek) {
+      } else if (row.oldDayOfWeek && row.startTime && row.endTime) {
+        const startTime = mergeTimeToDate(row.startDate, row.startTime);
+        const endTime = mergeTimeToDate(row.startDate, row.endTime);
         return ModificationRepeatScheduleRow.parse({
           type: "modification",
           startDate: row.startDate,
           oldDayOfWeek: row.oldDayOfWeek,
           newDayOfWeek: row.newDayOfWeek,
-          startTime: row.startTime,
-          endTime: row.endTime,
+          startTime: startTime,
+          endTime: endTime,
           restStartTime: row.restStartTime,
           restEndTime: row.restEndTime,
           workingStyle: row.workingStyle,
@@ -217,4 +222,8 @@ export const getRepeatScheduleModificationOrDeletionOrRegistration = (
     modificationRows: sheetValues.filter(isModificationRow),
     deletionRows: sheetValues.filter(isDeletionRow),
   };
+};
+//NOTE: Googleスプレッドシートでは時間のみの入力がDate型として取得される際、日付部分はデフォルトで1899/12/30となるため適切な日付情報に更新する必要がある
+const mergeTimeToDate = (date: Date, time: Date): Date => {
+  return set(date, { hours: time.getHours(), minutes: time.getMinutes() });
 };

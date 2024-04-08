@@ -353,21 +353,13 @@ export const callRepeatSchedule = () => {
       endTime: modificationRow.endTime,
     };
   });
-  //NOTE: typeをstring型にするために再定義を行っている
-  const deletionInfos = deletionRows.map((deletionRow) => {
-    return {
-      startOrEndDate: deletionRow.startOrEndDate,
-      oldDayOfWeek: deletionRow.oldDayOfWeek,
-    };
-  });
-  console.log(registrationInfos, modificationInfos, deletionInfos);
   const payload = {
     apiId: "shift-changer",
     operationType: operationType,
     userEmail: userEmail,
     registrationInfos: JSON.stringify(registrationInfos),
     modificationInfos: JSON.stringify(modificationInfos),
-    deletionInfos: JSON.stringify(deletionInfos),
+    deletionInfos: JSON.stringify(deletionRows),
   };
   const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
     method: "post",
@@ -388,16 +380,13 @@ export const callRepeatSchedule = () => {
     `${messageTitle}`,
     createRepeatScheduleMessage(registrationInfos, "registration"),
     createRepeatScheduleMessage(modificationInfos, "modification"),
-    createRepeatScheduleMessage(deletionInfos, "deletion"),
+    createRepeatScheduleMessage(deletionRows, "deletion"),
     comment ? `コメント: ${comment}` : undefined,
   ]
     .filter(Boolean)
     .join("\n---\n");
 
   postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, repeatScheduleMessageToNotify, partTimerProfile);
-  // sheet.clear();
-  // SpreadsheetApp.flush();
-  // setValuesModificationAndDeletionSheet(sheet);
 };
 const createRepeatScheduleMessage = (
   registrationRepeatScheduleRows: RecurringEventNotification[],

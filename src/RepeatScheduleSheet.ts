@@ -47,7 +47,7 @@ const RegistrationRepeatScheduleRow = z.object({
 type RegistrationRepeatScheduleRow = z.infer<typeof RegistrationRepeatScheduleRow>;
 
 const RepeatScheduleSheetRow = z.object({
-  startDate: z.date(), //TODO: 入力した日付の曜日とnewDayOfWeekの曜日が一致しない場合エラーをはくようにする
+  startDate: z.date(),
   oldDayOfWeek: dayOfWeekOrEmptyString,
   newDayOfWeek: dayOfWeekOrEmptyString,
   startTime: dateOrEmptyString,
@@ -227,7 +227,7 @@ export const getRepeatScheduleModificationOrDeletionOrRegistration = (
 const mergeTimeToDate = (date: Date, time: Date): Date => {
   return set(date, { hours: time.getHours(), minutes: time.getMinutes() });
 };
-//NOTE: 仕様的にstartTimeの日付に最初の予定が指定されるため、指定された日付の後で、一番近い指定曜日の日付に変更する
+//NOTE: 仕様的にstartTimeの日付に最初の予定が指定されるため、指定された日付の後で一番近い指定曜日の日付に変更する
 const getNextDayOfWeek = (startDate: Date, newDayOfWeek: string): Date => {
   const daysOfWeek = ["日曜日", "月曜日", "火曜日", "水曜日", "木曜日", "金曜日", "土曜日"];
   const targetDayOfWeek = daysOfWeek.indexOf(newDayOfWeek.toLowerCase());

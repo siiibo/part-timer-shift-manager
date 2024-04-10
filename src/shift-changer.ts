@@ -315,7 +315,6 @@ export const callRepeatSchedule = () => {
   const sheetType: SheetType = "repeatSchedule";
   const sheet = getSheet(sheetType, spreadsheetUrl);
   const comment = sheet.getRange("A2").getValue();
-  const operationType: OperationType = "repeatSchedule";
   const { registrationRows, modificationRows, deletionRows } =
     getRepeatScheduleModificationOrDeletionOrRegistration(sheet);
   const registrationInfos = registrationRows.map((registrationRow) => {
@@ -353,31 +352,64 @@ export const callRepeatSchedule = () => {
       endTime: modificationRow.endTime,
     };
   });
-  const payload = {
-    apiId: "shift-changer",
-    operationType: operationType,
-    userEmail: userEmail,
-    registrationInfos: JSON.stringify(registrationInfos),
-    modificationInfos: JSON.stringify(modificationInfos),
-    deletionInfos: JSON.stringify(deletionRows),
-  };
-  const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
-    method: "post",
-    payload: payload,
-    muteHttpExceptions: true,
-  };
   const { API_URL, SLACK_CHANNEL_TO_POST } = getConfig();
-  const response = UrlFetchApp.fetch(API_URL, options);
-  if (response.getResponseCode() !== 200) {
-    throw new Error(response.getContentText());
+  if (registrationInfos.length > 0) {
+    const payload = {
+      apiId: "shift-changer",
+      operationType: "registerRecurringEvent",
+      userEmail: userEmail,
+      registrationInfos: JSON.stringify(registrationInfos),
+    };
+    const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
+      method: "post",
+      payload: payload,
+      muteHttpExceptions: true,
+    };
+    const response = UrlFetchApp.fetch(API_URL, options);
+    if (response.getResponseCode() !== 200) {
+      throw new Error(response.getContentText());
+    }
   }
+  if (modificationInfos.length > 0) {
+    const payload = {
+      apiId: "shift-changer",
+      operationType: "modifyRecurringEvent",
+      userEmail: userEmail,
+      modificationInfos: JSON.stringify(modificationInfos),
+    };
+    const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
+      method: "post",
+      payload: payload,
+      muteHttpExceptions: true,
+    };
+    const response = UrlFetchApp.fetch(API_URL, options);
+    if (response.getResponseCode() !== 200) {
+      throw new Error(response.getContentText());
+    }
+  }
+  if (deletionRows.length > 0) {
+    const payload = {
+      apiId: "shift-changer",
+      operationType: "deleteRecurringEvent",
+      userEmail: userEmail,
+      deletionInfos: JSON.stringify(deletionRows),
+    };
+    const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
+      method: "post",
+      payload: payload,
+      muteHttpExceptions: true,
+    };
+    const response = UrlFetchApp.fetch(API_URL, options);
+    if (response.getResponseCode() !== 200) {
+      throw new Error(response.getContentText());
+    }
+  }
+
   if (modificationInfos.length == 0 && deletionRows.length == 0 && registrationInfos.length == 0) {
-    throw new Error("変更・削除する予定がありません。");
+    throw new Error("追加・変更・削除する予定がありません。");
   }
   const { job, lastName } = partTimerProfile;
   const messageTitle = `${job}${lastName}さんの以下の繰り返し予定が変更されました`; //NOTE: ここに記述することで1回のみ通知される
-
-  //TODO: 予定の最初の日付を取得して、それを通知メッセージに含める
   const repeatScheduleMessageToNotify = [
     `${messageTitle}`,
     createRepeatScheduleMessage(registrationInfos, "registration"),

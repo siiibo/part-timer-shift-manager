@@ -148,16 +148,17 @@ const deleteRecurringEvent = (deletionRecurringEvents: DeletionRecurringEvent[])
       encodeURIComponent(calendar.getId()) +
       "/events/" +
       encodeURIComponent("4008v0skroveg5dn2irdjoi6po"); //NOTE: 仮でこの値を入力している
+    //TODO: カレンダーからIDを取得するようにする
     const headers = {
       Authorization: "Bearer " + ScriptApp.getOAuthToken(),
       "Content-Type": "application/json",
     };
     const endDate = new Date(event.endDate); // 新しい Date オブジェクトを作成し、終了日を設定する
-    endDate.setHours(14, 30); // 時間を設定する
+    endDate.setHours(14, 30); // TODO: 時間を設定する
     console.log(endDate);
     const data = {
       end: {
-        date: endDate,
+        dateTime: endDate,
       },
       recurrence: ["RRULE:FREQ=DAILY;UNTIL=" + format(endDate, "yyyyMMdd'T'HHmmss'Z'")],
     };

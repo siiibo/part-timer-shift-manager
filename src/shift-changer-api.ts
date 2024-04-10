@@ -1,4 +1,4 @@
-import { addDays, addWeeks } from "date-fns";
+import { addDays, addWeeks, format } from "date-fns";
 import { z } from "zod";
 
 import { getConfig } from "./config";
@@ -144,24 +144,26 @@ const deleteRecurringEvent = (deletionRecurringEvents: DeletionRecurringEvent[])
     const eventId = calendar.getEvents(event.endDate, addDays(event.endDate, 1))[0].getId();
     console.log(eventId);
     const url =
-      "https://www.googleapis.com/calendar/v3/calendars/" + encodeURIComponent(calendar.getId()) + "/events/" + eventId;
-
+      "https://www.googleapis.com/calendar/v3/calendars/" +
+      encodeURIComponent(calendar.getId()) +
+      "/events/" +
+      encodeURIComponent(eventId);
+    console.log(url);
+    const headers = {
+      Authorization: "Bearer " + ScriptApp.getOAuthToken(),
+      "Content-Type": "application/json",
+    };
     const endDate = event.endDate;
     const data = {
       end: {
-        date: endDate.toISOString().substring(0, 10), // YYYY-MM-DD 形式
+        date: format(endDate, "yyyy-MM-dd"), // YYYY-MM-DD
       },
-      recurrence: [
-        "RRULE:FREQ=DAILY;UNTIL=" + endDate.toISOString().replace(/-|:|\.\d+Z$/g, "") + "Z", // UNTIL=YYYYMMDDT000000Z 形式
-      ],
+      recurrence: ["RRULE:FREQ=DAILY;AFTER=" + format(endDate, "yyyyMMdd'T'HHmmss'Z'")],
     };
     const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
       method: "patch",
       payload: JSON.stringify(data),
-      muteHttpExceptions: true,
-      headers: {
-        Authorization: "Bearer " + ScriptApp.getOAuthToken(),
-      },
+      headers,
     };
     const response = UrlFetchApp.fetch(url, options);
     Logger.log(response.getContentText());

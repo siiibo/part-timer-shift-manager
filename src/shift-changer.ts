@@ -361,7 +361,7 @@ const createTitleFromEventInfo = (
 };
 //NOTE: テスト用の関数
 export const deleteRecurringEvent = () => {
-  const endDate = new Date("2024-4-16");
+  const endDate = new Date("2024-4-9");
   const dayOfWeek = "火曜日";
   const payload = {
     apiId: "shift-changer",

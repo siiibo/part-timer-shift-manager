@@ -147,24 +147,27 @@ const deleteRecurringEvent = (deletionRecurringEvents: DeletionRecurringEvent[])
       "https://www.googleapis.com/calendar/v3/calendars/" +
       encodeURIComponent(calendar.getId()) +
       "/events/" +
-      encodeURIComponent(eventId);
-    console.log(url);
+      encodeURIComponent("4008v0skroveg5dn2irdjoi6po"); //NOTE: 仮でこの値を入力している
     const headers = {
       Authorization: "Bearer " + ScriptApp.getOAuthToken(),
       "Content-Type": "application/json",
     };
-    const endDate = event.endDate;
+    const endDate = new Date(event.endDate); // 新しい Date オブジェクトを作成し、終了日を設定する
+    endDate.setHours(14, 30); // 時間を設定する
+    console.log(endDate);
     const data = {
       end: {
-        date: format(endDate, "yyyy-MM-dd"), // YYYY-MM-DD
+        date: endDate,
       },
-      recurrence: ["RRULE:FREQ=DAILY;AFTER=" + format(endDate, "yyyyMMdd'T'HHmmss'Z'")],
+      recurrence: ["RRULE:FREQ=DAILY;UNTIL=" + format(endDate, "yyyyMMdd'T'HHmmss'Z'")],
     };
     const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
       method: "patch",
       payload: JSON.stringify(data),
       headers,
+      muteHttpExceptions: true,
     };
+    //HACK: BadRequestが返ってくる
     const response = UrlFetchApp.fetch(url, options);
     Logger.log(response.getContentText());
   });

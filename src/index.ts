@@ -5,6 +5,7 @@ import {
   callModificationAndDeletion,
   callRegistration,
   callShowEvents,
+  deleteRecurringEvent,
   doGet,
   doPost,
   initShiftChanger,
@@ -29,3 +30,4 @@ global.callShowEvents = callShowEvents;
 global.callModificationAndDeletion = callModificationAndDeletion;
 global.insertRegistrationSheet = insertRegistrationSheet;
 global.insertModificationAndDeletionSheet = insertModificationAndDeletionSheet;
+global.deleteRecurringEvent = deleteRecurringEvent;

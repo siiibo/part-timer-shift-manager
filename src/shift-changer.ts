@@ -359,3 +359,24 @@ const createTitleFromEventInfo = (
     return title;
   }
 };
+//NOTE: テスト用の関数
+export const deleteRecurringEvent = () => {
+  const endDate = new Date("2024-5-21");
+  const dayOfWeek = "火曜日";
+  const payload = {
+    apiId: "shift-changer",
+    operationType: "deleteRecurringEvent",
+    userEmail: "takuya.wada@siiibo.com",
+    recurringEventDeletion: JSON.stringify([{ endDate: endDate, dayOfWeek: dayOfWeek }]),
+  };
+  const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
+    method: "post",
+    payload: payload,
+    muteHttpExceptions: true,
+  };
+  const { API_URL } = getConfig();
+  const response = UrlFetchApp.fetch(API_URL, options);
+  if (response.getResponseCode() !== 200) {
+    throw new Error(response.getContentText());
+  }
+};

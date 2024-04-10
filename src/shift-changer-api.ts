@@ -1,4 +1,4 @@
-import { addWeeks } from "date-fns";
+import { addDays, addWeeks } from "date-fns";
 import { z } from "zod";
 
 import { getConfig } from "./config";
@@ -31,6 +31,12 @@ const RegistrationRecurringEvent = z.object({
   endTime: z.coerce.date(),
 });
 type RegistrationRecurringEvent = z.infer<typeof RegistrationRecurringEvent>;
+
+const DeletionRecurringEvent = z.object({
+  endDate: z.coerce.date(),
+  dayOfWeek: dayOfWeek,
+});
+type DeletionRecurringEvent = z.infer<typeof DeletionRecurringEvent>;
 
 const getCalendar = () => {
   const { CALENDAR_ID } = getConfig();
@@ -71,6 +77,14 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
       );
 
       registerRecurringEvent(registrationRecurringEvents, userEmail);
+      break;
+    }
+    case "deleteRecurringEvent": {
+      const deletionRecurringEvents = DeletionRecurringEvent.array().parse(
+        JSON.parse(e.parameter.recurringEventDeletion),
+      );
+      deleteRecurringEvent(deletionRecurringEvents);
+      break;
     }
   }
   return;
@@ -122,6 +136,35 @@ const registerRecurringEvent = (registrationRecurringEvents: RegistrationRecurri
     calendar.createEventSeries(event.title, event.startTime, event.endTime, recurrence, {
       guests: userEmail,
     });
+  });
+};
+const deleteRecurringEvent = (deletionRecurringEvents: DeletionRecurringEvent[]) => {
+  const calendar = getCalendar();
+  deletionRecurringEvents.forEach((event) => {
+    const eventId = calendar.getEvents(event.endDate, addDays(event.endDate, 1))[0].getId();
+    console.log(eventId);
+    const url =
+      "https://www.googleapis.com/calendar/v3/calendars/" + encodeURIComponent(calendar.getId()) + "/events/" + eventId;
+
+    const endDate = event.endDate;
+    const data = {
+      end: {
+        date: endDate.toISOString().substring(0, 10), // YYYY-MM-DD 形式
+      },
+      recurrence: [
+        "RRULE:FREQ=DAILY;UNTIL=" + endDate.toISOString().replace(/-|:|\.\d+Z$/g, "") + "Z", // UNTIL=YYYYMMDDT000000Z 形式
+      ],
+    };
+    const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
+      method: "patch",
+      payload: JSON.stringify(data),
+      muteHttpExceptions: true,
+      headers: {
+        Authorization: "Bearer " + ScriptApp.getOAuthToken(),
+      },
+    };
+    const response = UrlFetchApp.fetch(url, options);
+    Logger.log(response.getContentText());
   });
 };
 

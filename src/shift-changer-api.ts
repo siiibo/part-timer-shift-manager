@@ -70,7 +70,7 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
         JSON.parse(e.parameter.recurringEventModification),
       );
 
-      recurringEventRegistration(registrationRecurringEvents, userEmail);
+      recurringEventRegister(registrationRecurringEvents, userEmail);
     }
   }
   return;
@@ -114,12 +114,12 @@ const modification = (
   modificationInfos.forEach((eventInfo) => modifyEvent(eventInfo, calendar, userEmail));
 };
 
-const recurringEventRegistration = (registrationRecurringEvents: RegistrationRecurringEvent[], userEmail: string) => {
+const recurringEventRegister = (registrationRecurringEvents: RegistrationRecurringEvent[], userEmail: string) => {
   const calendar = getCalendar();
-  registrationRecurringEvents.forEach((eventInfo) => {
-    const dayOfWeek = convertJapaneseToEnglishDayOfWeek(eventInfo.dayOfWeek);
+  registrationRecurringEvents.forEach((event) => {
+    const dayOfWeek = convertJapaneseToEnglishDayOfWeek(event.dayOfWeek);
     const recurrence = CalendarApp.newRecurrence().addWeeklyRule().onlyOnWeekday(dayOfWeek);
-    calendar.createEventSeries(eventInfo.title, eventInfo.startTime, eventInfo.endTime, recurrence, {
+    calendar.createEventSeries(event.title, event.startTime, event.endTime, recurrence, {
       guests: userEmail,
     });
   });

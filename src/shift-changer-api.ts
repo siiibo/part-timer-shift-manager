@@ -3,6 +3,13 @@ import { z } from "zod";
 
 import { getConfig } from "./config";
 
+const dayOfWeek = z
+  .literal("月曜日")
+  .or(z.literal("火曜日"))
+  .or(z.literal("水曜日"))
+  .or(z.literal("木曜日"))
+  .or(z.literal("金曜日"));
+
 export const EventInfo = z.object({
   title: z.string(),
   date: z.coerce.date(), //TODO: 日付情報だけの変数dateを消去する
@@ -15,6 +22,15 @@ const ModificationInfo = z.object({
   previousEventInfo: EventInfo,
   newEventInfo: EventInfo,
 });
+
+const RegistrationRecurringEvent = z.object({
+  dayOfWeek: dayOfWeek,
+  startOrEndDate: z.coerce.date(),
+  title: z.string(),
+  startTime: z.coerce.date(),
+  endTime: z.coerce.date(),
+});
+type RegistrationRecurringEvent = z.infer<typeof RegistrationRecurringEvent>;
 
 const getCalendar = () => {
   const { CALENDAR_ID } = getConfig();
@@ -48,6 +64,13 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
       const startDate = new Date(e.parameter.startDate);
       const eventInfos = showEvents(userEmail, startDate);
       return JSON.stringify(eventInfos);
+    }
+    case "registerRecurringEvent": {
+      const registrationRecurringEvents = RegistrationRecurringEvent.array().parse(
+        JSON.parse(e.parameter.recurringEventModification),
+      );
+
+      registerRecurringEvent(registrationRecurringEvents, userEmail);
     }
   }
   return;
@@ -91,6 +114,17 @@ const modification = (
   modificationInfos.forEach((eventInfo) => modifyEvent(eventInfo, calendar, userEmail));
 };
 
+const registerRecurringEvent = (registrationRecurringEvents: RegistrationRecurringEvent[], userEmail: string) => {
+  const calendar = getCalendar();
+  registrationRecurringEvents.forEach((event) => {
+    const dayOfWeek = convertJapaneseToEnglishDayOfWeek(event.dayOfWeek);
+    const recurrence = CalendarApp.newRecurrence().addWeeklyRule().onlyOnWeekday(dayOfWeek);
+    calendar.createEventSeries(event.title, event.startTime, event.endTime, recurrence, {
+      guests: userEmail,
+    });
+  });
+};
+
 const modifyEvent = (
   eventInfo: {
     previousEventInfo: EventInfo;
@@ -118,4 +152,20 @@ const deleteEvent = (eventInfo: EventInfo, calendar: GoogleAppsScript.Calendar.C
   const event = calendar.getEvents(startDate, endDate).find((event) => isEventGuest(event, userEmail));
   if (!event) return;
   event.deleteEvent();
+};
+const convertJapaneseToEnglishDayOfWeek = (dayOfWeek: string) => {
+  switch (dayOfWeek) {
+    case "月曜日":
+      return CalendarApp.Weekday.MONDAY;
+    case "火曜日":
+      return CalendarApp.Weekday.TUESDAY;
+    case "水曜日":
+      return CalendarApp.Weekday.WEDNESDAY;
+    case "木曜日":
+      return CalendarApp.Weekday.THURSDAY;
+    case "金曜日":
+      return CalendarApp.Weekday.FRIDAY;
+    default:
+      throw new Error("Invalid day of the week");
+  }
 };

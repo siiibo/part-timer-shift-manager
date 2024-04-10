@@ -70,7 +70,7 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
         JSON.parse(e.parameter.recurringEventModification),
       );
 
-      recurringEventRegister(registrationRecurringEvents, userEmail);
+      registerRecurringEvent(registrationRecurringEvents, userEmail);
     }
   }
   return;
@@ -114,7 +114,7 @@ const modification = (
   modificationInfos.forEach((eventInfo) => modifyEvent(eventInfo, calendar, userEmail));
 };
 
-const recurringEventRegister = (registrationRecurringEvents: RegistrationRecurringEvent[], userEmail: string) => {
+const registerRecurringEvent = (registrationRecurringEvents: RegistrationRecurringEvent[], userEmail: string) => {
   const calendar = getCalendar();
   registrationRecurringEvents.forEach((event) => {
     const dayOfWeek = convertJapaneseToEnglishDayOfWeek(event.dayOfWeek);

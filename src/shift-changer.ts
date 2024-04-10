@@ -329,11 +329,12 @@ export const callRepeatSchedule = () => {
     return {
       title: title,
       startOrEndDate: registrationRow.startDate,
-      newDayOfWeek: registrationRow.newDayOfWeek,
+      dayOfWeek: registrationRow.newDayOfWeek,
       startTime: registrationRow.startTime,
       endTime: registrationRow.endTime,
     };
   });
+  console.log(registrationInfos);
   const modificationInfos = modificationRows.map((modificationRow) => {
     const title = createTitleFromEventInfo(
       {
@@ -358,7 +359,7 @@ export const callRepeatSchedule = () => {
       apiId: "shift-changer",
       operationType: "registerRecurringEvent",
       userEmail: userEmail,
-      registrationInfos: JSON.stringify(registrationInfos),
+      recurringEventModification: JSON.stringify(registrationInfos),
     };
     const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
       method: "post",

@@ -139,9 +139,9 @@ const registerRecurringEvent = (registrationRecurringEvents: RegistrationRecurri
 const deleteRecurringEvent = (deletionRecurringEvents: DeletionRecurringEvent[]) => {
   const calendar = getCalendar();
   deletionRecurringEvents.forEach((event) => {
-    const eventIds = calendar.getEvents(event.endDate, addDays(event.endDate, 1));
-    if (eventIds.length === 0) return { responseCode: 404, comment: "イベント情報が見つかりませんでした" };
-    const eventId = eventIds[0].getId();
+    const events = calendar.getEvents(event.endDate, addDays(event.endDate, 1));
+    if (events.length === 0) return { responseCode: 404, comment: "イベント情報が見つかりませんでした" };
+    const eventId = events[0].getId();
     //NOTE: eventIdのみを摘出するために正規表現を使用する
     const idRegex = /([^@]+)@google\.com/;
     const match = eventId.match(idRegex);

@@ -375,7 +375,9 @@ export const deleteRecurringEvent = () => {
   };
   const { API_URL } = getConfig();
   const response = UrlFetchApp.fetch(API_URL, options);
-  if (response.getResponseCode() !== 200) {
+  const responseJson = JSON.parse(response.getContentText());
+  console.log(responseJson);
+  if (responseJson.responseCode !== 200) {
     throw new Error(response.getContentText());
   }
 };

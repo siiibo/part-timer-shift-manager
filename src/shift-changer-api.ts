@@ -34,7 +34,6 @@ type RegistrationRecurringEvent = z.infer<typeof RegistrationRecurringEvent>;
 
 const DeletionRecurringEvent = z.object({
   endDate: z.coerce.date(),
-  dayOfWeek: dayOfWeek,
 });
 type DeletionRecurringEvent = z.infer<typeof DeletionRecurringEvent>;
 
@@ -142,25 +141,45 @@ const deleteRecurringEvent = (deletionRecurringEvents: DeletionRecurringEvent[])
   const calendar = getCalendar();
   deletionRecurringEvents.forEach((event) => {
     const eventId = calendar.getEvents(event.endDate, addDays(event.endDate, 1))[0].getId();
-    console.log(eventId);
+    const idRegex = /([^@]+)@google\.com/;
+    const match = eventId.match(idRegex);
+    if (!match || match.length == 0) {
+      throw new Error("Invalid event ID");
+    }
+    console.log(match[1], match[0]);
+
     const url =
       "https://www.googleapis.com/calendar/v3/calendars/" +
       encodeURIComponent(calendar.getId()) +
       "/events/" +
-      encodeURIComponent("4008v0skroveg5dn2irdjoi6po"); //NOTE: 仮でこの値を入力している
-    //TODO: カレンダーからIDを取得するようにする
+      encodeURIComponent(match[1]);
     const headers = {
       Authorization: "Bearer " + ScriptApp.getOAuthToken(),
       "Content-Type": "application/json",
     };
-    const endDate = new Date(event.endDate); // 新しい Date オブジェクトを作成し、終了日を設定する
-    endDate.setHours(14, 30); // TODO: 時間を設定する
-    console.log(endDate);
+    //NOTE: 開始情報を取得するためにGETリクエストを送信する
+    const getOptions: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
+      method: "patch",
+      headers,
+      muteHttpExceptions: true,
+    };
+    const getResponse = UrlFetchApp.fetch(url, getOptions);
+    if (getResponse.getResponseCode() != 200) {
+      throw new Error("Failed to get event information");
+    }
+    const getEvent = JSON.parse(getResponse.getContentText());
+    const eventStartTime = new Date(getEvent["start"]["dateTime"]);
+    const eventEndTime = new Date(getEvent["end"]["dateTime"]);
+    const endDate = new Date(event.endDate);
+    endDate.setHours(eventEndTime.getHours(), eventEndTime.getMinutes());
     const data = {
-      end: {
-        dateTime: endDate,
+      start: {
+        dateTime: eventStartTime,
       },
-      recurrence: ["RRULE:FREQ=DAILY;UNTIL=" + format(endDate, "yyyyMMdd'T'HHmmss'Z'")],
+      end: {
+        dateTime: eventEndTime,
+      },
+      recurrence: ["RRULE:FREQ=WEEKLY;UNTIL=" + format(endDate, "yyyyMMdd'T'HHmmss'Z'")],
     };
     const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
       method: "patch",
@@ -168,9 +187,10 @@ const deleteRecurringEvent = (deletionRecurringEvents: DeletionRecurringEvent[])
       headers,
       muteHttpExceptions: true,
     };
-    //HACK: BadRequestが返ってくる
     const response = UrlFetchApp.fetch(url, options);
-    Logger.log(response.getContentText());
+    if (response.getResponseCode() != 200) {
+      throw new Error("Failed to delete recurring event");
+    }
   });
 };
 

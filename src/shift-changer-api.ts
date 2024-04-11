@@ -82,8 +82,7 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
       const deletionRecurringEvents = DeletionRecurringEvent.array().parse(
         JSON.parse(e.parameter.recurringEventDeletion),
       );
-      deleteRecurringEvent(deletionRecurringEvents);
-      break;
+      return String(deleteRecurringEvent(deletionRecurringEvents));
     }
   }
   return;
@@ -147,7 +146,6 @@ const deleteRecurringEvent = (deletionRecurringEvents: DeletionRecurringEvent[])
     if (!match || match.length == 0) {
       throw new Error("Invalid event ID");
     }
-    console.log(match[1], match[0]);
 
     const url =
       "https://www.googleapis.com/calendar/v3/calendars/" +
@@ -166,7 +164,7 @@ const deleteRecurringEvent = (deletionRecurringEvents: DeletionRecurringEvent[])
     };
     const getResponse = UrlFetchApp.fetch(url, getOptions);
     if (getResponse.getResponseCode() != 200) {
-      throw new Error("Failed to get event information");
+      return getResponse.getResponseCode();
     }
     const getEvent = JSON.parse(getResponse.getContentText());
     const eventStartTime = new Date(getEvent["start"]["dateTime"]);
@@ -190,9 +188,10 @@ const deleteRecurringEvent = (deletionRecurringEvents: DeletionRecurringEvent[])
     };
     const response = UrlFetchApp.fetch(url, options);
     if (response.getResponseCode() != 200) {
-      throw new Error("Failed to delete recurring event");
+      return response.getResponseCode();
     }
   });
+  return 200;
 };
 
 const modifyEvent = (

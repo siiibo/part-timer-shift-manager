@@ -141,6 +141,7 @@ const deleteRecurringEvent = (deletionRecurringEvents: DeletionRecurringEvent[])
   const calendar = getCalendar();
   deletionRecurringEvents.forEach((event) => {
     const eventId = calendar.getEvents(event.endDate, addDays(event.endDate, 1))[0].getId();
+    //NOTE: eventIdのみを摘出するために正規表現を使用する
     const idRegex = /([^@]+)@google\.com/;
     const match = eventId.match(idRegex);
     if (!match || match.length == 0) {

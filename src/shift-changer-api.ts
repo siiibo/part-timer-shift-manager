@@ -82,7 +82,7 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
       const deletionRecurringEvents = DeletionRecurringEvent.array().parse(
         JSON.parse(e.parameter.recurringEventDeletion),
       );
-      return JSON.stringify({ responseCode: deleteRecurringEvent(deletionRecurringEvents) });
+      return JSON.stringify(deleteRecurringEvent(deletionRecurringEvents));
     }
   }
   return;
@@ -139,14 +139,13 @@ const registerRecurringEvent = (registrationRecurringEvents: RegistrationRecurri
 const deleteRecurringEvent = (deletionRecurringEvents: DeletionRecurringEvent[]) => {
   const calendar = getCalendar();
   deletionRecurringEvents.forEach((event) => {
-    const eventId = calendar.getEvents(event.endDate, addDays(event.endDate, 1))[0].getId();
+    const eventIds = calendar.getEvents(event.endDate, addDays(event.endDate, 1));
+    if (eventIds.length === 0) return { responseCode: 404, comment: "イベント情報が見つかりませんでした" };
+    const eventId = eventIds[0].getId();
     //NOTE: eventIdのみを摘出するために正規表現を使用する
     const idRegex = /([^@]+)@google\.com/;
     const match = eventId.match(idRegex);
-    if (!match || match.length == 0) {
-      throw new Error("Invalid event ID");
-    }
-
+    if (!match || match.length == 0) return { responseCode: 404, comment: "イベント情報が見つかりませんでした" };
     const url =
       "https://www.googleapis.com/calendar/v3/calendars/" +
       encodeURIComponent(calendar.getId()) +
@@ -163,9 +162,8 @@ const deleteRecurringEvent = (deletionRecurringEvents: DeletionRecurringEvent[])
       muteHttpExceptions: true,
     };
     const getResponse = UrlFetchApp.fetch(url, getOptions);
-    if (getResponse.getResponseCode() != 200) {
-      return getResponse.getResponseCode();
-    }
+    if (getResponse.getResponseCode() != 200)
+      return { responseCode: getResponse.getResponseCode(), comment: "イベント情報の取得に失敗しました" };
     const getEvent = JSON.parse(getResponse.getContentText());
     const eventStartTime = new Date(getEvent["start"]["dateTime"]);
     const eventEndTime = new Date(getEvent["end"]["dateTime"]);
@@ -188,10 +186,10 @@ const deleteRecurringEvent = (deletionRecurringEvents: DeletionRecurringEvent[])
     };
     const response = UrlFetchApp.fetch(url, options);
     if (response.getResponseCode() != 200) {
-      return response.getResponseCode();
+      return { responseCode: response.getResponseCode(), comment: "イベント情報の削除に失敗しました" };
     }
   });
-  return 200;
+  return { responseCode: 200, comment: "イベント情報の削除に成功しました" };
 };
 
 const modifyEvent = (

@@ -82,7 +82,7 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
       const deletionRecurringEvents = DeletionRecurringEvent.array().parse(
         JSON.parse(e.parameter.recurringEventDeletion),
       );
-      return String(deleteRecurringEvent(deletionRecurringEvents));
+      return JSON.stringify({ responseCode: deleteRecurringEvent(deletionRecurringEvents) });
     }
   }
   return;

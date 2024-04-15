@@ -82,6 +82,8 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
       const deletionRecurringEvents = DeletionRecurringEvent.array().parse(
         JSON.parse(e.parameter.recurringEventDeletion),
       );
+      if (deletionRecurringEvents.length === 0)
+        return JSON.stringify({ responseCode: 400, comment: "No event to delete" });
       return JSON.stringify(deleteRecurringEvent(deletionRecurringEvents));
     }
   }
@@ -140,6 +142,7 @@ const deleteRecurringEvent = (deletionRecurringEvents: DeletionRecurringEvent[])
   const calendar = getCalendar();
   const eventIdAndEndDates = deletionRecurringEvents.map((event) => {
     const events = calendar.getEvents(event.endDate, addDays(event.endDate, 1));
+    if (events.length === 0) return;
     const eventId = events[0].getId();
     //NOTE: eventIdのみを摘出するために正規表現を使用する
     const idRegex = /([^@]+)@google\.com/;
@@ -147,6 +150,8 @@ const deleteRecurringEvent = (deletionRecurringEvents: DeletionRecurringEvent[])
     if (!match) return;
     return { eventId: match[1], endDate: event.endDate };
   });
+  if (eventIdAndEndDates[0] === undefined)
+    return { responseCode: 400, comment: "イベントIDを取得することができませんでした" };
   const oldEventStartAndEndTimes = eventIdAndEndDates.map((eventInfo) => {
     if (!eventInfo) return;
     const { eventId, endDate } = eventInfo;
@@ -157,6 +162,8 @@ const deleteRecurringEvent = (deletionRecurringEvents: DeletionRecurringEvent[])
     endDate.setHours(oldEndTime.getHours(), oldEndTime.getMinutes());
     return { eventId, endDate, oldStartTime, oldEndTime };
   });
+  if (oldEventStartAndEndTimes[0] === undefined)
+    return { responseCode: 400, comment: "イベント情報を取得することができませんでした" };
   oldEventStartAndEndTimes.forEach((event) => {
     if (!event) return;
     const { eventId, endDate, oldStartTime, oldEndTime } = event;
@@ -173,7 +180,7 @@ const deleteRecurringEvent = (deletionRecurringEvents: DeletionRecurringEvent[])
     };
     Calendar.Events?.update(data, calendar.getId(), eventId);
   });
-  //TODO: APIを叩いた際に発生するエラーをハンドリングする
+
   return { responseCode: 200, comment: "イベントの消去が成功しました" };
 };
 

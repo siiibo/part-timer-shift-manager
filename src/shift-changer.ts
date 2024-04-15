@@ -329,7 +329,7 @@ export const callRepeatSchedule = () => {
     return {
       title: title,
       startOrEndDate: registrationRow.startDate,
-      dayOfWeek: registrationRow.newDayOfWeek,
+      newDayOfWeek: registrationRow.newDayOfWeek,
       startTime: registrationRow.startTime,
       endTime: registrationRow.endTime,
     };

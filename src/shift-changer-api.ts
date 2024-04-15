@@ -24,7 +24,7 @@ const ModificationInfo = z.object({
 });
 
 const RegistrationRecurringEvent = z.object({
-  dayOfWeek: dayOfWeek,
+  newDayOfWeek: dayOfWeek,
   startOrEndDate: z.coerce.date(),
   title: z.string(),
   startTime: z.coerce.date(),
@@ -117,8 +117,8 @@ const modification = (
 const registerRecurringEvent = (registrationRecurringEvents: RegistrationRecurringEvent[], userEmail: string) => {
   const calendar = getCalendar();
   registrationRecurringEvents.forEach((event) => {
-    const dayOfWeek = convertJapaneseToEnglishDayOfWeek(event.dayOfWeek);
-    const recurrence = CalendarApp.newRecurrence().addWeeklyRule().onlyOnWeekday(dayOfWeek);
+    const newDayOfWeek = convertJapaneseToEnglishDayOfWeek(event.newDayOfWeek);
+    const recurrence = CalendarApp.newRecurrence().addWeeklyRule().onlyOnWeekday(newDayOfWeek);
     calendar.createEventSeries(event.title, event.startTime, event.endTime, recurrence, {
       guests: userEmail,
     });

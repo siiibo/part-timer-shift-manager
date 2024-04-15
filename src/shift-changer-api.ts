@@ -173,6 +173,7 @@ const deleteRecurringEvent = (deletionRecurringEvents: DeletionRecurringEvent[])
     };
     Calendar.Events?.update(data, calendar.getId(), eventId);
   });
+  //TODO: APIを叩いた際に発生するエラーをハンドリングする
   return { responseCode: 200, comment: "イベントの消去が成功しました" };
 };
 

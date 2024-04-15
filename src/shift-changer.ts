@@ -388,12 +388,17 @@ export const callRepeatSchedule = () => {
       throw new Error(response.getContentText());
     }
   }
-  if (deletionRows.length > 0) {
+  const deletionInfos = deletionRows.map((deletionRow) => {
+    return {
+      endDate: deletionRow.startOrEndDate,
+    };
+  });
+  if (deletionInfos.length > 0) {
     const payload = {
       apiId: "shift-changer",
       operationType: "deleteRecurringEvent",
       userEmail: userEmail,
-      deletionInfos: JSON.stringify(deletionRows),
+      deletionInfos: JSON.stringify(deletionInfos),
     };
     const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
       method: "post",

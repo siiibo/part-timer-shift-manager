@@ -1,4 +1,4 @@
-import { addDays, addWeeks } from "date-fns";
+import { addDays, addWeeks, format } from "date-fns";
 import { z } from "zod";
 
 import { getConfig } from "./config";
@@ -138,60 +138,42 @@ const registerRecurringEvent = (registrationRecurringEvents: RegistrationRecurri
 };
 const deleteRecurringEvent = (deletionRecurringEvents: DeletionRecurringEvent[]) => {
   const calendar = getCalendar();
-  deletionRecurringEvents.forEach((event) => {
+  const eventIdAndEndDates = deletionRecurringEvents.map((event) => {
     const events = calendar.getEvents(event.endDate, addDays(event.endDate, 1));
-    if (events.length === 0) return { responseCode: 404, comment: "イベント情報が見つかりませんでした" };
     const eventId = events[0].getId();
     //NOTE: eventIdのみを摘出するために正規表現を使用する
     const idRegex = /([^@]+)@google\.com/;
     const match = eventId.match(idRegex);
-    if (!match || match.length == 0) return { responseCode: 404, comment: "イベント情報が見つかりませんでした" };
-    if (Calendar != null) {
-      throw new Error("Calendar is not defined");
-    }
-    //HACK: この箇所でエラーが発生する
-    // const newEvent = Calendar.Events.get(calendar.getId(), match[0] ,{});
-    // Logger.log(newEvent);
-
-    // const headers = {
-    //   Authorization: "Bearer " + ScriptApp.getOAuthToken(),
-    //   "Content-Type": "application/json",
-    // };
-    // //NOTE: 開始情報を取得するためにGETリクエストを送信する
-    // const getOptions: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
-    //   method: "patch",
-    //   headers,
-    //   muteHttpExceptions: true,
-    // };
-    // const getResponse = UrlFetchApp.fetch(url, getOptions);
-    // if (getResponse.getResponseCode() != 200)
-    //   return { responseCode: getResponse.getResponseCode(), comment: "イベント情報の取得に失敗しました" };
-    // const getEvent = JSON.parse(getResponse.getContentText());
-    // const eventStartTime = new Date(getEvent["start"]["dateTime"]);
-    // const eventEndTime = new Date(getEvent["end"]["dateTime"]);
-    // const endDate = new Date(event.endDate);
-    // endDate.setHours(eventEndTime.getHours(), eventEndTime.getMinutes());
-    // const data = {
-    //   start: {
-    //     dateTime: eventStartTime,
-    //   },
-    //   end: {
-    //     dateTime: eventEndTime,
-    //   },
-    //   recurrence: ["RRULE:FREQ=WEEKLY;UNTIL=" + format(endDate, "yyyyMMdd'T'HHmmss'Z'")],
-    // };
-    // const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
-    //   method: "patch",
-    //   payload: JSON.stringify(data),
-    //   headers,
-    //   muteHttpExceptions: true,
-    // };
-    // const response = UrlFetchApp.fetch(url, options);
-    // if (response.getResponseCode() != 200) {
-    //   return { responseCode: response.getResponseCode(), comment: "イベント情報の削除に失敗しました" };
-    // }
+    if (!match) return;
+    return { eventId: match[1], endDate: event.endDate };
   });
-  return { responseCode: 200, comment: "イベント情報の消去に成功しました" };
+  const oldEventStartAndEndTimes = eventIdAndEndDates.map((eventInfo) => {
+    if (!eventInfo) return;
+    const { eventId, endDate } = eventInfo;
+    const eventDetail = Calendar.Events?.get(calendar.getId(), eventId);
+    if (!eventDetail || !eventDetail.start?.dateTime || !eventDetail.end?.dateTime) return;
+    const oldStartTime = new Date(eventDetail.start?.dateTime);
+    const oldEndTime = new Date(eventDetail.end?.dateTime);
+    endDate.setHours(oldEndTime.getHours(), oldEndTime.getMinutes());
+    return { eventId, endDate, oldStartTime, oldEndTime };
+  });
+  oldEventStartAndEndTimes.forEach((event) => {
+    if (!event) return;
+    const { eventId, endDate, oldStartTime, oldEndTime } = event;
+    const data = {
+      start: {
+        dateTime: oldStartTime.toISOString(),
+        timeZone: "Asia/Tokyo",
+      },
+      end: {
+        dateTime: oldEndTime.toISOString(),
+        timeZone: "Asia/Tokyo",
+      },
+      recurrence: ["RRULE:FREQ=WEEKLY;UNTIL=" + format(endDate, "yyyyMMdd'T'HHmmss'Z'")],
+    };
+    Calendar.Events?.update(data, calendar.getId(), eventId);
+  });
+  return { responseCode: 200, comment: "イベントの消去が成功しました" };
 };
 
 const modifyEvent = (

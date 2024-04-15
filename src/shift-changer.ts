@@ -371,7 +371,6 @@ export const deleteRecurringEvent = () => {
   const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
     method: "post",
     payload: payload,
-    muteHttpExceptions: true,
   };
   const { API_URL } = getConfig();
   const response = UrlFetchApp.fetch(API_URL, options);

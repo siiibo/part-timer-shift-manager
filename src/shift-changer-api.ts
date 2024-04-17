@@ -1,4 +1,4 @@
-import { addDays, addWeeks, format } from "date-fns";
+import { addWeeks, endOfDay, format, startOfDay } from "date-fns";
 import { z } from "zod";
 
 import { getConfig } from "./config";
@@ -155,8 +155,8 @@ const deleteRecurringEvent = (
   const eventItems = deletionRecurringEvents.map((event) => {
     const events =
       advancedCalendar.list(calendar.getId(), {
-        timeMin: event.date.toISOString(),
-        timeMax: addDays(event.date, 1).toISOString(),
+        timeMin: startOfDay(event.date).toISOString(),
+        timeMax: endOfDay(event.date).toISOString(),
         singleEvents: true,
         orderBy: "startTime",
         maxResults: 1,

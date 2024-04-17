@@ -180,8 +180,8 @@ const deleteRecurringEvent = (
     const eventDetail = advancedCalendar.get(calendar.getId(), eventId);
     if (!eventDetail || !eventDetail.start?.dateTime || !eventDetail.end?.dateTime) return;
 
-    const startTime = new Date(eventDetail.start?.dateTime);
-    const endTime = new Date(eventDetail.end?.dateTime);
+    const startTime = new Date(eventDetail.start.dateTime);
+    const endTime = new Date(eventDetail.end.dateTime);
     const eventTitle = eventDetail.summary;
     endDate.setHours(endTime.getHours(), endTime.getMinutes());
 

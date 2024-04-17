@@ -85,7 +85,7 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
       if (deletionRecurringEvents.length === 0) {
         return JSON.stringify({ responseCode: 400, comment: "No event to delete" });
       }
-      return JSON.stringify(deleteRecurringEvent(deletionRecurringEvents));
+      return JSON.stringify(deleteRecurringEvent(deletionRecurringEvents, userEmail));
     }
   }
   return;
@@ -139,7 +139,7 @@ const registerRecurringEvent = (registrationRecurringEvents: RegistrationRecurri
     });
   });
 };
-const deleteRecurringEvent = (deletionRecurringEvents: DeletionRecurringEvent[]) => {
+const deleteRecurringEvent = (deletionRecurringEvents: DeletionRecurringEvent[], userEmail: string) => {
   const calendar = getCalendar();
   const advancedCalendar = Calendar.Events;
   if (advancedCalendar === undefined) return { responseCode: 400, comment: "カレンダーの取得に失敗しました" };
@@ -149,7 +149,7 @@ const deleteRecurringEvent = (deletionRecurringEvents: DeletionRecurringEvent[])
       timeMax: addDays(event.endDate, 1).toISOString(),
       singleEvents: true,
       orderBy: "startTime",
-      maxResults: 1,
+      q: userEmail,
     });
     if (events?.items === undefined || events.items.length == 0 || events.items[0].recurringEventId === undefined) {
       return;
@@ -177,6 +177,7 @@ const deleteRecurringEvent = (deletionRecurringEvents: DeletionRecurringEvent[])
     if (!event) return;
     const { eventId, endDate, oldStartTime, oldEndTime } = event;
     const data = {
+      attendees: [{ email: userEmail }],
       start: {
         dateTime: oldStartTime.toISOString(),
         timeZone: "Asia/Tokyo",

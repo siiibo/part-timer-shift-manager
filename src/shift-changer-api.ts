@@ -82,8 +82,9 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
       const deletionRecurringEvents = DeletionRecurringEvent.array().parse(
         JSON.parse(e.parameter.recurringEventDeletion),
       );
-      if (deletionRecurringEvents.length === 0)
+      if (deletionRecurringEvents.length === 0) {
         return JSON.stringify({ responseCode: 400, comment: "No event to delete" });
+      }
       return JSON.stringify(deleteRecurringEvent(deletionRecurringEvents));
     }
   }
@@ -150,8 +151,9 @@ const deleteRecurringEvent = (deletionRecurringEvents: DeletionRecurringEvent[])
     if (!match) return;
     return { eventId: match[1], endDate: event.endDate };
   });
-  if (eventIdAndEndDates[0] === undefined)
+  if (eventIdAndEndDates[0] === undefined) {
     return { responseCode: 400, comment: "イベントIDを取得することができませんでした" };
+  }
   const oldEventStartAndEndTimes = eventIdAndEndDates.map((eventInfo) => {
     if (!eventInfo) return;
     const { eventId, endDate } = eventInfo;
@@ -162,8 +164,9 @@ const deleteRecurringEvent = (deletionRecurringEvents: DeletionRecurringEvent[])
     endDate.setHours(oldEndTime.getHours(), oldEndTime.getMinutes());
     return { eventId, endDate, oldStartTime, oldEndTime };
   });
-  if (oldEventStartAndEndTimes[0] === undefined)
+  if (oldEventStartAndEndTimes[0] === undefined) {
     return { responseCode: 400, comment: "イベント情報を取得することができませんでした" };
+  }
   oldEventStartAndEndTimes.forEach((event) => {
     if (!event) return;
     const { eventId, endDate, oldStartTime, oldEndTime } = event;

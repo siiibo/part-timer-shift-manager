@@ -16,7 +16,7 @@ const workingStyleOrEmptyString = z.preprocess((val) => (val === "" ? undefined 
 
 const DeleteRepeatScheduleRow = z.object({
   type: z.literal("delete"),
-  startOrEndDate: z.date(),
+  date: z.date(),
   oldDayOfWeek: dayOfWeekOrEmptyString,
 });
 type DeleteRepeatScheduleRow = z.infer<typeof DeleteRepeatScheduleRow>;
@@ -24,6 +24,7 @@ type DeleteRepeatScheduleRow = z.infer<typeof DeleteRepeatScheduleRow>;
 const ModificationRepeatScheduleRow = z.object({
   type: z.literal("modification"),
   startDate: z.date(),
+  endDate: z.date(),
   oldDayOfWeek: dayOfWeekOrEmptyString,
   newDayOfWeek: dayOfWeekOrEmptyString,
   startTime: z.date(),
@@ -158,7 +159,7 @@ const getRepeatScheduleReSheetValues = (
       if (row.isDelete) {
         return DeleteRepeatScheduleRow.parse({
           type: "delete",
-          startOrEndDate: row.startDate,
+          date: row.startDate,
           oldDayOfWeek: row.oldDayOfWeek,
         });
       } else if (!row.oldDayOfWeek && row.startTime && row.endTime && row.newDayOfWeek) {
@@ -176,12 +177,14 @@ const getRepeatScheduleReSheetValues = (
           workingStyle: row.workingStyle,
         });
       } else if (row.oldDayOfWeek && row.startTime && row.endTime && row.newDayOfWeek) {
-        const nextDate = getNextDayOfWeek(row.startDate, row.newDayOfWeek);
-        const startTime = mergeTimeToDate(nextDate, row.startTime);
-        const endTime = mergeTimeToDate(nextDate, row.endTime);
+        const startDate = getNextDayOfWeek(row.startDate, row.newDayOfWeek);
+        const endDate = getNextDayOfWeek(row.startDate, row.oldDayOfWeek);
+        const startTime = mergeTimeToDate(startDate, row.startTime);
+        const endTime = mergeTimeToDate(startDate, row.endTime);
         return ModificationRepeatScheduleRow.parse({
           type: "modification",
-          startDate: nextDate,
+          startDate: startDate,
+          endDate: endDate,
           oldDayOfWeek: row.oldDayOfWeek,
           newDayOfWeek: row.newDayOfWeek,
           startTime: startTime,

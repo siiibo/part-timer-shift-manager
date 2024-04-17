@@ -23,14 +23,14 @@ const ModificationInfo = z.object({
   newEventInfo: EventInfo,
 });
 
-const RegistrationRecurringEvent = z.object({
+export const RegistrationRecurringEvent = z.object({
   newDayOfWeek: dayOfWeek,
   startOrEndDate: z.coerce.date(), //TODO: 日付情報だけの変数dateを消去する
   title: z.string(),
   startTime: z.coerce.date(),
   endTime: z.coerce.date(),
 });
-type RegistrationRecurringEvent = z.infer<typeof RegistrationRecurringEvent>;
+export type RegistrationRecurringEvent = z.infer<typeof RegistrationRecurringEvent>;
 
 const getCalendar = () => {
   const { CALENDAR_ID } = getConfig();

@@ -13,30 +13,36 @@ import {
 import { getRegistrationRows, insertRegistrationSheet, setValuesRegistrationSheet } from "./RegistrationSheet";
 import { getRepeatScheduleModificationOrDeletionOrRegistration } from "./RepeatScheduleSheet";
 import { insertRepeatScheduleSheet } from "./RepeatScheduleSheet";
-import { EventInfo, shiftChanger } from "./shift-changer-api";
+import { EventInfo, RegistrationRecurringEvent, shiftChanger } from "./shift-changer-api";
 
-const RecurringEventNotification = z.object({
-  title: z.string().optional(),
-  startOrEndDate: z.date(),
+//TODO: APIで用いている型を用いる、今はAPIで用いている型をコピーしている
+const ModificationRecurringEvent = z.object({
+  title: z.string(),
+  startDate: z.date(),
+  endDate: z.date(),
   oldDayOfWeek: z
     .literal("月曜日")
     .or(z.literal("火曜日"))
     .or(z.literal("水曜日"))
     .or(z.literal("木曜日"))
-    .or(z.literal("金曜日"))
-    .optional(),
+    .or(z.literal("金曜日")),
   newDayOfWeek: z
     .literal("月曜日")
     .or(z.literal("火曜日"))
     .or(z.literal("水曜日"))
     .or(z.literal("木曜日"))
-    .or(z.literal("金曜日"))
-    .optional(),
-  startTime: z.date().optional(),
-  endTime: z.date().optional(),
+    .or(z.literal("金曜日")),
+  startTime: z.date(),
+  endTime: z.date(),
 });
-type RecurringEventNotification = z.infer<typeof RecurringEventNotification>;
+type ModificationRecurringEvent = z.infer<typeof ModificationRecurringEvent>;
 
+const DeletionRecurringEvent = z.object({
+  date: z.date(),
+});
+type DeletionRecurringEvent = z.infer<typeof DeletionRecurringEvent>;
+
+type RecurringEventNotification = RegistrationRecurringEvent | ModificationRecurringEvent | DeletionRecurringEvent;
 type SheetType = "registration" | "modificationAndDeletion" | "repeatSchedule";
 type OperationType = "registration" | "modificationAndDeletion" | "showEvents" | "repeatSchedule";
 export const doGet = () => {
@@ -326,6 +332,7 @@ export const callRepeatSchedule = () => {
       },
       partTimerProfile,
     );
+    if (registrationRow.newDayOfWeek === undefined) throw new Error("曜日が指定されていません。");
     return {
       title: title,
       startOrEndDate: registrationRow.startDate,
@@ -334,7 +341,6 @@ export const callRepeatSchedule = () => {
       endTime: registrationRow.endTime,
     };
   });
-  console.log(registrationInfos);
   const modificationInfos = modificationRows.map((modificationRow) => {
     const title = createTitleFromEventInfo(
       {
@@ -344,9 +350,11 @@ export const callRepeatSchedule = () => {
       },
       partTimerProfile,
     );
+    if (!modificationRow.oldDayOfWeek || !modificationRow.newDayOfWeek) throw new Error("曜日が指定されていません。");
     return {
       title: title,
-      startOrEndDate: modificationRow.startDate, //TODO: ここでstartDateとendDateの2つを定義する必要がある
+      startDate: modificationRow.startDate,
+      endDate: modificationRow.endDate,
       oldDayOfWeek: modificationRow.oldDayOfWeek,
       newDayOfWeek: modificationRow.newDayOfWeek,
       startTime: modificationRow.startTime,
@@ -388,17 +396,12 @@ export const callRepeatSchedule = () => {
       throw new Error(response.getContentText());
     }
   }
-  const deletionInfos = deletionRows.map((deletionRow) => {
-    return {
-      endDate: deletionRow.startOrEndDate,
-    };
-  });
-  if (deletionInfos.length > 0) {
+  if (deletionRows.length > 0) {
     const payload = {
       apiId: "shift-changer",
       operationType: "deleteRecurringEvent",
       userEmail: userEmail,
-      deletionInfos: JSON.stringify(deletionInfos),
+      deletionInfos: JSON.stringify(deletionRows),
     };
     const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
       method: "post",
@@ -530,22 +533,26 @@ const createRepeatScheduleMessage = (
   };
   const messages = registrationRepeatScheduleRows.map((registrationRepeatScheduleRow) => {
     if (type === "registration") {
-      const startTime = format(registrationRepeatScheduleRow.startTime ?? "", "HH:mm");
-      const endTime = format(registrationRepeatScheduleRow.endTime ?? "", "HH:mm");
-      const dayOfWeek = registrationRepeatScheduleRow.newDayOfWeek;
+      //TODO: 一旦ここで型にparseしているがそのほかの案を検討する
+      const tmpRegistrationRepeatScheduleRow = RegistrationRecurringEvent.parse(registrationRepeatScheduleRow);
+      const startTime = format(tmpRegistrationRepeatScheduleRow.startTime ?? "", "HH:mm");
+      const endTime = format(tmpRegistrationRepeatScheduleRow.endTime ?? "", "HH:mm");
+      const dayOfWeek = tmpRegistrationRepeatScheduleRow.newDayOfWeek;
       const selectMessageTitle = messageTitle[type];
-      const title = registrationRepeatScheduleRow.title;
+      const title = tmpRegistrationRepeatScheduleRow.title;
       return `${selectMessageTitle}\n${dayOfWeek} : ${title} ${startTime}~${endTime}`;
     } else if (type === "modification") {
-      const startTime = format(registrationRepeatScheduleRow.startTime ?? "", "HH:mm");
-      const endTime = format(registrationRepeatScheduleRow.endTime ?? "", "HH:mm");
-      const oldDayOfWeek = registrationRepeatScheduleRow.oldDayOfWeek;
-      const newDayOfWeek = registrationRepeatScheduleRow.newDayOfWeek;
-      const title = registrationRepeatScheduleRow.title;
+      const tmpModificationRepeatScheduleRow = ModificationRecurringEvent.parse(registrationRepeatScheduleRow);
+      const startTime = format(tmpModificationRepeatScheduleRow.startTime ?? "", "HH:mm");
+      const endTime = format(tmpModificationRepeatScheduleRow.endTime ?? "", "HH:mm");
+      const oldDayOfWeek = tmpModificationRepeatScheduleRow.oldDayOfWeek;
+      const newDayOfWeek = tmpModificationRepeatScheduleRow.newDayOfWeek;
+      const title = tmpModificationRepeatScheduleRow.title;
       const selectMessageTitle = messageTitle[type];
       return `${selectMessageTitle}\n${oldDayOfWeek} → ${newDayOfWeek} : ${title} ${startTime}~${endTime}`;
     } else if (type === "deletion") {
-      const dayOfWeek = registrationRepeatScheduleRow.oldDayOfWeek;
+      const tmpDeleteRepeatScheduleRow = DeletionRecurringEvent.parse(registrationRepeatScheduleRow);
+      const dayOfWeek = tmpDeleteRepeatScheduleRow.date.getDay(); //TODO: ここで曜日を取得する方法を検討する
       const selectMessageTitle = messageTitle[type];
       return `${selectMessageTitle}\n${dayOfWeek}`;
     }

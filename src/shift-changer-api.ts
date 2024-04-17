@@ -33,7 +33,7 @@ const RegistrationRecurringEvent = z.object({
 type RegistrationRecurringEvent = z.infer<typeof RegistrationRecurringEvent>;
 
 const DeletionRecurringEvent = z.object({
-  endDate: z.coerce.date(),
+  date: z.coerce.date(),
 });
 type DeletionRecurringEvent = z.infer<typeof DeletionRecurringEvent>;
 
@@ -155,14 +155,14 @@ const deleteRecurringEvent = (
   const eventItems = deletionRecurringEvents.map((event) => {
     const events =
       advancedCalendar.list(calendar.getId(), {
-        timeMin: event.endDate.toISOString(),
-        timeMax: addDays(event.endDate, 1).toISOString(),
+        timeMin: event.date.toISOString(),
+        timeMax: addDays(event.date, 1).toISOString(),
         singleEvents: true,
         orderBy: "startTime",
         maxResults: 1,
         q: userEmail,
       }).items ?? [];
-    return { events, endDate: event.endDate };
+    return { events, endDate: event.date };
   });
   if (eventItems.length === 0) {
     return { responseCode: 400, comment: "イベント情報を取得することができませんでした" };

@@ -346,7 +346,7 @@ export const callRepeatSchedule = () => {
     );
     return {
       title: title,
-      startOrEndDate: modificationRow.startDate,
+      startOrEndDate: modificationRow.startDate, //TODO: ここでstartDateとendDateの2つを定義する必要がある
       oldDayOfWeek: modificationRow.oldDayOfWeek,
       newDayOfWeek: modificationRow.newDayOfWeek,
       startTime: modificationRow.startTime,

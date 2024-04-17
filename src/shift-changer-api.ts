@@ -143,6 +143,7 @@ const deleteRecurringEvent = (deletionRecurringEvents: DeletionRecurringEvent[],
   const calendar = getCalendar();
   const advancedCalendar = Calendar.Events;
   if (advancedCalendar === undefined) return { responseCode: 400, comment: "カレンダーの取得に失敗しました" };
+
   const eventIdAndEndDates = deletionRecurringEvents.map((event) => {
     const events = advancedCalendar.list(calendar.getId(), {
       timeMin: event.endDate.toISOString(),
@@ -155,11 +156,13 @@ const deleteRecurringEvent = (deletionRecurringEvents: DeletionRecurringEvent[],
       return;
     }
     const eventId = events.items[0].recurringEventId;
+
     return { eventId: eventId, endDate: event.endDate };
   });
   if (eventIdAndEndDates[0] === undefined) {
     return { responseCode: 400, comment: "イベントIDを取得することができませんでした" };
   }
+
   const oldEventStartAndEndTimes = eventIdAndEndDates.map((eventInfo) => {
     if (!eventInfo) return;
     const { eventId, endDate } = eventInfo;
@@ -169,11 +172,13 @@ const deleteRecurringEvent = (deletionRecurringEvents: DeletionRecurringEvent[],
     const oldEndTime = new Date(eventDetail.end?.dateTime);
     const eventTitle = eventDetail.summary;
     endDate.setHours(oldEndTime.getHours(), oldEndTime.getMinutes());
+
     return { eventId, endDate, oldStartTime, oldEndTime, eventTitle };
   });
   if (oldEventStartAndEndTimes[0] === undefined) {
     return { responseCode: 400, comment: "イベント情報を取得することができませんでした" };
   }
+
   oldEventStartAndEndTimes.forEach((event) => {
     if (!event) return;
     const { eventId, endDate, oldStartTime, oldEndTime, eventTitle } = event;
@@ -190,6 +195,7 @@ const deleteRecurringEvent = (deletionRecurringEvents: DeletionRecurringEvent[],
       },
       recurrence: ["RRULE:FREQ=WEEKLY;UNTIL=" + format(endDate, "yyyyMMdd'T'HHmmss'Z'")],
     };
+
     advancedCalendar.update(data, calendar.getId(), eventId);
   });
 

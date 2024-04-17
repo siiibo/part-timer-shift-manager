@@ -152,6 +152,7 @@ const deleteRecurringEvent = (
   const calendar = getCalendar();
   const advancedCalendar = Calendar.Events;
   if (advancedCalendar === undefined) return { responseCode: 400, comment: "カレンダーの取得に失敗しました" };
+
   const eventItems = deletionRecurringEvents
     .map((event) => {
       const events =
@@ -170,10 +171,12 @@ const deleteRecurringEvent = (
   if (eventItems.length === 0) {
     return { responseCode: 400, comment: "イベント情報を取得することができませんでした" };
   }
+
   const oldEventStartAndEndTimes = eventItems.map((eventItem) => {
     const { event, endDate } = eventItem;
     const eventId = event.recurringEventId;
     if (!eventId) return;
+
     const eventDetail = advancedCalendar.get(calendar.getId(), eventId);
     if (!eventDetail || !eventDetail.start?.dateTime || !eventDetail.end?.dateTime) return;
 
@@ -190,6 +193,7 @@ const deleteRecurringEvent = (
 
   oldEventStartAndEndTimes.forEach((event) => {
     if (!event) return;
+
     const { eventId, endDate, oldStartTime, oldEndTime, eventTitle } = event;
     const data = {
       summary: eventTitle,

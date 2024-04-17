@@ -37,6 +37,11 @@ const DeletionRecurringEvent = z.object({
 });
 type DeletionRecurringEvent = z.infer<typeof DeletionRecurringEvent>;
 
+type DeleteRecurringEventResponse = {
+  responseCode: number;
+  comment: string;
+};
+
 const getCalendar = () => {
   const { CALENDAR_ID } = getConfig();
   const calendar = CalendarApp.getCalendarById(CALENDAR_ID);
@@ -139,35 +144,39 @@ const registerRecurringEvent = (registrationRecurringEvents: RegistrationRecurri
     });
   });
 };
-const deleteRecurringEvent = (deletionRecurringEvents: DeletionRecurringEvent[], userEmail: string) => {
+const deleteRecurringEvent = (
+  deletionRecurringEvents: DeletionRecurringEvent[],
+  userEmail: string,
+): DeleteRecurringEventResponse => {
   const calendar = getCalendar();
   const advancedCalendar = Calendar.Events;
   if (advancedCalendar === undefined) return { responseCode: 400, comment: "カレンダーの取得に失敗しました" };
 
-  const eventIdAndEndDates = deletionRecurringEvents.map((event) => {
-    const events = advancedCalendar.list(calendar.getId(), {
+  const eventItems = deletionRecurringEvents.map((event) => {
+    const eventItem = advancedCalendar.list(calendar.getId(), {
       timeMin: event.endDate.toISOString(),
       timeMax: addDays(event.endDate, 1).toISOString(),
       singleEvents: true,
       orderBy: "startTime",
+      maxResults: 1,
       q: userEmail,
     });
-    if (events?.items === undefined || events.items.length == 0 || events.items[0].recurringEventId === undefined) {
-      return;
-    }
-    const eventId = events.items[0].recurringEventId;
-
-    return { eventId: eventId, endDate: event.endDate };
+    if (eventItem.items === undefined) return;
+    return { eventItem, endDate: event.endDate };
   });
-  if (eventIdAndEndDates[0] === undefined) {
-    return { responseCode: 400, comment: "イベントIDを取得することができませんでした" };
+  if (eventItems[0] === undefined) {
+    return { responseCode: 400, comment: "イベント情報を取得することができませんでした" };
   }
 
-  const oldEventStartAndEndTimes = eventIdAndEndDates.map((eventInfo) => {
+  const oldEventStartAndEndTimes = eventItems.map((eventInfo) => {
     if (!eventInfo) return;
-    const { eventId, endDate } = eventInfo;
+    const { eventItem, endDate } = eventInfo;
+    if (eventItem.items === undefined) return;
+    const eventId = eventItem.items[0].recurringEventId;
+    if (eventId === undefined) return;
     const eventDetail = advancedCalendar.get(calendar.getId(), eventId);
     if (!eventDetail || !eventDetail.start?.dateTime || !eventDetail.end?.dateTime) return;
+
     const oldStartTime = new Date(eventDetail.start?.dateTime);
     const oldEndTime = new Date(eventDetail.end?.dateTime);
     const eventTitle = eventDetail.summary;

@@ -165,7 +165,7 @@ const deleteRecurringEvent = (
         }).items ?? [];
       return { events: events, endDate: event.date };
     })
-    .filter((eventItem) => eventItem.events.length !== 1)
+    .filter((eventItem) => eventItem.events.length === 1)
     .map((eventItem) => ({ event: eventItem.events[0], endDate: eventItem.endDate }));
   if (eventItems.length === 0) {
     return { responseCode: 400, comment: "イベント情報を取得することができませんでした" };

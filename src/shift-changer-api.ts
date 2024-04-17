@@ -141,15 +141,20 @@ const registerRecurringEvent = (registrationRecurringEvents: RegistrationRecurri
 };
 const deleteRecurringEvent = (deletionRecurringEvents: DeletionRecurringEvent[]) => {
   const calendar = getCalendar();
+  if (Calendar.Events === undefined) return { responseCode: 400, comment: "Calendar.Eventsがundefinedです" };
   const eventIdAndEndDates = deletionRecurringEvents.map((event) => {
-    const events = calendar.getEvents(event.endDate, addDays(event.endDate, 1));
-    if (events.length === 0) return;
-    const eventId = events[0].getId();
-    //NOTE: eventIdのみを摘出するために正規表現を使用する
-    const idRegex = /([^@]+)@google\.com/;
-    const match = eventId.match(idRegex);
-    if (!match) return;
-    return { eventId: match[1], endDate: event.endDate };
+    const events = Calendar.Events?.list(calendar.getId(), {
+      timeMin: event.endDate.toISOString(),
+      timeMax: addDays(event.endDate, 1).toISOString(),
+      singleEvents: true,
+      orderBy: "startTime",
+      maxResults: 1,
+    });
+    if (events?.items === undefined || events.items.length == 0 || events.items[0].recurringEventId === undefined) {
+      return;
+    }
+    const eventId = events.items[0].recurringEventId;
+    return { eventId: eventId, endDate: event.endDate };
   });
   if (eventIdAndEndDates[0] === undefined) {
     return { responseCode: 400, comment: "イベントIDを取得することができませんでした" };

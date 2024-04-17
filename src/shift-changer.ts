@@ -361,12 +361,12 @@ const createTitleFromEventInfo = (
 };
 //NOTE: テスト用の関数
 export const deleteRecurringEvent = () => {
-  const endDate = new Date("2024-4-9");
+  const date = new Date("2024-4-9");
   const payload = {
     apiId: "shift-changer",
     operationType: "deleteRecurringEvent",
     userEmail: "takuya.wada@siiibo.com",
-    recurringEventDeletion: JSON.stringify([{ endDate: endDate }]),
+    recurringEventDeletion: JSON.stringify([{ date: date }]),
   };
   const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
     method: "post",

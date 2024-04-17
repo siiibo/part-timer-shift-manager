@@ -172,7 +172,7 @@ const deleteRecurringEvent = (
     return { responseCode: 400, comment: "イベント情報を取得することができませんでした" };
   }
 
-  const oldEventStartAndEndTimes = eventItems.map((eventItem) => {
+  const eventStartAndEndTimes = eventItems.map((eventItem) => {
     const { event, endDate } = eventItem;
     const eventId = event.recurringEventId;
     if (!eventId) return;
@@ -180,30 +180,30 @@ const deleteRecurringEvent = (
     const eventDetail = advancedCalendar.get(calendar.getId(), eventId);
     if (!eventDetail || !eventDetail.start?.dateTime || !eventDetail.end?.dateTime) return;
 
-    const oldStartTime = new Date(eventDetail.start?.dateTime);
-    const oldEndTime = new Date(eventDetail.end?.dateTime);
+    const startTime = new Date(eventDetail.start?.dateTime);
+    const endTime = new Date(eventDetail.end?.dateTime);
     const eventTitle = eventDetail.summary;
-    endDate.setHours(oldEndTime.getHours(), oldEndTime.getMinutes());
+    endDate.setHours(endTime.getHours(), endTime.getMinutes());
 
-    return { eventId, endDate, oldStartTime, oldEndTime, eventTitle };
+    return { eventId, endDate, startTime, endTime, eventTitle };
   });
-  if (!oldEventStartAndEndTimes[0]) {
+  if (!eventStartAndEndTimes[0]) {
     return { responseCode: 400, comment: "イベント情報を取得することができませんでした" };
   }
 
-  oldEventStartAndEndTimes.forEach((event) => {
+  eventStartAndEndTimes.forEach((event) => {
     if (!event) return;
 
-    const { eventId, endDate, oldStartTime, oldEndTime, eventTitle } = event;
+    const { eventId, endDate, startTime, endTime, eventTitle } = event;
     const data = {
       summary: eventTitle,
       attendees: [{ email: userEmail }],
       start: {
-        dateTime: oldStartTime.toISOString(),
+        dateTime: startTime.toISOString(),
         timeZone: "Asia/Tokyo",
       },
       end: {
-        dateTime: oldEndTime.toISOString(),
+        dateTime: endTime.toISOString(),
         timeZone: "Asia/Tokyo",
       },
       recurrence: ["RRULE:FREQ=WEEKLY;UNTIL=" + format(endDate, "yyyyMMdd'T'HHmmss'Z'")],

@@ -169,7 +169,6 @@ const deleteRecurringEvent = (
   }
 
   const oldEventStartAndEndTimes = eventItems.map((eventItem) => {
-    if (!eventItem) return;
     const { events, endDate } = eventItem;
     const eventId = events[0].recurringEventId;
     if (!eventId) return;

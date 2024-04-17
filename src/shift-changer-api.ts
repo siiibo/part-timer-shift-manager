@@ -167,16 +167,18 @@ const deleteRecurringEvent = (deletionRecurringEvents: DeletionRecurringEvent[],
     if (!eventDetail || !eventDetail.start?.dateTime || !eventDetail.end?.dateTime) return;
     const oldStartTime = new Date(eventDetail.start?.dateTime);
     const oldEndTime = new Date(eventDetail.end?.dateTime);
+    const eventTitle = eventDetail.summary;
     endDate.setHours(oldEndTime.getHours(), oldEndTime.getMinutes());
-    return { eventId, endDate, oldStartTime, oldEndTime };
+    return { eventId, endDate, oldStartTime, oldEndTime, eventTitle };
   });
   if (oldEventStartAndEndTimes[0] === undefined) {
     return { responseCode: 400, comment: "イベント情報を取得することができませんでした" };
   }
   oldEventStartAndEndTimes.forEach((event) => {
     if (!event) return;
-    const { eventId, endDate, oldStartTime, oldEndTime } = event;
+    const { eventId, endDate, oldStartTime, oldEndTime, eventTitle } = event;
     const data = {
+      summary: eventTitle,
       attendees: [{ email: userEmail }],
       start: {
         dateTime: oldStartTime.toISOString(),

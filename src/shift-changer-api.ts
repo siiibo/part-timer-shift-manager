@@ -1,14 +1,15 @@
-import { addDays, addWeeks, endOfDay, format, startOfDay } from "date-fns";
+import { addWeeks, endOfDay, format, nextDay, startOfDay } from "date-fns";
 import { z } from "zod";
 
 import { getConfig } from "./config";
 
-const dayOfWeek = z
+const DayOfWeek = z
   .literal("月曜日")
   .or(z.literal("火曜日"))
   .or(z.literal("水曜日"))
   .or(z.literal("木曜日"))
   .or(z.literal("金曜日"));
+type DayOfWeek = z.infer<typeof DayOfWeek>;
 
 export const EventInfo = z.object({
   title: z.string(),
@@ -24,7 +25,7 @@ const ModificationInfo = z.object({
 });
 
 const RegistrationRecurringEvent = z.object({
-  dayOfWeek: dayOfWeek,
+  dayOfWeek: DayOfWeek,
   startOrEndDate: z.coerce.date(), //TODO: この変数名をafterに変更する
   title: z.string(),
   startTime: z.coerce.date(),
@@ -34,7 +35,7 @@ type RegistrationRecurringEvent = z.infer<typeof RegistrationRecurringEvent>;
 
 const DeletionRecurringEvent = z.object({
   after: z.coerce.date(),
-  dayOfWeek: dayOfWeek,
+  dayOfWeek: DayOfWeek,
 });
 type DeletionRecurringEvent = z.infer<typeof DeletionRecurringEvent>;
 
@@ -261,18 +262,27 @@ const convertJapaneseToEnglishDayOfWeek = (dayOfWeek: string) => {
       throw new Error("Invalid day of the week");
   }
 };
+const convertJapaneseToNumberDayOfWeek = (dayOfWeek: DayOfWeek) => {
+  switch (dayOfWeek) {
+    case "月曜日":
+      return 1;
+    case "火曜日":
+      return 2;
+    case "水曜日":
+      return 3;
+    case "木曜日":
+      return 4;
+    case "金曜日":
+      return 5;
+    default:
+      throw new Error("Invalid day of the week");
+  }
+};
 
 //NOTE: 仕様的にstartTimeの日付に最初の予定が指定されるため、指定された日付の後で一番近い指定曜日の日付に変更する
-const getNextDayOfWeek = (startOrEndDate: Date, newDayOfWeek: string): Date => {
-  const daysOfWeek = ["日曜日", "月曜日", "火曜日", "水曜日", "木曜日", "金曜日", "土曜日"];
-  const targetDayOfWeek = daysOfWeek.indexOf(newDayOfWeek);
-  if (targetDayOfWeek === -1) {
-    throw new Error("Invalid day of week specified");
-  }
-
-  const currentDayOfWeek = startOrEndDate.getDay();
-  const daysToAdd = (targetDayOfWeek + 7 - currentDayOfWeek) % 7;
-  const nextDate = addDays(startOrEndDate, daysToAdd);
+const getNextDayOfWeek = (startOrEndDate: Date, newDayOfWeek: DayOfWeek): Date => {
+  const targetDayOfWeek = convertJapaneseToNumberDayOfWeek(newDayOfWeek);
+  const nextDate = nextDay(startOrEndDate, targetDayOfWeek);
 
   return nextDate;
 };

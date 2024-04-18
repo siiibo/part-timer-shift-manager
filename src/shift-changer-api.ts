@@ -178,23 +178,25 @@ const deleteRecurringEvent = (
     return { responseCode: 400, comment: "イベント情報を取得することができませんでした" };
   }
 
-  const eventStartAndEndTimes = eventItems.map((eventItem) => {
-    const { recurringEventId, startDate } = eventItem;
-    if (!recurringEventId) return;
+  const eventDetailAndStartDates = eventItems
+    .map((eventItem) => {
+      const { recurringEventId, startDate } = eventItem;
+      if (!recurringEventId) return;
 
-    const eventDetail = advancedCalendar.get(calendar.getId(), recurringEventId);
-    if (!eventDetail || !eventDetail.start?.dateTime || !eventDetail.end?.dateTime) return;
+      const eventDetail = advancedCalendar.get(calendar.getId(), recurringEventId);
+      return { eventDetail, startDate, recurringEventId };
+    })
+    .filter(isNotUndefined);
+  const eventStartAndEndTimes = eventDetailAndStartDates.map((eventDetailAndStartDate) => {
+    const { eventDetail, startDate, recurringEventId } = eventDetailAndStartDate;
+    if (!eventDetail.start?.dateTime || !eventDetail.end?.dateTime) return;
 
     const startTime = new Date(eventDetail.start.dateTime);
     const endTime = new Date(eventDetail.end.dateTime);
     const eventTitle = eventDetail.summary;
-    startDate.setHours(endTime.getHours(), endTime.getMinutes());
 
     return { recurringEventId, startDate, startTime, endTime, eventTitle };
   });
-  if (!eventStartAndEndTimes[0]) {
-    return { responseCode: 400, comment: "イベント情報を取得することができませんでした" };
-  }
 
   eventStartAndEndTimes.forEach((event) => {
     if (!event) return;

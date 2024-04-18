@@ -187,8 +187,7 @@ const deleteRecurringEvent = (
   });
 
   const filteredEventDetails = detailedEventItems
-    .map((detailedEventItem) => {
-      const { eventDetail, startDate, recurringEventId } = detailedEventItem;
+    .map(({ eventDetail, startDate, recurringEventId }) => {
       if (!eventDetail.start?.dateTime || !eventDetail.end?.dateTime || !eventDetail.summary) return;
 
       const startTime = new Date(eventDetail.start.dateTime);

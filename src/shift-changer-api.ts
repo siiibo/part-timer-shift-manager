@@ -246,7 +246,7 @@ const deleteEvent = (eventInfo: EventInfo, calendar: GoogleAppsScript.Calendar.C
   if (!event) return;
   event.deleteEvent();
 };
-const convertJapaneseToEnglishDayOfWeek = (dayOfWeek: string) => {
+const convertJapaneseToEnglishDayOfWeek = (dayOfWeek: DayOfWeek) => {
   switch (dayOfWeek) {
     case "月曜日":
       return CalendarApp.Weekday.MONDAY;
@@ -280,9 +280,9 @@ const convertJapaneseToNumberDayOfWeek = (dayOfWeek: DayOfWeek) => {
 };
 
 //NOTE: 仕様的にstartTimeの日付に最初の予定が指定されるため、指定された日付の後で一番近い指定曜日の日付に変更する
-const getNextDayOfWeek = (startOrEndDate: Date, newDayOfWeek: DayOfWeek): Date => {
-  const targetDayOfWeek = convertJapaneseToNumberDayOfWeek(newDayOfWeek);
-  const nextDate = nextDay(startOrEndDate, targetDayOfWeek);
+const getNextDayOfWeek = (date: Date, dayOfWeek: DayOfWeek): Date => {
+  const targetDayOfWeek = convertJapaneseToNumberDayOfWeek(dayOfWeek);
+  const nextDate = nextDay(date, targetDayOfWeek);
 
   return nextDate;
 };

@@ -179,17 +179,12 @@ const deleteRecurringEvent = (
     return { responseCode: 400, comment: "イベント情報を取得することができませんでした" };
   }
 
-  const detailedEventItems = eventItems
-    .map((eventItem) => {
-      const { recurringEventId, startDate } = eventItem;
-      const eventDetail = advancedCalendar.get(calendar.getId(), recurringEventId);
+  const detailedEventItems = eventItems.map((eventItem) => {
+    const { recurringEventId, startDate } = eventItem;
+    const eventDetail = advancedCalendar.get(calendar.getId(), recurringEventId);
 
-      return { eventDetail, startDate, recurringEventId };
-    })
-    .filter(isNotUndefined);
-  if (detailedEventItems.length === 0) {
-    return { responseCode: 400, comment: "イベント情報を取得することができませんでした" };
-  }
+    return { eventDetail, startDate, recurringEventId };
+  });
 
   const filteredEventDetails = detailedEventItems
     .map((detailedEventItem) => {

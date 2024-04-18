@@ -246,6 +246,7 @@ const deleteEvent = (eventInfo: EventInfo, calendar: GoogleAppsScript.Calendar.C
   if (!event) return;
   event.deleteEvent();
 };
+
 const convertJapaneseToEnglishDayOfWeek = (dayOfWeek: DayOfWeek) => {
   switch (dayOfWeek) {
     case "月曜日":
@@ -262,6 +263,7 @@ const convertJapaneseToEnglishDayOfWeek = (dayOfWeek: DayOfWeek) => {
       throw new Error("Invalid day of the week");
   }
 };
+
 const convertJapaneseToNumberDayOfWeek = (dayOfWeek: DayOfWeek) => {
   switch (dayOfWeek) {
     case "月曜日":

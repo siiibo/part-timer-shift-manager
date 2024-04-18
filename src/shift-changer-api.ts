@@ -169,6 +169,7 @@ const deleteRecurringEvent = (
           q: userEmail,
         }).items ?? [];
       const recurringEventId = events[0]?.recurringEventId;
+      if (!recurringEventId) return;
 
       return { recurringEventId, startDate };
     })
@@ -181,27 +182,32 @@ const deleteRecurringEvent = (
   const eventDetailAndStartDates = eventItems
     .map((eventItem) => {
       const { recurringEventId, startDate } = eventItem;
-      if (!recurringEventId) return;
-
       const eventDetail = advancedCalendar.get(calendar.getId(), recurringEventId);
+
       return { eventDetail, startDate, recurringEventId };
     })
     .filter(isNotUndefined);
+  if (eventDetailAndStartDates.length === 0) {
+    return { responseCode: 400, comment: "イベント情報を取得することができませんでした" };
+  }
 
-  const eventStartAndEndTimes = eventDetailAndStartDates.map((eventDetailAndStartDate) => {
-    const { eventDetail, startDate, recurringEventId } = eventDetailAndStartDate;
-    if (!eventDetail.start?.dateTime || !eventDetail.end?.dateTime) return;
+  const eventStartAndEndTimes = eventDetailAndStartDates
+    .map((eventDetailAndStartDate) => {
+      const { eventDetail, startDate, recurringEventId } = eventDetailAndStartDate;
+      if (!eventDetail.start?.dateTime || !eventDetail.end?.dateTime || !eventDetail.summary) return;
 
-    const startTime = new Date(eventDetail.start.dateTime);
-    const endTime = new Date(eventDetail.end.dateTime);
-    const eventTitle = eventDetail.summary;
+      const startTime = new Date(eventDetail.start.dateTime);
+      const endTime = new Date(eventDetail.end.dateTime);
+      const eventTitle = eventDetail.summary;
 
-    return { recurringEventId, startDate, startTime, endTime, eventTitle };
-  });
+      return { recurringEventId, startDate, startTime, endTime, eventTitle };
+    })
+    .filter(isNotUndefined);
+  if (eventStartAndEndTimes.length === 0) {
+    return { responseCode: 400, comment: "イベント情報を取得することができませんでした" };
+  }
 
   const result = eventStartAndEndTimes.map((event) => {
-    if (!event) return;
-
     const { recurringEventId, startDate, startTime, endTime, eventTitle } = event;
     const data = {
       summary: eventTitle,

@@ -156,26 +156,26 @@ const deleteRecurringEvent = (
 
   const eventItems = deletionRecurringEvents
     .map((event) => {
-      const endDate = getNextDayOfWeek(event.after, event.dayOfWeek);
+      const startDate = getNextDayOfWeek(event.after, event.dayOfWeek);
       const events =
         advancedCalendar.list(calendar.getId(), {
-          timeMin: startOfDay(endDate).toISOString(),
-          timeMax: endOfDay(endDate).toISOString(),
+          timeMin: startOfDay(startDate).toISOString(),
+          timeMax: endOfDay(startDate).toISOString(),
           singleEvents: true,
           orderBy: "startTime",
           maxResults: 1,
           q: userEmail,
         }).items ?? [];
-      return { events: events, endDate: endDate };
+      return { events: events, startDate: startDate };
     })
     .filter((eventItem) => eventItem.events.length === 1)
-    .map((eventItem) => ({ event: eventItem.events[0], endDate: eventItem.endDate }));
+    .map((eventItem) => ({ event: eventItem.events[0], startDate: eventItem.startDate }));
   if (eventItems.length === 0) {
     return { responseCode: 400, comment: "イベント情報を取得することができませんでした" };
   }
 
   const eventStartAndEndTimes = eventItems.map((eventItem) => {
-    const { event, endDate } = eventItem;
+    const { event, startDate } = eventItem;
     const eventId = event.recurringEventId;
     if (!eventId) return;
 
@@ -185,9 +185,9 @@ const deleteRecurringEvent = (
     const startTime = new Date(eventDetail.start.dateTime);
     const endTime = new Date(eventDetail.end.dateTime);
     const eventTitle = eventDetail.summary;
-    endDate.setHours(endTime.getHours(), endTime.getMinutes());
+    startDate.setHours(endTime.getHours(), endTime.getMinutes());
 
-    return { eventId, endDate, startTime, endTime, eventTitle };
+    return { eventId, startDate, startTime, endTime, eventTitle };
   });
   if (!eventStartAndEndTimes[0]) {
     return { responseCode: 400, comment: "イベント情報を取得することができませんでした" };
@@ -196,7 +196,7 @@ const deleteRecurringEvent = (
   eventStartAndEndTimes.forEach((event) => {
     if (!event) return;
 
-    const { eventId, endDate, startTime, endTime, eventTitle } = event;
+    const { eventId, startDate, startTime, endTime, eventTitle } = event;
     const data = {
       summary: eventTitle,
       attendees: [{ email: userEmail }],
@@ -208,7 +208,7 @@ const deleteRecurringEvent = (
         dateTime: endTime.toISOString(),
         timeZone: "Asia/Tokyo",
       },
-      recurrence: ["RRULE:FREQ=WEEKLY;UNTIL=" + format(endDate, "yyyyMMdd'T'HHmmss'Z'")],
+      recurrence: ["RRULE:FREQ=WEEKLY;UNTIL=" + format(startDate, "yyyyMMdd'T'HHmmss'Z'")],
     };
 
     advancedCalendar.update(data, calendar.getId(), eventId);
@@ -263,15 +263,15 @@ const convertJapaneseToEnglishDayOfWeek = (dayOfWeek: string) => {
 };
 
 //NOTE: 仕様的にstartTimeの日付に最初の予定が指定されるため、指定された日付の後で一番近い指定曜日の日付に変更する
-const getNextDayOfWeek = (startDate: Date, newDayOfWeek: string): Date => {
+const getNextDayOfWeek = (startOrEndDate: Date, newDayOfWeek: string): Date => {
   const daysOfWeek = ["日曜日", "月曜日", "火曜日", "水曜日", "木曜日", "金曜日", "土曜日"];
   const targetDayOfWeek = daysOfWeek.indexOf(newDayOfWeek);
   if (targetDayOfWeek === -1) {
     throw new Error("Invalid day of week specified");
   }
 
-  const currentDayOfWeek = startDate.getDay();
+  const currentDayOfWeek = startOrEndDate.getDay();
   const daysToAdd = (targetDayOfWeek + 7 - currentDayOfWeek) % 7;
 
-  return addDays(startDate, daysToAdd);
+  return addDays(startOrEndDate, daysToAdd);
 };

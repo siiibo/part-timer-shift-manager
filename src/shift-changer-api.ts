@@ -187,6 +187,7 @@ const deleteRecurringEvent = (
       return { eventDetail, startDate, recurringEventId };
     })
     .filter(isNotUndefined);
+
   const eventStartAndEndTimes = eventDetailAndStartDates.map((eventDetailAndStartDate) => {
     const { eventDetail, startDate, recurringEventId } = eventDetailAndStartDate;
     if (!eventDetail.start?.dateTime || !eventDetail.end?.dateTime) return;
@@ -198,7 +199,7 @@ const deleteRecurringEvent = (
     return { recurringEventId, startDate, startTime, endTime, eventTitle };
   });
 
-  eventStartAndEndTimes.forEach((event) => {
+  const result = eventStartAndEndTimes.map((event) => {
     if (!event) return;
 
     const { recurringEventId, startDate, startTime, endTime, eventTitle } = event;
@@ -215,9 +216,14 @@ const deleteRecurringEvent = (
       },
       recurrence: ["RRULE:FREQ=WEEKLY;UNTIL=" + format(startDate, "yyyyMMdd'T'HHmmss'Z'")],
     };
+    const eventResult = advancedCalendar.update(data, calendar.getId(), recurringEventId);
 
-    advancedCalendar.update(data, calendar.getId(), recurringEventId);
+    return eventResult;
   });
+
+  if (result.length === 0) {
+    return { responseCode: 400, comment: "イベントの消去が失敗しました" };
+  }
 
   return { responseCode: 200, comment: "イベントの消去が成功しました" };
 };

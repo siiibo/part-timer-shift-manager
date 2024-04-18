@@ -171,14 +171,13 @@ const deleteRecurringEvent = (
       return { events: events, startDate: startDate };
     })
     .filter((eventItem) => eventItem.events.length === 1)
-    .map((eventItem) => ({ event: eventItem.events[0], startDate: eventItem.startDate }));
+    .map((eventItem) => ({ eventId: eventItem.events[0].recurringEventId, startDate: eventItem.startDate }));
   if (eventItems.length === 0) {
     return { responseCode: 400, comment: "イベント情報を取得することができませんでした" };
   }
 
   const eventStartAndEndTimes = eventItems.map((eventItem) => {
-    const { event, startDate } = eventItem;
-    const eventId = event.recurringEventId;
+    const { eventId, startDate } = eventItem;
     if (!eventId) return;
 
     const eventDetail = advancedCalendar.get(calendar.getId(), eventId);

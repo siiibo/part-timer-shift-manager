@@ -169,7 +169,6 @@ const deleteRecurringEvent = (
           q: userEmail,
         }).items ?? [];
       const recurringEventId = events[0]?.recurringEventId;
-      if (!recurringEventId) return undefined;
 
       return { recurringEventId, startDate };
     })

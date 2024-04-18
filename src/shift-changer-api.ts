@@ -175,10 +175,6 @@ const deleteRecurringEvent = (
     })
     .filter(isNotUndefined);
 
-  if (eventItems.length === 0) {
-    return { responseCode: 400, comment: "イベント情報を取得することができませんでした" };
-  }
-
   const detailedEventItems = eventItems.map((eventItem) => {
     const { recurringEventId, startDate } = eventItem;
     const eventDetail = advancedCalendar.get(calendar.getId(), recurringEventId);
@@ -197,9 +193,6 @@ const deleteRecurringEvent = (
       return { recurringEventId, startDate, startTime, endTime, eventTitle };
     })
     .filter(isNotUndefined);
-  if (filteredEventDetails.length === 0) {
-    return { responseCode: 400, comment: "イベント情報を取得することができませんでした" };
-  }
 
   const updatedEventResults = filteredEventDetails.map((event) => {
     const { recurringEventId, startDate, startTime, endTime, eventTitle } = event;

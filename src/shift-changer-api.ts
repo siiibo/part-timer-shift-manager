@@ -1,4 +1,4 @@
-import { addWeeks, endOfDay, format, startOfDay } from "date-fns";
+import { addDays, addWeeks, endOfDay, format, startOfDay } from "date-fns";
 import { z } from "zod";
 
 import { getConfig } from "./config";
@@ -33,7 +33,8 @@ const RegistrationRecurringEvent = z.object({
 type RegistrationRecurringEvent = z.infer<typeof RegistrationRecurringEvent>;
 
 const DeletionRecurringEvent = z.object({
-  date: z.coerce.date(),
+  after: z.coerce.date(),
+  dayOfWeek: dayOfWeek,
 });
 type DeletionRecurringEvent = z.infer<typeof DeletionRecurringEvent>;
 
@@ -155,16 +156,17 @@ const deleteRecurringEvent = (
 
   const eventItems = deletionRecurringEvents
     .map((event) => {
+      const endDate = getNextDayOfWeek(event.after, event.dayOfWeek);
       const events =
         advancedCalendar.list(calendar.getId(), {
-          timeMin: startOfDay(event.date).toISOString(),
-          timeMax: endOfDay(event.date).toISOString(),
+          timeMin: startOfDay(endDate).toISOString(),
+          timeMax: endOfDay(endDate).toISOString(),
           singleEvents: true,
           orderBy: "startTime",
           maxResults: 1,
           q: userEmail,
         }).items ?? [];
-      return { events: events, endDate: event.date };
+      return { events: events, endDate: endDate };
     })
     .filter((eventItem) => eventItem.events.length === 1)
     .map((eventItem) => ({ event: eventItem.events[0], endDate: eventItem.endDate }));
@@ -258,4 +260,18 @@ const convertJapaneseToEnglishDayOfWeek = (dayOfWeek: string) => {
     default:
       throw new Error("Invalid day of the week");
   }
+};
+
+//NOTE: 仕様的にstartTimeの日付に最初の予定が指定されるため、指定された日付の後で一番近い指定曜日の日付に変更する
+const getNextDayOfWeek = (startDate: Date, newDayOfWeek: string): Date => {
+  const daysOfWeek = ["日曜日", "月曜日", "火曜日", "水曜日", "木曜日", "金曜日", "土曜日"];
+  const targetDayOfWeek = daysOfWeek.indexOf(newDayOfWeek);
+  if (targetDayOfWeek === -1) {
+    throw new Error("Invalid day of week specified");
+  }
+
+  const currentDayOfWeek = startDate.getDay();
+  const daysToAdd = (targetDayOfWeek + 7 - currentDayOfWeek) % 7;
+
+  return addDays(startDate, daysToAdd);
 };

@@ -168,19 +168,22 @@ const deleteRecurringEvent = (
           maxResults: 1,
           q: userEmail,
         }).items ?? [];
-      return { events: events, startDate: startDate };
+      const recurringEventId = events[0]?.recurringEventId;
+      if (!recurringEventId) return undefined;
+
+      return { recurringEventId, startDate };
     })
-    .filter((eventItem) => eventItem.events.length === 1)
-    .map((eventItem) => ({ eventId: eventItem.events[0].recurringEventId, startDate: eventItem.startDate }));
+    .filter(isNotUndefined);
+
   if (eventItems.length === 0) {
     return { responseCode: 400, comment: "イベント情報を取得することができませんでした" };
   }
 
   const eventStartAndEndTimes = eventItems.map((eventItem) => {
-    const { eventId, startDate } = eventItem;
-    if (!eventId) return;
+    const { recurringEventId, startDate } = eventItem;
+    if (!recurringEventId) return;
 
-    const eventDetail = advancedCalendar.get(calendar.getId(), eventId);
+    const eventDetail = advancedCalendar.get(calendar.getId(), recurringEventId);
     if (!eventDetail || !eventDetail.start?.dateTime || !eventDetail.end?.dateTime) return;
 
     const startTime = new Date(eventDetail.start.dateTime);
@@ -188,7 +191,7 @@ const deleteRecurringEvent = (
     const eventTitle = eventDetail.summary;
     startDate.setHours(endTime.getHours(), endTime.getMinutes());
 
-    return { eventId, startDate, startTime, endTime, eventTitle };
+    return { recurringEventId, startDate, startTime, endTime, eventTitle };
   });
   if (!eventStartAndEndTimes[0]) {
     return { responseCode: 400, comment: "イベント情報を取得することができませんでした" };
@@ -197,7 +200,7 @@ const deleteRecurringEvent = (
   eventStartAndEndTimes.forEach((event) => {
     if (!event) return;
 
-    const { eventId, startDate, startTime, endTime, eventTitle } = event;
+    const { recurringEventId, startDate, startTime, endTime, eventTitle } = event;
     const data = {
       summary: eventTitle,
       attendees: [{ email: userEmail }],
@@ -212,7 +215,7 @@ const deleteRecurringEvent = (
       recurrence: ["RRULE:FREQ=WEEKLY;UNTIL=" + format(startDate, "yyyyMMdd'T'HHmmss'Z'")],
     };
 
-    advancedCalendar.update(data, calendar.getId(), eventId);
+    advancedCalendar.update(data, calendar.getId(), recurringEventId);
   });
 
   return { responseCode: 200, comment: "イベントの消去が成功しました" };
@@ -286,4 +289,7 @@ const getNextDayOfWeek = (date: Date, dayOfWeek: DayOfWeek): Date => {
   const nextDate = nextDay(date, targetDayOfWeek);
 
   return nextDate;
+};
+const isNotUndefined = <T>(value: T | undefined): value is T => {
+  return value !== undefined;
 };

@@ -35,7 +35,7 @@ type RegistrationRecurringEvent = z.infer<typeof RegistrationRecurringEvent>;
 
 const DeletionRecurringEvent = z.object({
   after: z.coerce.date(),
-  dayOfWeek: DayOfWeek,
+  dayOfWeek: DayOfWeek.array(),
 });
 type DeletionRecurringEvent = z.infer<typeof DeletionRecurringEvent>;
 
@@ -86,12 +86,7 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
       break;
     }
     case "deleteRecurringEvent": {
-      const deletionRecurringEvents = DeletionRecurringEvent.array().parse(
-        JSON.parse(e.parameter.recurringEventDeletion),
-      );
-      if (deletionRecurringEvents.length === 0) {
-        return JSON.stringify({ responseCode: 400, comment: "No event to delete" });
-      }
+      const deletionRecurringEvents = DeletionRecurringEvent.parse(JSON.parse(e.parameter.recurringEventDeletion));
       return JSON.stringify(deleteRecurringEvent(deletionRecurringEvents, userEmail));
     }
   }
@@ -148,17 +143,19 @@ const registerRecurringEvent = (registrationRecurringEvents: RegistrationRecurri
 };
 
 const deleteRecurringEvent = (
-  deletionRecurringEvents: DeletionRecurringEvent[],
+  deletionRecurringEvents: DeletionRecurringEvent,
   userEmail: string,
 ): DeleteRecurringEventResponse => {
   const calendar = getCalendar();
   const advancedCalendar = Calendar.Events;
   if (advancedCalendar === undefined) return { responseCode: 400, comment: "カレンダーの取得に失敗しました" };
 
-  const eventItems = deletionRecurringEvents
-    .map((event) => {
+  const dayOfWeeks = deletionRecurringEvents.dayOfWeek;
+  const after = deletionRecurringEvents.after;
+  const eventItems = dayOfWeeks
+    .map((dayOfWeek) => {
       //NOTE: 仕様的にstartTimeの日付に最初の予定が指定されるため、指定された日付の後で一番近い指定曜日の日付に変更する
-      const startDate = getNextDayOfWeek(event.after, event.dayOfWeek);
+      const startDate = getNextDayOfWeek(after, dayOfWeek);
       const events =
         advancedCalendar.list(calendar.getId(), {
           timeMin: startOfDay(startDate).toISOString(),

@@ -362,18 +362,17 @@ const createTitleFromEventInfo = (
 
 //NOTE: test用のコード
 export const modificationTest = () => {
-  const oldDayOfWeek = "月曜日";
-  const newDayOfWeek = "火曜日";
+  const dayOfWeek = "月曜日";
   const title = "test"; // 追加する際に使用
   const after = new Date("2024-4-25"); // 消去する際に使用
-  const startTime = getNextDayOfWeek(after, newDayOfWeek).setHours(10, 0, 0, 0);
-  const endTime = getNextDayOfWeek(after, newDayOfWeek).setHours(19, 0, 0, 0);
+  const startTime = getNextDayOfWeek(after, dayOfWeek).setHours(10, 0, 0, 0);
+  const endTime = getNextDayOfWeek(after, dayOfWeek).setHours(19, 0, 0, 0);
 
   const payload = {
     apiId: "shift-changer",
     operationType: "modificationRecurringEvent",
     userEmail: "takuya.wada@siiibo.com",
-    recurringEventModification: JSON.stringify([{ title, after, oldDayOfWeek, newDayOfWeek, startTime, endTime }]),
+    recurringEventModification: JSON.stringify([{ title, after, dayOfWeek, startTime, endTime }]),
   };
   const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
     method: "post",

@@ -46,8 +46,7 @@ type DeleteRecurringEventResponse = {
 const ModificationRecurringEvent = z.object({
   title: z.string(),
   after: z.coerce.date(),
-  oldDayOfWeek: DayOfWeek,
-  newDayOfWeek: DayOfWeek,
+  dayOfWeek: DayOfWeek,
   startTime: z.coerce.date(),
   endTime: z.coerce.date(),
 });
@@ -103,21 +102,14 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
       const modificationRecurringEvent = ModificationRecurringEvent.array().parse(
         JSON.parse(e.parameter.recurringEventModification),
       );
-      const deletionRecurringEvents = modificationRecurringEvent.map(({ oldDayOfWeek }) => {
-        return oldDayOfWeek;
+      const response = modificationRecurringEvent.map(({ title, after, dayOfWeek, startTime, endTime }) => {
+        const response = deleteRecurringEvent({ dayOfWeeks: [dayOfWeek], after }, userEmail);
+        if (response.responseCode !== 200) return;
+        const registrationRecurringEvents = [{ dayOfWeek, title, startTime, endTime }];
+        console.log(registrationRecurringEvents);
+        registerRecurringEvent(registrationRecurringEvents, userEmail);
       });
-      const responseMessage = deleteRecurringEvent(
-        { after: modificationRecurringEvent[0].after, dayOfWeeks: deletionRecurringEvents },
-        userEmail,
-      );
-      if (responseMessage.responseCode !== 200) return JSON.stringify(responseMessage);
-
-      const registrationRecurringEvents = modificationRecurringEvent.map(
-        ({ newDayOfWeek, startTime, endTime, title }) => {
-          return RegistrationRecurringEvent.parse({ dayOfWeek: newDayOfWeek, startTime, endTime, title });
-        },
-      );
-      registerRecurringEvent(registrationRecurringEvents, userEmail);
+      if (response.length === 0) return JSON.stringify({ responseCode: 400, comment: "イベントの変更が失敗しました" });
 
       return JSON.stringify({ responseCode: 200, comment: "イベントの変更が成功しました" });
     }

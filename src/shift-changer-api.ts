@@ -178,19 +178,15 @@ const deleteRecurringEvent = (
   detailedEventItems.forEach(({ eventDetail, startDate, recurringEventId }) => {
     if (!eventDetail.start?.dateTime || !eventDetail.end?.dateTime) return;
 
-    const startTime = eventDetail.start.dateTime;
-    const endTime = eventDetail.end.dateTime;
-    const eventTitle = eventDetail.summary;
-
     const data = {
-      summary: eventTitle,
+      summary: eventDetail.summary,
       attendees: [{ email: userEmail }],
       start: {
-        dateTime: startTime,
+        dateTime: eventDetail.start.dateTime,
         timeZone: "Asia/Tokyo",
       },
       end: {
-        dateTime: endTime,
+        dateTime: eventDetail.end.dateTime,
         timeZone: "Asia/Tokyo",
       },
       recurrence: ["RRULE:FREQ=WEEKLY;UNTIL=" + format(startDate, "yyyyMMdd'T'HHmmss'Z'")],

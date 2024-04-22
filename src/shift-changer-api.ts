@@ -26,7 +26,6 @@ const ModificationInfo = z.object({
 
 const RegistrationRecurringEvent = z.object({
   dayOfWeek: DayOfWeek,
-  startOrEndDate: z.coerce.date(), //TODO: この変数名をafterに変更する
   title: z.string(),
   startTime: z.coerce.date(),
   endTime: z.coerce.date(),

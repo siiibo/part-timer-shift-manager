@@ -1,14 +1,15 @@
-import { addWeeks } from "date-fns";
+import { addWeeks, endOfDay, format, nextDay, startOfDay } from "date-fns";
 import { z } from "zod";
 
 import { getConfig } from "./config";
 
-const dayOfWeek = z
+const DayOfWeek = z
   .literal("月曜日")
   .or(z.literal("火曜日"))
   .or(z.literal("水曜日"))
   .or(z.literal("木曜日"))
   .or(z.literal("金曜日"));
+type DayOfWeek = z.infer<typeof DayOfWeek>;
 
 export const EventInfo = z.object({
   title: z.string(),
@@ -24,13 +25,23 @@ const ModificationInfo = z.object({
 });
 
 const RegistrationRecurringEvent = z.object({
-  dayOfWeek: dayOfWeek,
-  startOrEndDate: z.coerce.date(),
+  dayOfWeek: DayOfWeek,
   title: z.string(),
   startTime: z.coerce.date(),
   endTime: z.coerce.date(),
 });
 type RegistrationRecurringEvent = z.infer<typeof RegistrationRecurringEvent>;
+
+const DeletionRecurringEvent = z.object({
+  after: z.coerce.date(),
+  dayOfWeeks: DayOfWeek.array(),
+});
+type DeletionRecurringEvent = z.infer<typeof DeletionRecurringEvent>;
+
+type DeleteRecurringEventResponse = {
+  responseCode: number;
+  comment: string;
+};
 
 const getCalendar = () => {
   const { CALENDAR_ID } = getConfig();
@@ -71,6 +82,12 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
       );
 
       registerRecurringEvent(registrationRecurringEvents, userEmail);
+      break;
+    }
+    case "deleteRecurringEvent": {
+      const deletionRecurringEvents = DeletionRecurringEvent.parse(JSON.parse(e.parameter.recurringEventDeletion));
+
+      return JSON.stringify(deleteRecurringEvent(deletionRecurringEvents, userEmail));
     }
   }
   return;
@@ -125,6 +142,60 @@ const registerRecurringEvent = (registrationRecurringEvents: RegistrationRecurri
   });
 };
 
+const deleteRecurringEvent = (
+  { dayOfWeeks, after }: DeletionRecurringEvent,
+  userEmail: string,
+): DeleteRecurringEventResponse => {
+  const calendarId = getConfig().CALENDAR_ID;
+  const advancedCalendar = Calendar.Events;
+  if (advancedCalendar === undefined) return { responseCode: 400, comment: "カレンダーの取得に失敗しました" };
+
+  const eventItems = dayOfWeeks
+    .map((dayOfWeek) => {
+      //NOTE: 仕様的にstartTimeの日付に最初の予定が指定されるため、指定された日付の後で一番近い指定曜日の日付に変更する
+      const untilDate = getNextDayOfWeek(after, dayOfWeek);
+      const events =
+        advancedCalendar.list(calendarId, {
+          timeMin: startOfDay(untilDate).toISOString(),
+          timeMax: endOfDay(untilDate).toISOString(),
+          singleEvents: true,
+          orderBy: "startTime",
+          maxResults: 1,
+          q: userEmail,
+        }).items ?? [];
+      const recurringEventId = events[0]?.recurringEventId;
+      return recurringEventId ? { recurringEventId, untilDate } : undefined;
+    })
+    .filter(isNotUndefined);
+  if (eventItems.length === 0) return { responseCode: 400, comment: "消去するイベントの取得に失敗しました" };
+
+  const detailedEventItems = eventItems.map(({ recurringEventId, untilDate }) => {
+    const eventDetail = advancedCalendar.get(calendarId, recurringEventId);
+    return { eventDetail, untilDate, recurringEventId };
+  });
+
+  detailedEventItems.forEach(({ eventDetail, untilDate, recurringEventId }) => {
+    if (!eventDetail.start?.dateTime || !eventDetail.end?.dateTime) return;
+
+    const data = {
+      summary: eventDetail.summary,
+      attendees: [{ email: userEmail }],
+      start: {
+        dateTime: eventDetail.start.dateTime,
+        timeZone: "Asia/Tokyo",
+      },
+      end: {
+        dateTime: eventDetail.end.dateTime,
+        timeZone: "Asia/Tokyo",
+      },
+      recurrence: ["RRULE:FREQ=WEEKLY;UNTIL=" + format(untilDate, "yyyyMMdd'T'HHmmss'Z'")],
+    };
+    advancedCalendar.update(data, calendarId, recurringEventId);
+  });
+
+  return { responseCode: 200, comment: "イベントの消去が成功しました" };
+};
+
 const modifyEvent = (
   eventInfo: {
     previousEventInfo: EventInfo;
@@ -153,7 +224,8 @@ const deleteEvent = (eventInfo: EventInfo, calendar: GoogleAppsScript.Calendar.C
   if (!event) return;
   event.deleteEvent();
 };
-const convertJapaneseToEnglishDayOfWeek = (dayOfWeek: string) => {
+
+const convertJapaneseToEnglishDayOfWeek = (dayOfWeek: DayOfWeek) => {
   switch (dayOfWeek) {
     case "月曜日":
       return CalendarApp.Weekday.MONDAY;
@@ -168,4 +240,32 @@ const convertJapaneseToEnglishDayOfWeek = (dayOfWeek: string) => {
     default:
       throw new Error("Invalid day of the week");
   }
+};
+
+const convertJapaneseToNumberDayOfWeek = (dayOfWeek: DayOfWeek) => {
+  switch (dayOfWeek) {
+    case "月曜日":
+      return 1;
+    case "火曜日":
+      return 2;
+    case "水曜日":
+      return 3;
+    case "木曜日":
+      return 4;
+    case "金曜日":
+      return 5;
+    default:
+      throw new Error("Invalid day of the week");
+  }
+};
+
+const getNextDayOfWeek = (date: Date, dayOfWeek: DayOfWeek): Date => {
+  const targetDayOfWeek = convertJapaneseToNumberDayOfWeek(dayOfWeek);
+  const nextDate = nextDay(date, targetDayOfWeek);
+
+  return nextDate;
+};
+
+const isNotUndefined = <T>(value: T | undefined): value is T => {
+  return value !== undefined;
 };

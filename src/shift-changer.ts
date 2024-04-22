@@ -366,7 +366,7 @@ export const deleteRecurringEvent = () => {
     apiId: "shift-changer",
     operationType: "deleteRecurringEvent",
     userEmail: "takuya.wada@siiibo.com",
-    recurringEventDeletion: JSON.stringify([{ after: date, dayOfWeek: "火曜日" }]),
+    recurringEventDeletion: JSON.stringify({ after: date, dayOfWeeks: ["火曜日"] }),
   };
   const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
     method: "post",

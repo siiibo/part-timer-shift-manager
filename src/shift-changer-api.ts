@@ -35,7 +35,7 @@ type RegistrationRecurringEvent = z.infer<typeof RegistrationRecurringEvent>;
 
 const DeletionRecurringEvent = z.object({
   after: z.coerce.date(),
-  dayOfWeek: DayOfWeek.array(),
+  dayOfWeeks: DayOfWeek.array(),
 });
 type DeletionRecurringEvent = z.infer<typeof DeletionRecurringEvent>;
 
@@ -87,7 +87,7 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
     }
     case "deleteRecurringEvent": {
       const deletionRecurringEvents = DeletionRecurringEvent.parse(JSON.parse(e.parameter.recurringEventDeletion));
-      const dayOfWeeks = deletionRecurringEvents.dayOfWeek;
+      const dayOfWeeks = deletionRecurringEvents.dayOfWeeks;
       const after = deletionRecurringEvents.after;
       return JSON.stringify(deleteRecurringEvent(dayOfWeeks, after, userEmail));
     }
@@ -208,6 +208,8 @@ const deleteRecurringEvent = (
     };
     advancedCalendar.update(data, calendarId, recurringEventId);
   });
+
+  if (filteredEventDetails.length === 0) return { responseCode: 400, comment: "予定を消去することができませんでした" };
 
   return { responseCode: 200, comment: "イベントの消去が成功しました" };
 };

@@ -176,22 +176,15 @@ const deleteRecurringEvent = (
 
     return { eventDetail, startDate, recurringEventId };
   });
+  if (detailedEventItems.length === 0) return { responseCode: 400, comment: "イベントの消去に失敗しました" };
 
-  const filteredEventDetails = detailedEventItems
-    .map(({ eventDetail, startDate, recurringEventId }) => {
-      if (!eventDetail.start?.dateTime || !eventDetail.end?.dateTime || !eventDetail.summary) return;
+  detailedEventItems.forEach(({ eventDetail, startDate, recurringEventId }) => {
+    if (!eventDetail.start?.dateTime || !eventDetail.end?.dateTime) return;
 
-      const startTime = new Date(eventDetail.start.dateTime);
-      const endTime = new Date(eventDetail.end.dateTime);
-      const eventTitle = eventDetail.summary;
+    const startTime = new Date(eventDetail.start.dateTime);
+    const endTime = new Date(eventDetail.end.dateTime);
+    const eventTitle = eventDetail.summary;
 
-      return { recurringEventId, startDate, startTime, endTime, eventTitle };
-    })
-    .filter(isNotUndefined);
-  if (filteredEventDetails.length === 0) return { responseCode: 400, comment: "イベントの消去に失敗しました" };
-
-  filteredEventDetails.forEach((event) => {
-    const { recurringEventId, startDate, startTime, endTime, eventTitle } = event;
     const data = {
       summary: eventTitle,
       attendees: [{ email: userEmail }],

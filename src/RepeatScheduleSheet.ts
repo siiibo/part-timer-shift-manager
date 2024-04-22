@@ -1,8 +1,8 @@
 import { set } from "date-fns";
 import { z } from "zod";
 
-const dateOrEmptyString = z.preprocess((val) => (val === "" ? undefined : val), z.date().optional());
-const dayOfWeekOrEmptyString = z.preprocess(
+const DateOrEmptyString = z.preprocess((val) => (val === "" ? undefined : val), z.date().optional());
+const DayOfWeekOrEmptyString = z.preprocess(
   (val) => (val === "" ? undefined : val),
   z
     .literal("月曜日")
@@ -12,21 +12,29 @@ const dayOfWeekOrEmptyString = z.preprocess(
     .or(z.literal("金曜日"))
     .optional(),
 );
-const workingStyleOrEmptyString = z.preprocess((val) => (val === "" ? undefined : val), z.string().optional());
+const WorkingStyleOrEmptyString = z.preprocess(
+  (val) => (val === "" ? undefined : val),
+  z.literal("リモート").or(z.literal("出勤")).optional(),
+);
+
+const OperationString = z.preprocess(
+  (val) => (val === "" ? undefined : val),
+  z.literal("時間変更").or(z.literal("消去")).or(z.literal("追加")).optional(),
+);
 
 const DeleteRepeatScheduleRow = z.object({
   type: z.literal("delete"),
   date: z.date(),
-  oldDayOfWeek: dayOfWeekOrEmptyString,
+  oldDayOfWeek: DayOfWeekOrEmptyString,
 });
 type DeleteRepeatScheduleRow = z.infer<typeof DeleteRepeatScheduleRow>;
 
 const ModificationRepeatScheduleRow = z.object({
   type: z.literal("modification"),
-  startDate: z.date(),
+  after: z.date(),
   endDate: z.date(),
-  oldDayOfWeek: dayOfWeekOrEmptyString,
-  newDayOfWeek: dayOfWeekOrEmptyString,
+  oldDayOfWeek: DayOfWeekOrEmptyString,
+  newDayOfWeek: DayOfWeekOrEmptyString,
   startTime: z.date(),
   endTime: z.date(),
   restStartTime: z.date().optional(),
@@ -37,8 +45,8 @@ type ModificationRepeatScheduleRow = z.infer<typeof ModificationRepeatScheduleRo
 
 const RegistrationRepeatScheduleRow = z.object({
   type: z.literal("registration"),
-  startDate: z.date(),
-  newDayOfWeek: dayOfWeekOrEmptyString,
+  after: z.date(),
+  newDayOfWeek: DayOfWeekOrEmptyString,
   startTime: z.date(),
   endTime: z.date(),
   restStartTime: z.date().optional(),
@@ -48,15 +56,14 @@ const RegistrationRepeatScheduleRow = z.object({
 type RegistrationRepeatScheduleRow = z.infer<typeof RegistrationRepeatScheduleRow>;
 
 const RepeatScheduleSheetRow = z.object({
-  startDate: z.date(),
-  oldDayOfWeek: dayOfWeekOrEmptyString,
-  newDayOfWeek: dayOfWeekOrEmptyString,
-  startTime: dateOrEmptyString,
-  endTime: dateOrEmptyString,
-  restStartTime: dateOrEmptyString,
-  restEndTime: dateOrEmptyString,
-  workingStyle: workingStyleOrEmptyString,
-  isDelete: z.coerce.boolean(),
+  after: z.date(),
+  operation: OperationString,
+  dayOfWeek: DayOfWeekOrEmptyString,
+  startTime: DateOrEmptyString,
+  endTime: DateOrEmptyString,
+  restStartTime: DateOrEmptyString,
+  restEndTime: DateOrEmptyString,
+  workingStyle: WorkingStyleOrEmptyString,
 });
 type RepeatScheduleSheetRow = z.infer<typeof RepeatScheduleSheetRow>;
 
@@ -94,29 +101,18 @@ const setValuesRepeatScheduleSheet = (sheet: GoogleAppsScript.Spreadsheet.Sheet)
   dateCell.setDataValidation(dateRule);
   const description3 = "【固定シフト変更】";
   sheet.getRange("A7").setValue(description3).setFontWeight("bold");
-  sheet.getRange("B8").setValue("固定シフト変更後").setFontWeight("bold");
-  sheet.getRange("H8").setValue("【削除】削除したい固定シフトを選択してください").setFontWeight("bold");
-  const header2 = [
-    "追加・変更・消去する曜日を選択",
-    "変更後の曜日",
-    "開始時刻",
-    "終了時刻",
-    "休憩開始時刻",
-    "休憩終了時刻",
-    "勤務形態",
-    "消去対象",
-  ];
-  sheet.getRange(9, 1, 1, header2.length).setValues([header2]).setFontWeight("bold");
-
-  const dayOfWeekCells = sheet.getRange("A10:B14");
-  const dayOfWeekRule = SpreadsheetApp.newDataValidation()
-    .requireValueInList(["月曜日", "火曜日", "水曜日", "木曜日", "金曜日"])
+  const header2 = ["操作", "曜日", "開始時間", "終了時刻", "休憩開始時刻", "休憩終了時刻", "勤務形態"];
+  sheet.getRange(8, 1, 1, header2.length).setValues([header2]).setFontWeight("bold");
+  const operationCells = sheet.getRange("A9:A13");
+  const operationRule = SpreadsheetApp.newDataValidation()
+    .requireValueInList(["時間変更", "消去", "追加"], true)
     .setAllowInvalid(false)
-    .setHelpText("曜日を選択さしてください")
+    .setHelpText("時間変更, 削除, 登録 を選択してください。")
     .build();
-  dayOfWeekCells.setDataValidation(dayOfWeekRule);
+  operationCells.setDataValidation(operationRule);
+  sheet.getRange("B9:B13").setValues([["月曜日"], ["火曜日"], ["水曜日"], ["木曜日"], ["金曜日"]]);
 
-  const workingStyleCells = sheet.getRange("G10:G14");
+  const workingStyleCells = sheet.getRange("G9:G13");
   const workingStyleRule = SpreadsheetApp.newDataValidation()
     .requireValueInList(["リモート", "出勤"], true)
     .setAllowInvalid(false)
@@ -124,69 +120,57 @@ const setValuesRepeatScheduleSheet = (sheet: GoogleAppsScript.Spreadsheet.Sheet)
     .build();
   workingStyleCells.setDataValidation(workingStyleRule);
 
-  workingStyleCells.setDataValidation(workingStyleRule);
-  const checkboxCells = sheet.getRange("H10:H14");
-  const checkboxRule = SpreadsheetApp.newDataValidation()
-    .requireCheckbox()
-    .setAllowInvalid(false)
-    .setHelpText("チェックボックス以外の入力形式は認められません。")
-    .build();
-  checkboxCells.setDataValidation(checkboxRule);
   sheet.setColumnWidth(1, 370);
   sheet.setColumnWidth(2, 150);
 };
 const getRepeatScheduleReSheetValues = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
 ): (DeleteRepeatScheduleRow | ModificationRepeatScheduleRow | RegistrationRepeatScheduleRow | NoOperationRow)[] => {
-  const startDate = sheet.getRange("A5").getValue();
+  const after = sheet.getRange("A5").getValue();
   const sheetValues = sheet
-    .getRange("A10:H14")
+    .getRange("A9:G13")
     .getValues()
     .map((row) =>
       RepeatScheduleSheetRow.parse({
-        startDate: startDate,
-        oldDayOfWeek: row[0],
-        newDayOfWeek: row[1],
+        after: after,
+        operation: row[0],
+        dayOfWeek: row[1],
         startTime: row[2],
         endTime: row[3],
         restStartTime: row[4],
         restEndTime: row[5],
         workingStyle: row[6],
-        isDelete: row[7],
       }),
     )
     .map((row) => {
-      if (row.isDelete) {
+      if (row.operation === "消去") {
         return DeleteRepeatScheduleRow.parse({
           type: "delete",
-          date: row.startDate,
-          oldDayOfWeek: row.oldDayOfWeek,
+          after: row.after,
+          dayOfWeek: row.dayOfWeek,
         });
-      } else if (!row.oldDayOfWeek && row.startTime && row.endTime && row.newDayOfWeek) {
-        const nextDate = getNextDayOfWeek(row.startDate, row.newDayOfWeek);
+      } else if (row.operation === "追加" && row.dayOfWeek && row.startTime && row.endTime) {
+        const nextDate = getNextDayOfWeek(row.after, row.dayOfWeek);
         const startTime = mergeTimeToDate(nextDate, row.startTime);
         const endTime = mergeTimeToDate(nextDate, row.endTime);
         return RegistrationRepeatScheduleRow.parse({
           type: "registration",
-          startDate: nextDate,
-          newDayOfWeek: row.newDayOfWeek,
+          after: row.after,
+          dayOfWeek: row.dayOfWeek,
           startTime: startTime,
           endTime: endTime,
           restStartTime: row.restStartTime,
           restEndTime: row.restEndTime,
           workingStyle: row.workingStyle,
         });
-      } else if (row.oldDayOfWeek && row.startTime && row.endTime && row.newDayOfWeek) {
-        const startDate = getNextDayOfWeek(row.startDate, row.newDayOfWeek);
-        const endDate = getNextDayOfWeek(row.startDate, row.oldDayOfWeek);
-        const startTime = mergeTimeToDate(startDate, row.startTime);
-        const endTime = mergeTimeToDate(startDate, row.endTime);
+      } else if (row.operation === "時間変更" && row.dayOfWeek && row.startTime && row.endTime && row.after) {
+        const after = getNextDayOfWeek(row.after, row.dayOfWeek);
+        const startTime = mergeTimeToDate(after, row.startTime);
+        const endTime = mergeTimeToDate(after, row.endTime);
         return ModificationRepeatScheduleRow.parse({
           type: "modification",
-          startDate: startDate,
-          endDate: endDate,
-          oldDayOfWeek: row.oldDayOfWeek,
-          newDayOfWeek: row.newDayOfWeek,
+          after: row.after,
+          dayOfWeek: row.dayOfWeek,
           startTime: startTime,
           endTime: endTime,
           restStartTime: row.restStartTime,

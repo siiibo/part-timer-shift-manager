@@ -173,8 +173,7 @@ const deleteRecurringEvent = (
     })
     .filter(isNotUndefined);
 
-  const detailedEventItems = eventItems.map((eventItem) => {
-    const { recurringEventId, startDate } = eventItem;
+  const detailedEventItems = eventItems.map(({ recurringEventId, startDate }) => {
     const eventDetail = advancedCalendar.get(calendarId, recurringEventId);
 
     return { eventDetail, startDate, recurringEventId };

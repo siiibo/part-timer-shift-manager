@@ -24,8 +24,8 @@ const OperationString = z.preprocess(
 
 const DeleteRepeatScheduleRow = z.object({
   type: z.literal("delete"),
-  date: z.date(),
-  oldDayOfWeek: DayOfWeekOrEmptyString,
+  after: z.date(),
+  dayOfWeek: DayOfWeekOrEmptyString,
 });
 type DeleteRepeatScheduleRow = z.infer<typeof DeleteRepeatScheduleRow>;
 
@@ -33,8 +33,7 @@ const ModificationRepeatScheduleRow = z.object({
   type: z.literal("modification"),
   after: z.date(),
   endDate: z.date(),
-  oldDayOfWeek: DayOfWeekOrEmptyString,
-  newDayOfWeek: DayOfWeekOrEmptyString,
+  dayOfWeek: DayOfWeekOrEmptyString,
   startTime: z.date(),
   endTime: z.date(),
   restStartTime: z.date().optional(),
@@ -45,8 +44,7 @@ type ModificationRepeatScheduleRow = z.infer<typeof ModificationRepeatScheduleRo
 
 const RegistrationRepeatScheduleRow = z.object({
   type: z.literal("registration"),
-  after: z.date(),
-  newDayOfWeek: DayOfWeekOrEmptyString,
+  dayOfWeek: DayOfWeekOrEmptyString,
   startTime: z.date(),
   endTime: z.date(),
   restStartTime: z.date().optional(),
@@ -155,7 +153,6 @@ const getRepeatScheduleReSheetValues = (
         const endTime = mergeTimeToDate(nextDate, row.endTime);
         return RegistrationRepeatScheduleRow.parse({
           type: "registration",
-          after: row.after,
           dayOfWeek: row.dayOfWeek,
           startTime: startTime,
           endTime: endTime,

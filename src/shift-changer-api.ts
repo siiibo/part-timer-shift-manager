@@ -166,7 +166,6 @@ const deleteRecurringEvent = (
         }).items ?? [];
       const recurringEventId = events[0]?.recurringEventId;
       if (!recurringEventId) return;
-
       return { recurringEventId, startDate };
     })
     .filter(isNotUndefined);
@@ -174,26 +173,25 @@ const deleteRecurringEvent = (
 
   const detailedEventItems = eventItems.map(({ recurringEventId, startDate }) => {
     const eventDetail = advancedCalendar.get(calendarId, recurringEventId);
-
     return { eventDetail, startDate, recurringEventId };
   });
 
   detailedEventItems.forEach(({ eventDetail, startDate, recurringEventId }) => {
     if (!eventDetail.start?.dateTime || !eventDetail.end?.dateTime) return;
 
-    const startTime = new Date(eventDetail.start.dateTime);
-    const endTime = new Date(eventDetail.end.dateTime);
+    const startTime = eventDetail.start.dateTime;
+    const endTime = eventDetail.end.dateTime;
     const eventTitle = eventDetail.summary;
 
     const data = {
       summary: eventTitle,
       attendees: [{ email: userEmail }],
       start: {
-        dateTime: startTime.toISOString(),
+        dateTime: startTime,
         timeZone: "Asia/Tokyo",
       },
       end: {
-        dateTime: endTime.toISOString(),
+        dateTime: endTime,
         timeZone: "Asia/Tokyo",
       },
       recurrence: ["RRULE:FREQ=WEEKLY;UNTIL=" + format(startDate, "yyyyMMdd'T'HHmmss'Z'")],

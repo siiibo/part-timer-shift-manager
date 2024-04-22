@@ -134,7 +134,7 @@ const modification = (
 const registerRecurringEvent = (registrationRecurringEvents: RegistrationRecurringEvent[], userEmail: string) => {
   const calendar = getCalendar();
   registrationRecurringEvents.forEach((event) => {
-    const newDayOfWeek = convertJapaneseToEnglishDayOfWeek(event.newDayOfWeek);
+    const newDayOfWeek = convertJapaneseToEnglishDayOfWeek(event.dayOfWeek);
     const recurrence = CalendarApp.newRecurrence().addWeeklyRule().onlyOnWeekday(newDayOfWeek);
     calendar.createEventSeries(event.title, event.startTime, event.endTime, recurrence, {
       guests: userEmail,

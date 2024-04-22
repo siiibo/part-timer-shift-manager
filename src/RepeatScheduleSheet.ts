@@ -32,7 +32,6 @@ type DeleteRepeatScheduleRow = z.infer<typeof DeleteRepeatScheduleRow>;
 const ModificationRepeatScheduleRow = z.object({
   type: z.literal("modification"),
   after: z.date(),
-  endDate: z.date(),
   dayOfWeek: DayOfWeekOrEmptyString,
   startTime: z.date(),
   endTime: z.date(),
@@ -141,6 +140,7 @@ const getRepeatScheduleReSheetValues = (
       }),
     )
     .map((row) => {
+      console.log(row);
       if (row.operation === "消去") {
         return DeleteRepeatScheduleRow.parse({
           type: "delete",

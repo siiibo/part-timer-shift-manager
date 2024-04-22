@@ -323,6 +323,7 @@ export const callRepeatSchedule = () => {
   const comment = sheet.getRange("A2").getValue();
   const { registrationRows, modificationRows, deletionRows } =
     getRepeatScheduleModificationOrDeletionOrRegistration(sheet);
+
   const registrationInfos = registrationRows.map((registrationRow) => {
     const title = createTitleFromEventInfo(
       {
@@ -332,11 +333,9 @@ export const callRepeatSchedule = () => {
       },
       partTimerProfile,
     );
-    if (registrationRow.newDayOfWeek === undefined) throw new Error("曜日が指定されていません。");
     return {
       title: title,
-      startOrEndDate: registrationRow.startDate,
-      newDayOfWeek: registrationRow.newDayOfWeek,
+      dayOfWeek: registrationRow.dayOfWeek,
       startTime: registrationRow.startTime,
       endTime: registrationRow.endTime,
     };
@@ -350,17 +349,21 @@ export const callRepeatSchedule = () => {
       },
       partTimerProfile,
     );
-    if (!modificationRow.oldDayOfWeek || !modificationRow.newDayOfWeek) throw new Error("曜日が指定されていません。");
     return {
       title: title,
-      startDate: modificationRow.startDate,
-      endDate: modificationRow.endDate,
-      oldDayOfWeek: modificationRow.oldDayOfWeek,
-      newDayOfWeek: modificationRow.newDayOfWeek,
+      after: modificationRow.after,
+      dayOfWeek: modificationRow.dayOfWeek,
       startTime: modificationRow.startTime,
       endTime: modificationRow.endTime,
     };
   });
+
+  const dayOfWeeks = deletionRows.map((deletionRow) => {
+    return deletionRow.dayOfWeek;
+  });
+
+  const deletionInfos = { after: deletionRows[0].after, dayOfWeeks: dayOfWeeks };
+
   const { API_URL, SLACK_CHANNEL_TO_POST } = getConfig();
   if (registrationInfos.length > 0) {
     const payload = {
@@ -396,12 +399,12 @@ export const callRepeatSchedule = () => {
       throw new Error(response.getContentText());
     }
   }
-  if (deletionRows.length > 0) {
+  if (deletionInfos.dayOfWeeks.length > 0) {
     const payload = {
       apiId: "shift-changer",
       operationType: "deleteRecurringEvent",
       userEmail: userEmail,
-      deletionInfos: JSON.stringify(deletionRows),
+      deletionInfos: JSON.stringify(deletionInfos),
     };
     const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
       method: "post",
@@ -521,6 +524,7 @@ const createTitleFromEventInfo = (
     return title;
   }
 };
+//TODO: メッセージを作成する関数のエラーを解消する
 const createRepeatScheduleMessage = (
   registrationRepeatScheduleRows: RecurringEventNotification[],
   type: "registration" | "modification" | "deletion",

@@ -87,7 +87,9 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
     }
     case "deleteRecurringEvent": {
       const deletionRecurringEvents = DeletionRecurringEvent.parse(JSON.parse(e.parameter.recurringEventDeletion));
-      return JSON.stringify(deleteRecurringEvent(deletionRecurringEvents, userEmail));
+      const dayOfWeeks = deletionRecurringEvents.dayOfWeek;
+      const after = deletionRecurringEvents.after;
+      return JSON.stringify(deleteRecurringEvent(dayOfWeeks, after, userEmail));
     }
   }
   return;
@@ -143,15 +145,14 @@ const registerRecurringEvent = (registrationRecurringEvents: RegistrationRecurri
 };
 
 const deleteRecurringEvent = (
-  deletionRecurringEvents: DeletionRecurringEvent,
+  dayOfWeeks: DayOfWeek[],
+  after: Date,
   userEmail: string,
 ): DeleteRecurringEventResponse => {
   const calendarId = getConfig().CALENDAR_ID;
   const advancedCalendar = Calendar.Events;
   if (advancedCalendar === undefined) return { responseCode: 400, comment: "カレンダーの取得に失敗しました" };
 
-  const dayOfWeeks = deletionRecurringEvents.dayOfWeek;
-  const after = deletionRecurringEvents.after;
   const eventItems = dayOfWeeks
     .map((dayOfWeek) => {
       //NOTE: 仕様的にstartTimeの日付に最初の予定が指定されるため、指定された日付の後で一番近い指定曜日の日付に変更する

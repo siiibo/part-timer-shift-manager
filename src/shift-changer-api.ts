@@ -168,7 +168,7 @@ const deleteRecurringEvent = (
       return recurringEventId ? { recurringEventId, untilDate } : undefined;
     })
     .filter(isNotUndefined);
-  if (eventItems.length === 0) return { responseCode: 400, comment: "消去するイベントが" };
+  if (eventItems.length === 0) return { responseCode: 400, comment: "消去するイベントの取得に失敗しました" };
 
   const detailedEventItems = eventItems.map(({ recurringEventId, untilDate }) => {
     const eventDetail = advancedCalendar.get(calendarId, recurringEventId);

@@ -170,13 +170,13 @@ const deleteRecurringEvent = (
       return { recurringEventId, startDate };
     })
     .filter(isNotUndefined);
+  if (eventItems.length === 0) return { responseCode: 400, comment: "イベントの消去に失敗しました" };
 
   const detailedEventItems = eventItems.map(({ recurringEventId, startDate }) => {
     const eventDetail = advancedCalendar.get(calendarId, recurringEventId);
 
     return { eventDetail, startDate, recurringEventId };
   });
-  if (detailedEventItems.length === 0) return { responseCode: 400, comment: "イベントの消去に失敗しました" };
 
   detailedEventItems.forEach(({ eventDetail, startDate, recurringEventId }) => {
     if (!eventDetail.start?.dateTime || !eventDetail.end?.dateTime) return;

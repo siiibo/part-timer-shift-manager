@@ -154,28 +154,28 @@ const deleteRecurringEvent = (
   const eventItems = dayOfWeeks
     .map((dayOfWeek) => {
       //NOTE: 仕様的にstartTimeの日付に最初の予定が指定されるため、指定された日付の後で一番近い指定曜日の日付に変更する
-      const startDate = getNextDayOfWeek(after, dayOfWeek);
+      const untilDate = getNextDayOfWeek(after, dayOfWeek);
       const events =
         advancedCalendar.list(calendarId, {
-          timeMin: startOfDay(startDate).toISOString(),
-          timeMax: endOfDay(startDate).toISOString(),
+          timeMin: startOfDay(untilDate).toISOString(),
+          timeMax: endOfDay(untilDate).toISOString(),
           singleEvents: true,
           orderBy: "startTime",
           maxResults: 1,
           q: userEmail,
         }).items ?? [];
       const recurringEventId = events[0]?.recurringEventId;
-      return recurringEventId ? { recurringEventId, startDate } : undefined;
+      return recurringEventId ? { recurringEventId, untilDate } : undefined;
     })
     .filter(isNotUndefined);
-  if (eventItems.length === 0) return { responseCode: 400, comment: "イベントの消去に失敗しました" };
+  if (eventItems.length === 0) return { responseCode: 400, comment: "消去するイベントが" };
 
-  const detailedEventItems = eventItems.map(({ recurringEventId, startDate }) => {
+  const detailedEventItems = eventItems.map(({ recurringEventId, untilDate }) => {
     const eventDetail = advancedCalendar.get(calendarId, recurringEventId);
-    return { eventDetail, startDate, recurringEventId };
+    return { eventDetail, untilDate, recurringEventId };
   });
 
-  detailedEventItems.forEach(({ eventDetail, startDate, recurringEventId }) => {
+  detailedEventItems.forEach(({ eventDetail, untilDate, recurringEventId }) => {
     if (!eventDetail.start?.dateTime || !eventDetail.end?.dateTime) return;
 
     const data = {
@@ -189,7 +189,7 @@ const deleteRecurringEvent = (
         dateTime: eventDetail.end.dateTime,
         timeZone: "Asia/Tokyo",
       },
-      recurrence: ["RRULE:FREQ=WEEKLY;UNTIL=" + format(startDate, "yyyyMMdd'T'HHmmss'Z'")],
+      recurrence: ["RRULE:FREQ=WEEKLY;UNTIL=" + format(untilDate, "yyyyMMdd'T'HHmmss'Z'")],
     };
     advancedCalendar.update(data, calendarId, recurringEventId);
   });

@@ -87,9 +87,8 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
     }
     case "deleteRecurringEvent": {
       const deletionRecurringEvents = DeletionRecurringEvent.parse(JSON.parse(e.parameter.recurringEventDeletion));
-      const dayOfWeeks = deletionRecurringEvents.dayOfWeeks;
-      const after = deletionRecurringEvents.after;
-      return JSON.stringify(deleteRecurringEvent(dayOfWeeks, after, userEmail));
+
+      return JSON.stringify(deleteRecurringEvent(deletionRecurringEvents, userEmail));
     }
   }
   return;
@@ -145,8 +144,7 @@ const registerRecurringEvent = (registrationRecurringEvents: RegistrationRecurri
 };
 
 const deleteRecurringEvent = (
-  dayOfWeeks: DayOfWeek[],
-  after: Date,
+  { dayOfWeeks, after }: DeletionRecurringEvent,
   userEmail: string,
 ): DeleteRecurringEventResponse => {
   const calendarId = getConfig().CALENDAR_ID;

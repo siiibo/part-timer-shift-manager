@@ -188,6 +188,7 @@ const deleteRecurringEvent = (
       return { recurringEventId, startDate, startTime, endTime, eventTitle };
     })
     .filter(isNotUndefined);
+  if (filteredEventDetails.length === 0) return { responseCode: 400, comment: "イベントの消去に失敗しました" };
 
   filteredEventDetails.forEach((event) => {
     const { recurringEventId, startDate, startTime, endTime, eventTitle } = event;
@@ -206,8 +207,6 @@ const deleteRecurringEvent = (
     };
     advancedCalendar.update(data, calendarId, recurringEventId);
   });
-
-  if (filteredEventDetails.length === 0) return { responseCode: 400, comment: "予定を消去することができませんでした" };
 
   return { responseCode: 200, comment: "イベントの消去が成功しました" };
 };

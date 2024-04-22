@@ -146,7 +146,7 @@ const deleteRecurringEvent = (
   deletionRecurringEvents: DeletionRecurringEvent,
   userEmail: string,
 ): DeleteRecurringEventResponse => {
-  const calendar = getCalendar();
+  const calendarId = getConfig().CALENDAR_ID;
   const advancedCalendar = Calendar.Events;
   if (advancedCalendar === undefined) return { responseCode: 400, comment: "カレンダーの取得に失敗しました" };
 
@@ -157,7 +157,7 @@ const deleteRecurringEvent = (
       //NOTE: 仕様的にstartTimeの日付に最初の予定が指定されるため、指定された日付の後で一番近い指定曜日の日付に変更する
       const startDate = getNextDayOfWeek(after, dayOfWeek);
       const events =
-        advancedCalendar.list(calendar.getId(), {
+        advancedCalendar.list(calendarId, {
           timeMin: startOfDay(startDate).toISOString(),
           timeMax: endOfDay(startDate).toISOString(),
           singleEvents: true,
@@ -174,7 +174,7 @@ const deleteRecurringEvent = (
 
   const detailedEventItems = eventItems.map((eventItem) => {
     const { recurringEventId, startDate } = eventItem;
-    const eventDetail = advancedCalendar.get(calendar.getId(), recurringEventId);
+    const eventDetail = advancedCalendar.get(calendarId, recurringEventId);
 
     return { eventDetail, startDate, recurringEventId };
   });
@@ -206,7 +206,7 @@ const deleteRecurringEvent = (
       },
       recurrence: ["RRULE:FREQ=WEEKLY;UNTIL=" + format(startDate, "yyyyMMdd'T'HHmmss'Z'")],
     };
-    const eventResult = advancedCalendar.update(data, calendar.getId(), recurringEventId);
+    const eventResult = advancedCalendar.update(data, calendarId, recurringEventId);
 
     return eventResult;
   });

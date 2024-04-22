@@ -165,8 +165,7 @@ const deleteRecurringEvent = (
           q: userEmail,
         }).items ?? [];
       const recurringEventId = events[0]?.recurringEventId;
-      if (!recurringEventId) return;
-      return { recurringEventId, startDate };
+      return recurringEventId ? { recurringEventId, startDate } : undefined;
     })
     .filter(isNotUndefined);
   if (eventItems.length === 0) return { responseCode: 400, comment: "イベントの消去に失敗しました" };

@@ -100,11 +100,9 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
       return JSON.stringify(deleteRecurringEvent(deletionRecurringEvents, userEmail));
     }
     case "modificationRecurringEvent": {
-      console.log(e.parameter.recurringEventModification);
       const modificationRecurringEvent = ModificationRecurringEvent.array().parse(
         JSON.parse(e.parameter.recurringEventModification),
       );
-      console.log(modificationRecurringEvent);
       const deletionRecurringEvents = modificationRecurringEvent.map(({ oldDayOfWeek }) => {
         return oldDayOfWeek;
       });
@@ -120,6 +118,7 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
         },
       );
       registerRecurringEvent(registrationRecurringEvents, userEmail);
+
       return JSON.stringify({ responseCode: 200, comment: "イベントの変更が成功しました" });
     }
   }

@@ -43,6 +43,16 @@ type DeleteRecurringEventResponse = {
   comment: string;
 };
 
+const ModificationRecurringEvent = z.object({
+  title: z.string(),
+  after: z.coerce.date(),
+  oldDayOfWeek: DayOfWeek,
+  newDayOfWeek: DayOfWeek,
+  startTime: z.coerce.date(),
+  endTime: z.coerce.date(),
+});
+type ModificationRecurringEvent = z.infer<typeof ModificationRecurringEvent>;
+
 const getCalendar = () => {
   const { CALENDAR_ID } = getConfig();
   const calendar = CalendarApp.getCalendarById(CALENDAR_ID);
@@ -78,7 +88,7 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
     }
     case "registerRecurringEvent": {
       const registrationRecurringEvents = RegistrationRecurringEvent.array().parse(
-        JSON.parse(e.parameter.recurringEventModification),
+        JSON.parse(e.parameter.recurringEventModification), //NOTE: ここのパラメータ違う
       );
 
       registerRecurringEvent(registrationRecurringEvents, userEmail);
@@ -88,6 +98,29 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
       const deletionRecurringEvents = DeletionRecurringEvent.parse(JSON.parse(e.parameter.recurringEventDeletion));
 
       return JSON.stringify(deleteRecurringEvent(deletionRecurringEvents, userEmail));
+    }
+    case "modificationRecurringEvent": {
+      console.log(e.parameter.recurringEventModification);
+      const modificationRecurringEvent = ModificationRecurringEvent.array().parse(
+        JSON.parse(e.parameter.recurringEventModification),
+      );
+      console.log(modificationRecurringEvent);
+      const deletionRecurringEvents = modificationRecurringEvent.map(({ oldDayOfWeek }) => {
+        return oldDayOfWeek;
+      });
+      const responseMessage = deleteRecurringEvent(
+        { after: modificationRecurringEvent[0].after, dayOfWeeks: deletionRecurringEvents },
+        userEmail,
+      );
+      if (responseMessage.responseCode !== 200) return JSON.stringify(responseMessage);
+
+      const registrationRecurringEvents = modificationRecurringEvent.map(
+        ({ newDayOfWeek, startTime, endTime, title }) => {
+          return RegistrationRecurringEvent.parse({ dayOfWeek: newDayOfWeek, startTime, endTime, title });
+        },
+      );
+      registerRecurringEvent(registrationRecurringEvents, userEmail);
+      return JSON.stringify({ responseCode: 200, comment: "イベントの変更が成功しました" });
     }
   }
   return;
@@ -259,7 +292,8 @@ const convertJapaneseToNumberDayOfWeek = (dayOfWeek: DayOfWeek) => {
   }
 };
 
-const getNextDayOfWeek = (date: Date, dayOfWeek: DayOfWeek): Date => {
+//NOTE: テスト用のコードに使用するためexportしている
+export const getNextDayOfWeek = (date: Date, dayOfWeek: DayOfWeek): Date => {
   const targetDayOfWeek = convertJapaneseToNumberDayOfWeek(dayOfWeek);
   const nextDate = nextDay(date, targetDayOfWeek);
 

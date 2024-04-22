@@ -10,7 +10,7 @@ import {
   setValuesModificationAndDeletionSheet,
 } from "./ModificationAndDeletionSheet";
 import { getRegistrationRows, insertRegistrationSheet, setValuesRegistrationSheet } from "./RegistrationSheet";
-import { EventInfo, shiftChanger } from "./shift-changer-api";
+import { EventInfo, getNextDayOfWeek, shiftChanger } from "./shift-changer-api";
 
 type SheetType = "registration" | "modificationAndDeletion";
 type OperationType = "registration" | "modificationAndDeletion" | "showEvents";
@@ -357,5 +357,32 @@ const createTitleFromEventInfo = (
   } else {
     const title = `【${workingStyle}】${job}${lastName}さん (休憩: ${restStartTime}~${restEndTime})`;
     return title;
+  }
+};
+
+//NOTE: test用のコード
+export const modificationTest = () => {
+  const oldDayOfWeek = "月曜日";
+  const newDayOfWeek = "火曜日";
+  const title = "test"; // 追加する際に使用
+  const after = new Date("2024-4-25"); // 消去する際に使用
+  const startTime = getNextDayOfWeek(after, newDayOfWeek).setHours(10, 0, 0, 0);
+  const endTime = getNextDayOfWeek(after, newDayOfWeek).setHours(19, 0, 0, 0);
+
+  const payload = {
+    apiId: "shift-changer",
+    operationType: "modificationRecurringEvent",
+    userEmail: "takuya.wada@siiibo.com",
+    recurringEventModification: JSON.stringify([{ title, after, oldDayOfWeek, newDayOfWeek, startTime, endTime }]),
+  };
+  const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
+    method: "post",
+    payload: payload,
+    muteHttpExceptions: true,
+  };
+  const { API_URL } = getConfig();
+  const response = UrlFetchApp.fetch(API_URL, options);
+  if (response.getResponseCode() !== 200) {
+    throw new Error(response.getContentText());
   }
 };

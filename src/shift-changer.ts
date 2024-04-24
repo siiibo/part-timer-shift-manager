@@ -13,7 +13,7 @@ import {
 import { getRegistrationRows, insertRegistrationSheet, setValuesRegistrationSheet } from "./RegistrationSheet";
 import { getRepeatScheduleModificationOrDeletionOrRegistration } from "./RepeatScheduleSheet";
 import { insertRepeatScheduleSheet } from "./RepeatScheduleSheet";
-import { EventInfo, RegistrationRecurringEvent, shiftChanger } from "./shift-changer-api";
+import { DeletionRecurringEvent, EventInfo, RegisterRecurringEventRequest, shiftChanger } from "./shift-changer-api";
 
 //TODO: APIで用いている型を用いる、今はAPIで用いている型をコピーしている
 const ModificationRecurringEvent = z.object({
@@ -37,12 +37,7 @@ const ModificationRecurringEvent = z.object({
 });
 type ModificationRecurringEvent = z.infer<typeof ModificationRecurringEvent>;
 
-const DeletionRecurringEvent = z.object({
-  date: z.date(),
-});
-type DeletionRecurringEvent = z.infer<typeof DeletionRecurringEvent>;
-
-type RecurringEventNotification = RegistrationRecurringEvent | ModificationRecurringEvent | DeletionRecurringEvent;
+type RecurringEventNotification = RegisterRecurringEventRequest | ModificationRecurringEvent | DeletionRecurringEvent;
 type SheetType = "registration" | "modificationAndDeletion" | "repeatSchedule";
 type OperationType = "registration" | "modificationAndDeletion" | "showEvents" | "repeatSchedule";
 export const doGet = () => {

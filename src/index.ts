@@ -5,7 +5,6 @@ import { insertRepeatScheduleSheet } from "./RepeatScheduleSheet";
 import {
   callModificationAndDeletion,
   callRegistration,
-  callRepeatSchedule,
   callShowEvents,
   doGet,
   doPost,
@@ -32,4 +31,3 @@ global.callModificationAndDeletion = callModificationAndDeletion;
 global.insertRegistrationSheet = insertRegistrationSheet;
 global.insertModificationAndDeletionSheet = insertModificationAndDeletionSheet;
 global.insertRepeatScheduleSheet = insertRepeatScheduleSheet;
-global.callRepeatSchedule = callRepeatSchedule;

@@ -37,14 +37,6 @@ const RegisterRecurringEventRequest = z.object({
 });
 type RegisterRecurringEventRequest = z.infer<typeof RegisterRecurringEventRequest>;
 
-const RegistrationRecurringEvent = z.object({
-  dayOfWeek: DayOfWeek,
-  title: z.string(),
-  startTime: z.coerce.date(),
-  endTime: z.coerce.date(),
-});
-type RegistrationRecurringEvent = z.infer<typeof RegistrationRecurringEvent>;
-
 const DeletionRecurringEvent = z.object({
   after: z.coerce.date(),
   dayOfWeeks: DayOfWeek.array(),
@@ -90,19 +82,9 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
       return JSON.stringify(eventInfos);
     }
     case "registerRecurringEvent": {
-      const registrationRecurringInfos = RegisterRecurringEventRequest.parse(
+      const registrationRecurringEvents = RegisterRecurringEventRequest.parse(
         JSON.parse(e.parameter.recurringEventModification),
       );
-      const after = registrationRecurringInfos.after;
-      const registrationRecurringEvents = registrationRecurringInfos.events.map(
-        ({ dayOfWeek, title, startTime, endTime }) => {
-          const nextDay = getNextDayOfWeek(after, dayOfWeek);
-          const nextStartTime = mergeTimeToDate(nextDay, startTime);
-          const nextEndTime = mergeTimeToDate(nextDay, endTime);
-          return { title, startTime: nextStartTime, endTime: nextEndTime, dayOfWeek };
-        },
-      );
-
       registerRecurringEvent(registrationRecurringEvents, userEmail);
       break;
     }
@@ -153,12 +135,18 @@ const modification = (
   modificationInfos.forEach((eventInfo) => modifyEvent(eventInfo, calendar, userEmail));
 };
 
-const registerRecurringEvent = (registrationRecurringEvents: RegistrationRecurringEvent[], userEmail: string) => {
+const registerRecurringEvent = (registerRecurringEventRequest: RegisterRecurringEventRequest, userEmail: string) => {
   const calendar = getCalendar();
-  registrationRecurringEvents.forEach((event) => {
-    const dayOfWeek = convertJapaneseToEnglishDayOfWeek(event.dayOfWeek);
-    const recurrence = CalendarApp.newRecurrence().addWeeklyRule().onlyOnWeekday(dayOfWeek);
-    calendar.createEventSeries(event.title, event.startTime, event.endTime, recurrence, {
+  const after = registerRecurringEventRequest.after;
+
+  registerRecurringEventRequest.events.forEach(({ title, startTime, endTime, dayOfWeek }) => {
+    const nextDate = getNextDayOfWeek(after, dayOfWeek);
+    const nextStartTime = mergeTimeToDate(nextDate, startTime);
+    const nextEndTime = mergeTimeToDate(nextDate, endTime);
+    const englishDayOfWeek = convertJapaneseToEnglishDayOfWeek(dayOfWeek);
+
+    const recurrence = CalendarApp.newRecurrence().addWeeklyRule().onlyOnWeekday(englishDayOfWeek);
+    calendar.createEventSeries(title, nextStartTime, nextEndTime, recurrence, {
       guests: userEmail,
     });
   });

@@ -1,4 +1,4 @@
-import { addWeeks, endOfDay, format, nextDay, startOfDay } from "date-fns";
+import { addWeeks, endOfDay, format, nextDay, set, startOfDay } from "date-fns";
 import { z } from "zod";
 
 import { getConfig } from "./config";
@@ -26,6 +26,7 @@ const ModificationInfo = z.object({
 
 const RegistrationRecurringEvent = z.object({
   dayOfWeek: DayOfWeek,
+  after: z.coerce.date(),
   title: z.string(),
   startTime: z.coerce.date(),
   endTime: z.coerce.date(),
@@ -80,11 +81,14 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
       const registrationRecurringInfos = RegistrationRecurringEvent.array().parse(
         JSON.parse(e.parameter.recurringEventModification),
       );
-      const registrationRecurringEvents = registrationRecurringInfos.map(({ title, startTime, endTime, dayOfWeek }) => {
-        const nextStartTime = getNextDayOfWeek(startTime, dayOfWeek);
-        const nextEndTime = getNextDayOfWeek(endTime, dayOfWeek);
-        return { title, startTime: nextStartTime, endTime: nextEndTime, dayOfWeek };
-      });
+      const registrationRecurringEvents = registrationRecurringInfos.map(
+        ({ title, after, startTime, endTime, dayOfWeek }) => {
+          const nextDay = getNextDayOfWeek(after, dayOfWeek);
+          const nextStartTime = mergeTimeToDate(nextDay, startTime);
+          const nextEndTime = mergeTimeToDate(nextDay, endTime);
+          return { title, after, startTime: nextStartTime, endTime: nextEndTime, dayOfWeek };
+        },
+      );
       registerRecurringEvent(registrationRecurringEvents, userEmail);
       break;
     }
@@ -272,4 +276,8 @@ const getNextDayOfWeek = (date: Date, dayOfWeek: DayOfWeek): Date => {
 
 const isNotUndefined = <T>(value: T | undefined): value is T => {
   return value !== undefined;
+};
+
+const mergeTimeToDate = (date: Date, time: Date): Date => {
+  return set(date, { hours: time.getHours(), minutes: time.getMinutes() });
 };

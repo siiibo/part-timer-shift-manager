@@ -23,10 +23,21 @@ const ModificationInfo = z.object({
   previousEventInfo: EventInfo,
   newEventInfo: EventInfo,
 });
+const RegisterRecurringEventRequest = z.object({
+  after: z.coerce.date(),
+  events: z
+    .object({
+      dayOfWeek: DayOfWeek,
+      title: z.string(),
+      startTime: z.coerce.date(),
+      endTime: z.coerce.date(),
+    })
+    .array(),
+});
+type RegisterRecurringEventRequest = z.infer<typeof RegisterRecurringEventRequest>;
 
 const RegistrationRecurringEvent = z.object({
   dayOfWeek: DayOfWeek,
-  after: z.coerce.date(),
   title: z.string(),
   startTime: z.coerce.date(),
   endTime: z.coerce.date(),
@@ -78,15 +89,16 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
       return JSON.stringify(eventInfos);
     }
     case "registerRecurringEvent": {
-      const registrationRecurringInfos = RegistrationRecurringEvent.array().parse(
+      const registrationRecurringInfos = RegisterRecurringEventRequest.parse(
         JSON.parse(e.parameter.recurringEventModification),
       );
-      const registrationRecurringEvents = registrationRecurringInfos.map(
-        ({ title, after, startTime, endTime, dayOfWeek }) => {
+      const after = registrationRecurringInfos.after;
+      const registrationRecurringEvents = registrationRecurringInfos.events.map(
+        ({ dayOfWeek, title, startTime, endTime }) => {
           const nextDay = getNextDayOfWeek(after, dayOfWeek);
           const nextStartTime = mergeTimeToDate(nextDay, startTime);
           const nextEndTime = mergeTimeToDate(nextDay, endTime);
-          return { title, after, startTime: nextStartTime, endTime: nextEndTime, dayOfWeek };
+          return { title, startTime: nextStartTime, endTime: nextEndTime, dayOfWeek };
         },
       );
       registerRecurringEvent(registrationRecurringEvents, userEmail);

@@ -87,7 +87,7 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
     }
     case "registerRecurringEvent": {
       const registrationRecurringEvents = RegistrationRecurringEvent.array().parse(
-        JSON.parse(e.parameter.recurringEventModification), //NOTE: ここのパラメータ違う
+        JSON.parse(e.parameter.recurringEventRegistration),
       );
 
       registerRecurringEvent(registrationRecurringEvents, userEmail);

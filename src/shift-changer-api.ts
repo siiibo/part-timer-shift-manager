@@ -105,6 +105,7 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
       const response = modificationRecurringEvent.map(({ title, after, dayOfWeek, startTime, endTime }) => {
         const response = deleteRecurringEvent({ dayOfWeeks: [dayOfWeek], after }, userEmail);
         if (response.responseCode !== 200) return;
+
         const registrationRecurringEvents = [{ dayOfWeek, title, startTime, endTime }];
         registerRecurringEvent(registrationRecurringEvents, userEmail);
         return response;

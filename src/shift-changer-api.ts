@@ -118,9 +118,10 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
           events: [{ title, startTime, endTime, dayOfWeek }],
         });
 
-        console.log(deleteRecurringEvent(deletionRecurringEvents, userEmail));
+        deleteRecurringEvent(deletionRecurringEvents, userEmail);
         registerRecurringEvent(registerRecurringEventRequest, userEmail);
       });
+      break;
     }
   }
   return;

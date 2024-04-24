@@ -77,10 +77,14 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
       return JSON.stringify(eventInfos);
     }
     case "registerRecurringEvent": {
-      const registrationRecurringEvents = RegistrationRecurringEvent.array().parse(
+      const registrationRecurringInfos = RegistrationRecurringEvent.array().parse(
         JSON.parse(e.parameter.recurringEventModification),
       );
-
+      const registrationRecurringEvents = registrationRecurringInfos.map(({ title, startTime, endTime, dayOfWeek }) => {
+        const nextStartTime = getNextDayOfWeek(startTime, dayOfWeek);
+        const nextEndTime = getNextDayOfWeek(endTime, dayOfWeek);
+        return { title, startTime: nextStartTime, endTime: nextEndTime, dayOfWeek };
+      });
       registerRecurringEvent(registrationRecurringEvents, userEmail);
       break;
     }

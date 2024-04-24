@@ -118,7 +118,7 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
           events: [{ title, startTime, endTime, dayOfWeek }],
         });
 
-        deleteRecurringEvent(deletionRecurringEvents, userEmail);
+        console.log(deleteRecurringEvent(deletionRecurringEvents, userEmail));
         registerRecurringEvent(registerRecurringEventRequest, userEmail);
       });
     }
@@ -296,7 +296,7 @@ const convertJapaneseToNumberDayOfWeek = (dayOfWeek: DayOfWeek) => {
   }
 };
 
-export const getNextDay = (date: Date, dayOfWeek: DayOfWeek): Date => {
+const getNextDay = (date: Date, dayOfWeek: DayOfWeek): Date => {
   const targetDayOfWeek = convertJapaneseToNumberDayOfWeek(dayOfWeek);
   const nextDate = nextDay(date, targetDayOfWeek);
 

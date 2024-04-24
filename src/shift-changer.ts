@@ -10,7 +10,7 @@ import {
   setValuesModificationAndDeletionSheet,
 } from "./ModificationAndDeletionSheet";
 import { getRegistrationRows, insertRegistrationSheet, setValuesRegistrationSheet } from "./RegistrationSheet";
-import { EventInfo, getNextDayOfWeek, shiftChanger } from "./shift-changer-api";
+import { EventInfo, getNextDay, shiftChanger } from "./shift-changer-api";
 
 type SheetType = "registration" | "modificationAndDeletion";
 type OperationType = "registration" | "modificationAndDeletion" | "showEvents";
@@ -365,8 +365,8 @@ export const modificationTest = () => {
   const dayOfWeek = "月曜日";
   const title = "test"; // 追加する際に使用
   const after = new Date("2024-4-25"); // 消去する際に使用
-  const startTime = getNextDayOfWeek(after, dayOfWeek).setHours(10, 0, 0, 0);
-  const endTime = getNextDayOfWeek(after, dayOfWeek).setHours(19, 0, 0, 0);
+  const startTime = getNextDay(after, dayOfWeek).setHours(10, 0, 0, 0);
+  const endTime = getNextDay(after, dayOfWeek).setHours(19, 0, 0, 0);
 
   const payload = {
     apiId: "shift-changer",

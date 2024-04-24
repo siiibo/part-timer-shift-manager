@@ -1,6 +1,5 @@
 import { GasWebClient as SlackClient } from "@hi-se/web-api";
 import { format } from "date-fns";
-import { z } from "zod";
 
 import { getConfig } from "./config";
 import { PartTimerProfile } from "./JobSheet";
@@ -13,31 +12,36 @@ import {
 import { getRegistrationRows, insertRegistrationSheet, setValuesRegistrationSheet } from "./RegistrationSheet";
 import { getRepeatScheduleModificationOrDeletionOrRegistration } from "./RepeatScheduleSheet";
 import { insertRepeatScheduleSheet } from "./RepeatScheduleSheet";
-import { DeletionRecurringEvent, EventInfo, RegisterRecurringEventRequest, shiftChanger } from "./shift-changer-api";
+import { EventInfo, shiftChanger } from "./shift-changer-api";
 
 //TODO: APIで用いている型を用いる、今はAPIで用いている型をコピーしている
-const ModificationRecurringEvent = z.object({
-  title: z.string(),
-  startDate: z.date(),
-  endDate: z.date(),
-  oldDayOfWeek: z
-    .literal("月曜日")
-    .or(z.literal("火曜日"))
-    .or(z.literal("水曜日"))
-    .or(z.literal("木曜日"))
-    .or(z.literal("金曜日")),
-  newDayOfWeek: z
-    .literal("月曜日")
-    .or(z.literal("火曜日"))
-    .or(z.literal("水曜日"))
-    .or(z.literal("木曜日"))
-    .or(z.literal("金曜日")),
-  startTime: z.date(),
-  endTime: z.date(),
-});
-type ModificationRecurringEvent = z.infer<typeof ModificationRecurringEvent>;
+// const RecurringEventNotification = z.object({
+//   after: z.date(),
+//   events: z
+//     .object({
+//       dayOfWeek: z
+//         .literal("月曜日")
+//         .or(z.literal("火曜日"))
+//         .or(z.literal("水曜日"))
+//         .or(z.literal("木曜日"))
+//         .or(z.literal("金曜日"))
+//         .optional(),
+//       dayOfWeeks: z
+//         .literal("月曜日")
+//         .or(z.literal("火曜日"))
+//         .or(z.literal("水曜日"))
+//         .or(z.literal("木曜日"))
+//         .or(z.literal("金曜日"))
+//         .array()
+//         .optional(),
+//       title: z.string().optional(),
+//       startTime: z.date().optional(),
+//       endTime: z.date().optional(),
+//     })
+//     .array(),
+// });
+// type RecurringEventNotification = z.infer<typeof RecurringEventNotification>;
 
-type RecurringEventNotification = RegisterRecurringEventRequest | ModificationRecurringEvent | DeletionRecurringEvent;
 type SheetType = "registration" | "modificationAndDeletion" | "repeatSchedule";
 type OperationType = "registration" | "modificationAndDeletion" | "showEvents" | "repeatSchedule";
 export const doGet = () => {
@@ -318,6 +322,7 @@ export const callRepeatSchedule = () => {
   const comment = sheet.getRange("A2").getValue();
   const { registrationRows, modificationRows, deletionRows } =
     getRepeatScheduleModificationOrDeletionOrRegistration(sheet);
+  const after = new Date(sheet.getRange("A5").getValue());
 
   const registrationInfos = registrationRows.map((registrationRow) => {
     const title = createTitleFromEventInfo(
@@ -346,18 +351,15 @@ export const callRepeatSchedule = () => {
     );
     return {
       title: title,
-      after: modificationRow.after,
       dayOfWeek: modificationRow.dayOfWeek,
       startTime: modificationRow.startTime,
       endTime: modificationRow.endTime,
     };
   });
 
-  const dayOfWeeks = deletionRows.map((deletionRow) => {
+  const deleteDayOfWeeks = deletionRows.map((deletionRow) => {
     return deletionRow.dayOfWeek;
   });
-
-  const deletionInfos = { after: deletionRows[0].after, dayOfWeeks: dayOfWeeks };
 
   const { API_URL, SLACK_CHANNEL_TO_POST } = getConfig();
   if (registrationInfos.length > 0) {
@@ -365,7 +367,7 @@ export const callRepeatSchedule = () => {
       apiId: "shift-changer",
       operationType: "registerRecurringEvent",
       userEmail: userEmail,
-      recurringEventModification: JSON.stringify(registrationInfos),
+      recurringEventModification: JSON.stringify({ after, events: registrationInfos }),
     };
     const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
       method: "post",
@@ -382,7 +384,7 @@ export const callRepeatSchedule = () => {
       apiId: "shift-changer",
       operationType: "modifyRecurringEvent",
       userEmail: userEmail,
-      modificationInfos: JSON.stringify(modificationInfos),
+      modificationInfos: JSON.stringify({ after, events: modificationInfos }),
     };
     const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
       method: "post",
@@ -394,12 +396,12 @@ export const callRepeatSchedule = () => {
       throw new Error(response.getContentText());
     }
   }
-  if (deletionInfos.dayOfWeeks.length > 0) {
+  if (deleteDayOfWeeks.length > 0) {
     const payload = {
       apiId: "shift-changer",
       operationType: "deleteRecurringEvent",
       userEmail: userEmail,
-      deletionInfos: JSON.stringify(deletionInfos),
+      deletionInfos: JSON.stringify({ after, dayOfWeeks: deleteDayOfWeeks }),
     };
     const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
       method: "post",
@@ -419,9 +421,9 @@ export const callRepeatSchedule = () => {
   const messageTitle = `${job}${lastName}さんの以下の繰り返し予定が変更されました`; //NOTE: ここに記述することで1回のみ通知される
   const repeatScheduleMessageToNotify = [
     `${messageTitle}`,
-    createRepeatScheduleMessage(registrationInfos, "registration"),
-    createRepeatScheduleMessage(modificationInfos, "modification"),
-    createRepeatScheduleMessage(deletionRows, "deletion"),
+    // createRepeatScheduleMessage({after,events:registrationInfos}, "registration"),
+    // createRepeatScheduleMessage({after,events:modificationInfos}, "modification"),
+    // createRepeatScheduleMessage({after,events:deleteDayOfWeeks}, "deletion"),//HACK: ここで型エラーが発生する
     comment ? `コメント: ${comment}` : undefined,
   ]
     .filter(Boolean)
@@ -520,41 +522,40 @@ const createTitleFromEventInfo = (
   }
 };
 //TODO: メッセージを作成する関数のエラーを解消する
-const createRepeatScheduleMessage = (
-  registrationRepeatScheduleRows: RecurringEventNotification[],
-  type: "registration" | "modification" | "deletion",
-): string => {
-  if (registrationRepeatScheduleRows.length === 0) return "";
-  const messageTitle = {
-    modification: "以下の繰り返し予定が変更されました",
-    registration: "以下の繰り返し予定が追加されました",
-    deletion: "以下の繰り返し予定が削除されました",
-  };
-  const messages = registrationRepeatScheduleRows.map((registrationRepeatScheduleRow) => {
-    if (type === "registration") {
-      //TODO: 一旦ここで型にparseしているがそのほかの案を検討する
-      const tmpRegistrationRepeatScheduleRow = RegistrationRecurringEvent.parse(registrationRepeatScheduleRow);
-      const startTime = format(tmpRegistrationRepeatScheduleRow.startTime ?? "", "HH:mm");
-      const endTime = format(tmpRegistrationRepeatScheduleRow.endTime ?? "", "HH:mm");
-      const dayOfWeek = tmpRegistrationRepeatScheduleRow.newDayOfWeek;
-      const selectMessageTitle = messageTitle[type];
-      const title = tmpRegistrationRepeatScheduleRow.title;
-      return `${selectMessageTitle}\n${dayOfWeek} : ${title} ${startTime}~${endTime}`;
-    } else if (type === "modification") {
-      const tmpModificationRepeatScheduleRow = ModificationRecurringEvent.parse(registrationRepeatScheduleRow);
-      const startTime = format(tmpModificationRepeatScheduleRow.startTime ?? "", "HH:mm");
-      const endTime = format(tmpModificationRepeatScheduleRow.endTime ?? "", "HH:mm");
-      const oldDayOfWeek = tmpModificationRepeatScheduleRow.oldDayOfWeek;
-      const newDayOfWeek = tmpModificationRepeatScheduleRow.newDayOfWeek;
-      const title = tmpModificationRepeatScheduleRow.title;
-      const selectMessageTitle = messageTitle[type];
-      return `${selectMessageTitle}\n${oldDayOfWeek} → ${newDayOfWeek} : ${title} ${startTime}~${endTime}`;
-    } else if (type === "deletion") {
-      const tmpDeleteRepeatScheduleRow = DeletionRecurringEvent.parse(registrationRepeatScheduleRow);
-      const dayOfWeek = tmpDeleteRepeatScheduleRow.date.getDay(); //TODO: ここで曜日を取得する方法を検討する
-      const selectMessageTitle = messageTitle[type];
-      return `${selectMessageTitle}\n${dayOfWeek}`;
-    }
-  });
-  return `${messages.join("\n")}`;
-};
+// const createRepeatScheduleMessage = (
+//   registrationRepeatScheduleRows: RecurringEventNotification,
+//   type: "registration" | "modification" | "deletion",
+// ): string => {
+//   const messageTitle = {
+//     modification: "以下の繰り返し予定が変更されました",
+//     registration: "以下の繰り返し予定が追加されました",
+//     deletion: "以下の繰り返し予定が削除されました",
+//   };
+//   const messages = registrationRepeatScheduleRows.events.map((registrationRepeatScheduleRow) => {
+//     if (type === "registration") {
+//       //TODO: 一旦ここで型にparseしているがそのほかの案を検討する
+//       const tmpRegistrationRepeatScheduleRow = RecurringEventNotification.parse(registrationRepeatScheduleRow);
+//       const startTime = format(tmpRegistrationRepeatScheduleRow.startTime ?? "", "HH:mm");
+//       const endTime = format(tmpRegistrationRepeatScheduleRow.endTime ?? "", "HH:mm");
+//       const dayOfWeek = tmpRegistrationRepeatScheduleRow.newDayOfWeek;
+//       const selectMessageTitle = messageTitle[type];
+//       const title = tmpRegistrationRepeatScheduleRow.title;
+//       return `${selectMessageTitle}\n${dayOfWeek} : ${title} ${startTime}~${endTime}`;
+//     } else if (type === "modification") {
+//       const tmpModificationRepeatScheduleRow = RecurringEventNotification.parse(registrationRepeatScheduleRow);
+//       const startTime = format(tmpModificationRepeatScheduleRow.startTime ?? "", "HH:mm");
+//       const endTime = format(tmpModificationRepeatScheduleRow.endTime ?? "", "HH:mm");
+//       const oldDayOfWeek = tmpModificationRepeatScheduleRow.oldDayOfWeek;
+//       const newDayOfWeek = tmpModificationRepeatScheduleRow.newDayOfWeek;
+//       const title = tmpModificationRepeatScheduleRow.title;
+//       const selectMessageTitle = messageTitle[type];
+//       return `${selectMessageTitle}\n${oldDayOfWeek} → ${newDayOfWeek} : ${title} ${startTime}~${endTime}`;
+//     } else if (type === "deletion") {
+//       const tmpDeleteRepeatScheduleRow = DeletionRecurringEvent.parse(registrationRepeatScheduleRow);
+//       const dayOfWeek = tmpDeleteRepeatScheduleRow.date.getDay(); //TODO: ここで曜日を取得する方法を検討する
+//       const selectMessageTitle = messageTitle[type];
+//       return `${selectMessageTitle}\n${dayOfWeek}`;
+//     }
+//   });
+//   return `${messages.join("\n")}`;
+// };

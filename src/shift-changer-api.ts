@@ -49,11 +49,15 @@ type DeleteRecurringEventResponse = {
 };
 
 const ModificationRecurringEvent = z.object({
-  title: z.string(),
   after: z.coerce.date(),
-  dayOfWeek: DayOfWeek,
-  startTime: z.coerce.date(),
-  endTime: z.coerce.date(),
+  events: z
+    .object({
+      title: z.string(),
+      dayOfWeek: DayOfWeek,
+      startTime: z.coerce.date(),
+      endTime: z.coerce.date(),
+    })
+    .array(),
 });
 type ModificationRecurringEvent = z.infer<typeof ModificationRecurringEvent>;
 
@@ -103,20 +107,20 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
       return JSON.stringify(deleteRecurringEvent(deletionRecurringEvents, userEmail));
     }
     case "modificationRecurringEvent": {
-      const modificationRecurringEvent = ModificationRecurringEvent.array().parse(
+      const modificationRecurringEvent = ModificationRecurringEvent.parse(
         JSON.parse(e.parameter.recurringEventModification),
       );
-      const response = modificationRecurringEvent.map(({ title, after, dayOfWeek, startTime, endTime }) => {
-        const response = deleteRecurringEvent({ dayOfWeeks: [dayOfWeek], after }, userEmail);
-        if (response.responseCode !== 200) return;
+      const after = modificationRecurringEvent.after;
+      modificationRecurringEvent.events.forEach(({ title, startTime, endTime, dayOfWeek }) => {
+        const deletionRecurringEvents = DeletionRecurringEvent.parse({ after, dayOfWeeks: [dayOfWeek] });
+        const registerRecurringEventRequest = RegisterRecurringEventRequest.parse({
+          after,
+          events: [{ title, startTime, endTime, dayOfWeek }],
+        });
 
-        const registrationRecurringEvents = [{ dayOfWeek, title, startTime, endTime }];
-        registerRecurringEvent(registrationRecurringEvents, userEmail);
-        return response;
+        deleteRecurringEvent(deletionRecurringEvents, userEmail);
+        registerRecurringEvent(registerRecurringEventRequest, userEmail);
       });
-      if (response.length === 0) return JSON.stringify({ responseCode: 400, comment: "イベントの変更が失敗しました" });
-
-      return JSON.stringify({ responseCode: 200, comment: "イベントの変更が成功しました" });
     }
   }
   return;

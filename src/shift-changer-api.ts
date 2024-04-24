@@ -23,6 +23,7 @@ const ModificationInfo = z.object({
   previousEventInfo: EventInfo,
   newEventInfo: EventInfo,
 });
+
 const RegisterRecurringEventRequest = z.object({
   after: z.coerce.date(),
   events: z
@@ -101,6 +102,7 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
           return { title, startTime: nextStartTime, endTime: nextEndTime, dayOfWeek };
         },
       );
+
       registerRecurringEvent(registrationRecurringEvents, userEmail);
       break;
     }

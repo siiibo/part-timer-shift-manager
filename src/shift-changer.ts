@@ -371,9 +371,10 @@ export const testRegisterRecurringEvent = () => {
     apiId: "shift-changer",
     operationType: "registerRecurringEvent",
     userEmail: "takuya.wada@siiibo.com",
-    recurringEventModification: JSON.stringify([
-      { after, dayOfWeek: dayOfWeek, title: title, startTime: startTime, endTime: endTime },
-    ]),
+    recurringEventRegistration: JSON.stringify({
+      after,
+      events: [{ dayOfWeek: dayOfWeek, title: title, startTime: startTime, endTime: endTime }],
+    }),
   };
   const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
     method: "post",

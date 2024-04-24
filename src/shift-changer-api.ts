@@ -82,10 +82,10 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
       return JSON.stringify(eventInfos);
     }
     case "registerRecurringEvent": {
-      const registrationRecurringEvents = RegisterRecurringEventRequest.parse(
-        JSON.parse(e.parameter.recurringEventModification),
+      const registerRecurringEventRequest = RegisterRecurringEventRequest.parse(
+        JSON.parse(e.parameter.recurringEventRegistration),
       );
-      registerRecurringEvent(registrationRecurringEvents, userEmail);
+      registerRecurringEvent(registerRecurringEventRequest, userEmail);
       break;
     }
     case "deleteRecurringEvent": {
@@ -135,11 +135,9 @@ const modification = (
   modificationInfos.forEach((eventInfo) => modifyEvent(eventInfo, calendar, userEmail));
 };
 
-const registerRecurringEvent = (registerRecurringEventRequest: RegisterRecurringEventRequest, userEmail: string) => {
+const registerRecurringEvent = ({ after, events }: RegisterRecurringEventRequest, userEmail: string) => {
   const calendar = getCalendar();
-  const after = registerRecurringEventRequest.after;
-
-  registerRecurringEventRequest.events.forEach(({ title, startTime, endTime, dayOfWeek }) => {
+  events.forEach(({ title, startTime, endTime, dayOfWeek }) => {
     const nextDate = getNextDayOfWeek(after, dayOfWeek);
     const nextStartTime = mergeTimeToDate(nextDate, startTime);
     const nextEndTime = mergeTimeToDate(nextDate, endTime);

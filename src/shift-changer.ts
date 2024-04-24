@@ -363,14 +363,16 @@ const createTitleFromEventInfo = (
 export const testRegisterRecurringEvent = () => {
   const dayOfWeek = "金曜日";
   const title = "test";
+  const after = new Date("2024-04-25");
   const startTime = new Date();
-  const endTime = new Date().setHours(20, 0, 0, 0);
+  const endTime = new Date(new Date().setHours(18));
+  console.log(startTime, endTime);
   const payload = {
     apiId: "shift-changer",
     operationType: "registerRecurringEvent",
     userEmail: "takuya.wada@siiibo.com",
     recurringEventModification: JSON.stringify([
-      { dayOfWeek: dayOfWeek, title: title, startTime: startTime, endTime: endTime },
+      { after, dayOfWeek: dayOfWeek, title: title, startTime: startTime, endTime: endTime },
     ]),
   };
   const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {

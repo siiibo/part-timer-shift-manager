@@ -138,13 +138,13 @@ const modification = (
 const registerRecurringEvent = ({ after, events }: RegisterRecurringEventRequest, userEmail: string) => {
   const calendar = getCalendar();
   events.forEach(({ title, startTime, endTime, dayOfWeek }) => {
-    const nextDay = getNextDay(after, dayOfWeek);
-    const recurrenceStartDate = mergeTimeToDate(nextDay, startTime);
-    const recurrenceEndDate = mergeTimeToDate(nextDay, endTime);
+    const recurrenceStartDate = getNextDay(after, dayOfWeek);
+    const eventStartTime = mergeTimeToDate(recurrenceStartDate, startTime);
+    const eventEndTime = mergeTimeToDate(recurrenceStartDate, endTime);
     const englishDayOfWeek = convertJapaneseToEnglishDayOfWeek(dayOfWeek);
 
     const recurrence = CalendarApp.newRecurrence().addWeeklyRule().onlyOnWeekday(englishDayOfWeek);
-    calendar.createEventSeries(title, recurrenceStartDate, recurrenceEndDate, recurrence, {
+    calendar.createEventSeries(title, eventStartTime, eventEndTime, recurrence, {
       guests: userEmail,
     });
   });

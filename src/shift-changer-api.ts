@@ -233,7 +233,7 @@ const modifyRecurringEvent = (modificationRecurringEvent: ModificationRecurringE
   const after = modificationRecurringEvent.after;
   const deleteDayOfWeeks = modificationRecurringEvent.events.map(({ dayOfWeek }) => dayOfWeek);
   const deletionRecurringEvents = DeletionRecurringEvent.parse({ after, dayOfWeeks: deleteDayOfWeeks });
-  const registerRecurringEvent = modificationRecurringEvent.events.map(({ title, startTime, endTime, dayOfWeek }) => ({
+  const registerRecurringEvents = modificationRecurringEvent.events.map(({ title, startTime, endTime, dayOfWeek }) => ({
     title,
     startTime,
     endTime,
@@ -241,14 +241,14 @@ const modifyRecurringEvent = (modificationRecurringEvent: ModificationRecurringE
   }));
   const registerRecurringEventRequest = RegisterRecurringEventRequest.parse({
     after,
-    events: registerRecurringEvent,
+    events: registerRecurringEvents,
   });
 
   //NOTE: 繰り返し予定を消去する機能
   const dayOfWeeks = deletionRecurringEvents.dayOfWeeks;
   const eventItems = dayOfWeeks
     .map((dayOfWeek) => {
-      //NOTE: 仕様的にstartTimeの日付に最初の予定が指定されるため、指定された日付の後で一番近い指定曜日の日付に変更する
+      //NOTE: 仕様的にstartTimeの日付に最初の予定が指定されるため、指定された日付の前で一番近い指定曜日の日付に変更する
       const untilDate = getPreviousDay(after, dayOfWeek);
       const events =
         advancedCalendar.list(calendarId, {

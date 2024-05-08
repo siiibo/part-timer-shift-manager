@@ -17,6 +17,7 @@
     "date-fns": "^3.2.0",
     "husky": "^9.0.6",
     "lint-staged": "^15.2.0",
+    "rrule": "^2.8.1",
     "zod": "^3.22.4"
   },
   "devDependencies": {

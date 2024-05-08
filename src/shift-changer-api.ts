@@ -1,4 +1,4 @@
-import { addWeeks, endOfDay, format, nextDay, set, startOfDay } from "date-fns";
+import { addWeeks, endOfDay, format, nextDay, previousDay, set, startOfDay } from "date-fns";
 import { z } from "zod";
 
 import { getConfig } from "./config";
@@ -161,7 +161,7 @@ const deleteRecurringEvent = (
   const eventItems = dayOfWeeks
     .map((dayOfWeek) => {
       //NOTE: 仕様的にstartTimeの日付に最初の予定が指定されるため、指定された日付の後で一番近い指定曜日の日付に変更する
-      const untilDate = getNextDay(after, dayOfWeek);
+      const untilDate = getPreviousDay(after, dayOfWeek);
       const events =
         advancedCalendar.list(calendarId, {
           timeMin: startOfDay(untilDate).toISOString(),
@@ -272,6 +272,13 @@ const getNextDay = (date: Date, dayOfWeek: DayOfWeek): Date => {
   const nextDate = nextDay(date, targetDayOfWeek);
 
   return nextDate;
+};
+
+const getPreviousDay = (date: Date, dayOfWeek: DayOfWeek): Date => {
+  const targetDayOfWeek = convertJapaneseToNumberDayOfWeek(dayOfWeek);
+  const previousDate = previousDay(date, targetDayOfWeek);
+
+  return previousDate;
 };
 
 const isNotUndefined = <T>(value: T | undefined): value is T => {

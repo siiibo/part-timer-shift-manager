@@ -385,4 +385,5 @@ export const modificationTest = () => {
   if (response.getResponseCode() !== 200) {
     throw new Error(response.getContentText());
   }
+  console.log(response.getContentText());
 };

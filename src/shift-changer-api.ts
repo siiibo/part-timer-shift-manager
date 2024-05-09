@@ -110,8 +110,7 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
       const modificationRecurringEvent = ModificationRecurringEvent.parse(
         JSON.parse(e.parameter.recurringEventModification),
       );
-      modifyRecurringEvent(modificationRecurringEvent, userEmail);
-      break;
+      return JSON.stringify(modifyRecurringEvent(modificationRecurringEvent, userEmail));
     }
   }
   return;
@@ -303,6 +302,7 @@ const modifyRecurringEvent = (modificationRecurringEvent: ModificationRecurringE
       guests: userEmail,
     });
   });
+  return { responseCode: 200, comment: "イベントの変更が成功しました" };
 };
 
 const modifyEvent = (

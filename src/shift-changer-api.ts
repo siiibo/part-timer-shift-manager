@@ -205,7 +205,7 @@ const deleteRecurringEvent = (
   detailedEventItems.forEach(({ eventDetail, untilDate, recurringEventId }) => {
     if (!eventDetail.start?.dateTime || !eventDetail.end?.dateTime) return;
     const untilTime = mergeTimeToDate(untilDate, new Date(eventDetail.start.dateTime));
-    const untilTimeUTC = subHours(untilTime, 9);
+    const untilTimeUTC = convertJPToUTC(untilTime);
     const data = {
       summary: eventDetail.summary,
       attendees: [{ email: userEmail }],
@@ -274,7 +274,7 @@ const modifyRecurringEvent = (modificationRecurringEvent: ModificationRecurringE
   detailedEventItems.forEach(({ eventDetail, untilDate, recurringEventId }) => {
     if (!eventDetail.start?.dateTime || !eventDetail.end?.dateTime) return;
     const untilTime = mergeTimeToDate(untilDate, new Date(eventDetail.start.dateTime));
-    const untilTimeUTC = subHours(untilTime, 9);
+    const untilTimeUTC = convertJPToUTC(untilTime);
     const data = {
       summary: eventDetail.summary,
       attendees: [{ email: userEmail }],
@@ -388,4 +388,8 @@ const isNotUndefined = <T>(value: T | undefined): value is T => {
 
 const mergeTimeToDate = (date: Date, time: Date): Date => {
   return set(date, { hours: time.getHours(), minutes: time.getMinutes() });
+};
+
+const convertJPToUTC = (date: Date): Date => {
+  return subHours(date, 9);
 };

@@ -364,7 +364,7 @@ const createTitleFromEventInfo = (
 export const modificationTest = () => {
   const dayOfWeek = "月曜日";
   const title = "test"; // 追加する際に使用
-  const after = new Date("2024-4-25"); // 消去する際に使用
+  const after = new Date("2024-4-26"); // 消去する際に使用
   const startTime = new Date();
   const endTime = new Date(new Date().setHours(20));
   const request = { after, events: [{ title, dayOfWeek, startTime, endTime }] };

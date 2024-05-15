@@ -239,30 +239,30 @@ const modifyRecurringEvent = (modificationRecurringEvent: ModificationRecurringE
   const eventItems = dayOfWeeks
     .map((dayOfWeek) => {
       //NOTE: 仕様的にstartTimeの日付に最初の予定が指定されるため、指定された日付の前で一番近い指定曜日の日付に変更する
-      const untilDate = getRecurrenceEndDate(after, dayOfWeek);
+      const recurrenceEndDate = getRecurrenceEndDate(after, dayOfWeek);
       const events =
         advancedCalendar.list(calendarId, {
-          timeMin: startOfDay(untilDate).toISOString(),
-          timeMax: endOfDay(untilDate).toISOString(),
+          timeMin: startOfDay(recurrenceEndDate).toISOString(),
+          timeMax: endOfDay(recurrenceEndDate).toISOString(),
           singleEvents: true,
           orderBy: "startTime",
           maxResults: 1,
           q: userEmail,
         }).items ?? [];
       const recurringEventId = events[0]?.recurringEventId;
-      return recurringEventId ? { recurringEventId, untilDate } : undefined;
+      return recurringEventId ? { recurringEventId, recurrenceEndDate } : undefined;
     })
     .filter(isNotUndefined);
   if (eventItems.length === 0) return { responseCode: 400, comment: "消去するイベントの取得に失敗しました" };
 
-  const detailedEventItems = eventItems.map(({ recurringEventId, untilDate }) => {
+  const detailedEventItems = eventItems.map(({ recurringEventId, recurrenceEndDate }) => {
     const eventDetail = advancedCalendar.get(calendarId, recurringEventId);
-    return { eventDetail, untilDate, recurringEventId };
+    return { eventDetail, recurrenceEndDate, recurringEventId };
   });
 
-  detailedEventItems.forEach(({ eventDetail, untilDate, recurringEventId }) => {
+  detailedEventItems.forEach(({ eventDetail, recurrenceEndDate, recurringEventId }) => {
     if (!eventDetail.start?.dateTime || !eventDetail.end?.dateTime) return;
-    const untilTimeUTC = getEndOfDayFormattedAsUTCISO(untilDate);
+    const untilTimeUTC = getEndOfDayFormattedAsUTCISO(recurrenceEndDate);
 
     const data = {
       summary: eventDetail.summary,

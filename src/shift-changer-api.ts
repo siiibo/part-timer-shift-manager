@@ -185,7 +185,7 @@ const deleteRecurringEvent = (
   detailedEventItems.forEach(({ eventDetail, untilDate, recurringEventId }) => {
     if (!eventDetail.start?.dateTime || !eventDetail.end?.dateTime) return;
     const untilTime = mergeTimeToDate(untilDate, new Date(eventDetail.start.dateTime));
-    const untilTimeUTC = convertJSPToUTC(untilTime);
+    const untilTimeUTC = convertJSTToUTC(untilTime);
 
     const data = {
       summary: eventDetail.summary,
@@ -291,7 +291,7 @@ const mergeTimeToDate = (date: Date, time: Date): Date => {
   return set(date, { hours: time.getHours(), minutes: time.getMinutes() });
 };
 
-const convertJSPToUTC = (date: Date): string => {
+const convertJSTToUTC = (date: Date): string => {
   const UTCTime = subHours(date, 9);
   return UTCTime.toISOString();
 };

@@ -138,7 +138,7 @@ const modification = (
 const registerRecurringEvent = ({ after, events }: RegisterRecurringEventRequest, userEmail: string) => {
   const calendar = getCalendar();
   events.forEach(({ title, startTime, endTime, dayOfWeek }) => {
-    const recurrenceStartDate = getNextDay(after, dayOfWeek);
+    const recurrenceStartDate = getRecurrenceStartDate(after, dayOfWeek);
     const eventStartTime = mergeTimeToDate(recurrenceStartDate, startTime);
     const eventEndTime = mergeTimeToDate(recurrenceStartDate, endTime);
     const englishDayOfWeek = convertJapaneseToEnglishDayOfWeek(dayOfWeek);
@@ -268,10 +268,9 @@ const convertJapaneseToNumberDayOfWeek = (dayOfWeek: DayOfWeek) => {
   }
 };
 
-const getNextDay = (date: Date, dayOfWeek: DayOfWeek): Date => {
+const getRecurrenceStartDate = (date: Date, dayOfWeek: DayOfWeek): Date => {
   const targetDayOfWeek = convertJapaneseToNumberDayOfWeek(dayOfWeek);
   if (date.getDay() === targetDayOfWeek) return date;
-
   const nextDate = nextDay(date, targetDayOfWeek);
 
   return nextDate;

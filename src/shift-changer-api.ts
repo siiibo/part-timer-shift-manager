@@ -161,7 +161,7 @@ const deleteRecurringEvent = (
   const eventItems = dayOfWeeks
     .map((dayOfWeek) => {
       //NOTE: 仕様的にstartTimeの日付に最初の予定が指定されるため、指定された日付の後で一番近い指定曜日の日付に変更する
-      const untilDate = getPreviousRecurrenceStartDay(after, dayOfWeek);
+      const untilDate = getRecurrenceEndDate(after, dayOfWeek);
       const events =
         advancedCalendar.list(calendarId, {
           timeMin: startOfDay(untilDate).toISOString(),
@@ -277,7 +277,7 @@ const getRecurrenceStartDate = (date: Date, dayOfWeek: DayOfWeek): Date => {
   return nextDate;
 };
 
-const getPreviousRecurrenceStartDay = (date: Date, dayOfWeek: DayOfWeek): Date => {
+const getRecurrenceEndDate = (date: Date, dayOfWeek: DayOfWeek): Date => {
   const targetDayOfWeek = convertJapaneseToNumberDayOfWeek(dayOfWeek);
   const previousDate = previousDay(date, targetDayOfWeek);
 

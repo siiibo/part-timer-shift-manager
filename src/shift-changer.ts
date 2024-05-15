@@ -9,9 +9,9 @@ import {
   insertModificationAndDeletionSheet,
   setValuesModificationAndDeletionSheet,
 } from "./ModificationAndDeletionSheet";
+import { getRecurringEventModificationOrDeletionOrRegistration } from "./RecurringEventSheet";
+import { insertRecurringEventSheet } from "./RecurringEventSheet";
 import { getRegistrationRows, insertRegistrationSheet, setValuesRegistrationSheet } from "./RegistrationSheet";
-import { getRepeatScheduleModificationOrDeletionOrRegistration } from "./RepeatScheduleSheet";
-import { insertRepeatScheduleSheet } from "./RepeatScheduleSheet";
 import { EventInfo, shiftChanger } from "./shift-changer-api";
 
 //TODO: APIで用いている型を用いる、今はAPIで用いている型をコピーしている
@@ -42,8 +42,8 @@ import { EventInfo, shiftChanger } from "./shift-changer-api";
 // });
 // type RecurringEventNotification = z.infer<typeof RecurringEventNotification>;
 
-type SheetType = "registration" | "modificationAndDeletion" | "repeatSchedule";
-type OperationType = "registration" | "modificationAndDeletion" | "showEvents" | "repeatSchedule";
+type SheetType = "registration" | "modificationAndDeletion" | "recurringEvent";
+type OperationType = "registration" | "modificationAndDeletion" | "showEvents" | "recurringEvent";
 export const doGet = () => {
   return ContentService.createTextOutput("ok");
 };
@@ -93,9 +93,9 @@ const createMenu = (ui: GoogleAppsScript.Base.Ui, menu: GoogleAppsScript.Base.Me
     .addSubMenu(
       ui
         .createMenu("固定シフト変更")
-        .addItem("シートの追加", insertRepeatScheduleSheet.name)
+        .addItem("シートの追加", insertRecurringEventSheet.name)
         .addSeparator()
-        .addItem("提出", callRepeatSchedule.name),
+        .addItem("提出", callRecurringEvent.name),
     )
     .addToUi();
 };
@@ -307,7 +307,7 @@ const createDeletionMessage = (deletionInfos: EventInfo[], partTimerProfile: Par
   return `${messageTitle}\n${messages.join("\n")}`;
 };
 
-export const callRepeatSchedule = () => {
+export const callRecurringEvent = () => {
   const lock = LockService.getUserLock();
   if (!lock.tryLock(0)) {
     throw new Error("すでに処理を実行中です。そのままお待ちください");
@@ -317,11 +317,11 @@ export const callRepeatSchedule = () => {
   const { SLACK_ACCESS_TOKEN } = getConfig();
   const client = getSlackClient(SLACK_ACCESS_TOKEN);
   const partTimerProfile = getPartTimerProfile(userEmail);
-  const sheetType: SheetType = "repeatSchedule";
+  const sheetType: SheetType = "recurringEvent";
   const sheet = getSheet(sheetType, spreadsheetUrl);
   const comment = sheet.getRange("A2").getValue();
   const { registrationRows, modificationRows, deletionRows } =
-    getRepeatScheduleModificationOrDeletionOrRegistration(sheet);
+    getRecurringEventModificationOrDeletionOrRegistration(sheet);
   const after = new Date(sheet.getRange("A5").getValue());
 
   const registrationInfos = registrationRows.map((registrationRow) => {
@@ -419,17 +419,17 @@ export const callRepeatSchedule = () => {
   }
   const { job, lastName } = partTimerProfile;
   const messageTitle = `${job}${lastName}さんの以下の繰り返し予定が変更されました`; //NOTE: ここに記述することで1回のみ通知される
-  const repeatScheduleMessageToNotify = [
+  const RecurringEventMessageToNotify = [
     `${messageTitle}`,
-    // createRepeatScheduleMessage({after,events:registrationInfos}, "registration"),
-    // createRepeatScheduleMessage({after,events:modificationInfos}, "modification"),
-    // createRepeatScheduleMessage({after,events:deleteDayOfWeeks}, "deletion"),//HACK: ここで型エラーが発生する
+    // createRecurringEventMessage({after,events:registrationInfos}, "registration"),
+    // createRecurringEventMessage({after,events:modificationInfos}, "modification"),
+    // createRecurringEventMessage({after,events:deleteDayOfWeeks}, "deletion"),//HACK: ここで型エラーが発生する
     comment ? `コメント: ${comment}` : undefined,
   ]
     .filter(Boolean)
     .join("\n---\n");
 
-  postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, repeatScheduleMessageToNotify, partTimerProfile);
+  postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, RecurringEventMessageToNotify, partTimerProfile);
 };
 
 const getSlackClient = (slackToken: string): SlackClient => {
@@ -522,8 +522,8 @@ const createTitleFromEventInfo = (
   }
 };
 //TODO: メッセージを作成する関数のエラーを解消する
-// const createRepeatScheduleMessage = (
-//   registrationRepeatScheduleRows: RecurringEventNotification,
+// const createRecurringEventMessage = (
+//   registrationRecurringEventRows: RecurringEventNotification,
 //   type: "registration" | "modification" | "deletion",
 // ): string => {
 //   const messageTitle = {
@@ -531,28 +531,28 @@ const createTitleFromEventInfo = (
 //     registration: "以下の繰り返し予定が追加されました",
 //     deletion: "以下の繰り返し予定が削除されました",
 //   };
-//   const messages = registrationRepeatScheduleRows.events.map((registrationRepeatScheduleRow) => {
+//   const messages = registrationRecurringEventRows.events.map((registrationRecurringEventRow) => {
 //     if (type === "registration") {
 //       //TODO: 一旦ここで型にparseしているがそのほかの案を検討する
-//       const tmpRegistrationRepeatScheduleRow = RecurringEventNotification.parse(registrationRepeatScheduleRow);
-//       const startTime = format(tmpRegistrationRepeatScheduleRow.startTime ?? "", "HH:mm");
-//       const endTime = format(tmpRegistrationRepeatScheduleRow.endTime ?? "", "HH:mm");
-//       const dayOfWeek = tmpRegistrationRepeatScheduleRow.newDayOfWeek;
+//       const tmpRegistrationRecurringEventRow = RecurringEventNotification.parse(registrationRecurringEventRow);
+//       const startTime = format(tmpRegistrationRecurringEventRow.startTime ?? "", "HH:mm");
+//       const endTime = format(tmpRegistrationRecurringEventRow.endTime ?? "", "HH:mm");
+//       const dayOfWeek = tmpRegistrationRecurringEventRow.newDayOfWeek;
 //       const selectMessageTitle = messageTitle[type];
-//       const title = tmpRegistrationRepeatScheduleRow.title;
+//       const title = tmpRegistrationRecurringEventRow.title;
 //       return `${selectMessageTitle}\n${dayOfWeek} : ${title} ${startTime}~${endTime}`;
 //     } else if (type === "modification") {
-//       const tmpModificationRepeatScheduleRow = RecurringEventNotification.parse(registrationRepeatScheduleRow);
-//       const startTime = format(tmpModificationRepeatScheduleRow.startTime ?? "", "HH:mm");
-//       const endTime = format(tmpModificationRepeatScheduleRow.endTime ?? "", "HH:mm");
-//       const oldDayOfWeek = tmpModificationRepeatScheduleRow.oldDayOfWeek;
-//       const newDayOfWeek = tmpModificationRepeatScheduleRow.newDayOfWeek;
-//       const title = tmpModificationRepeatScheduleRow.title;
+//       const tmpModificationRecurringEventRow = RecurringEventNotification.parse(registrationRecurringEventRow);
+//       const startTime = format(tmpModificationRecurringEventRow.startTime ?? "", "HH:mm");
+//       const endTime = format(tmpModificationRecurringEventRow.endTime ?? "", "HH:mm");
+//       const oldDayOfWeek = tmpModificationRecurringEventRow.oldDayOfWeek;
+//       const newDayOfWeek = tmpModificationRecurringEventRow.newDayOfWeek;
+//       const title = tmpModificationRecurringEventRow.title;
 //       const selectMessageTitle = messageTitle[type];
 //       return `${selectMessageTitle}\n${oldDayOfWeek} → ${newDayOfWeek} : ${title} ${startTime}~${endTime}`;
 //     } else if (type === "deletion") {
-//       const tmpDeleteRepeatScheduleRow = DeletionRecurringEvent.parse(registrationRepeatScheduleRow);
-//       const dayOfWeek = tmpDeleteRepeatScheduleRow.date.getDay(); //TODO: ここで曜日を取得する方法を検討する
+//       const tmpDeleteRecurringEventRow = DeletionRecurringEvent.parse(registrationRecurringEventRow);
+//       const dayOfWeek = tmpDeleteRecurringEventRow.date.getDay(); //TODO: ここで曜日を取得する方法を検討する
 //       const selectMessageTitle = messageTitle[type];
 //       return `${selectMessageTitle}\n${dayOfWeek}`;
 //     }

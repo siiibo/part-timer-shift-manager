@@ -1,11 +1,11 @@
 import { insertModificationAndDeletionSheet } from "./ModificationAndDeletionSheet";
 import { initNotifyDailyShift, notifyDailyShift } from "./notify-daily-shift";
+import { insertRecurringEventSheet } from "./RecurringEventSheet";
 import { insertRegistrationSheet } from "./RegistrationSheet";
-import { insertRepeatScheduleSheet } from "./RepeatScheduleSheet";
 import {
   callModificationAndDeletion,
+  callRecurringEvent,
   callRegistration,
-  callRepeatSchedule,
   callShowEvents,
   doGet,
   doPost,
@@ -31,5 +31,5 @@ global.callShowEvents = callShowEvents;
 global.callModificationAndDeletion = callModificationAndDeletion;
 global.insertRegistrationSheet = insertRegistrationSheet;
 global.insertModificationAndDeletionSheet = insertModificationAndDeletionSheet;
-global.insertRepeatScheduleSheet = insertRepeatScheduleSheet;
-global.callRepeatSchedule = callRepeatSchedule;
+global.insertRecurringEventSheet = insertRecurringEventSheet;
+global.callRecurringEvent = callRecurringEvent;

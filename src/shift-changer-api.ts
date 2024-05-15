@@ -1,4 +1,4 @@
-import { addWeeks, endOfDay, format, nextDay, previousDay, set, startOfDay } from "date-fns";
+import { addWeeks, endOfDay, format, nextDay, previousDay, set, startOfDay, subHours } from "date-fns";
 import { z } from "zod";
 
 import { getConfig } from "./config";
@@ -184,6 +184,7 @@ const deleteRecurringEvent = (
 
   detailedEventItems.forEach(({ eventDetail, untilDate, recurringEventId }) => {
     if (!eventDetail.start?.dateTime || !eventDetail.end?.dateTime) return;
+    const untilTimeUTC = getEndOfDayFormattedAsUTCISO(untilDate);
 
     const data = {
       summary: eventDetail.summary,
@@ -196,7 +197,7 @@ const deleteRecurringEvent = (
         dateTime: eventDetail.end.dateTime,
         timeZone: "Asia/Tokyo",
       },
-      recurrence: ["RRULE:FREQ=WEEKLY;UNTIL=" + format(untilDate, "yyyyMMdd'T'HHmmss'Z'")],
+      recurrence: ["RRULE:FREQ=WEEKLY;UNTIL=" + untilTimeUTC],
     };
     advancedCalendar.update(data, calendarId, recurringEventId);
   });
@@ -287,4 +288,10 @@ const isNotUndefined = <T>(value: T | undefined): value is T => {
 
 const mergeTimeToDate = (date: Date, time: Date): Date => {
   return set(date, { hours: time.getHours(), minutes: time.getMinutes() });
+};
+
+const getEndOfDayFormattedAsUTCISO = (date: Date): string => {
+  const endTime = endOfDay(date);
+  const UTCTime = subHours(endTime, 9);
+  return format(UTCTime, "yyyyMMdd'T'HHmmss'Z'");
 };

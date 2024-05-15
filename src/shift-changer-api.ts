@@ -268,11 +268,10 @@ const convertJapaneseToNumberDayOfWeek = (dayOfWeek: DayOfWeek) => {
   }
 };
 
-const getRecurrenceStartDate = (date: Date, dayOfWeek: DayOfWeek): Date => {
+const getRecurrenceStartDate = (after: Date, dayOfWeek: DayOfWeek): Date => {
   const targetDayOfWeek = convertJapaneseToNumberDayOfWeek(dayOfWeek);
-  // 指定した曜日とdateの日付が一致してしまうと予定が一週開いてしまうため、dateを返す
-  if (date.getDay() === targetDayOfWeek) return date;
-  const nextDate = nextDay(date, targetDayOfWeek);
+  if (after.getDay() === targetDayOfWeek) return after;
+  const nextDate = nextDay(after, targetDayOfWeek);
 
   return nextDate;
 };

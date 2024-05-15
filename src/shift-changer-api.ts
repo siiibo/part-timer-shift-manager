@@ -184,8 +184,7 @@ const deleteRecurringEvent = (
 
   detailedEventItems.forEach(({ eventDetail, untilDate, recurringEventId }) => {
     if (!eventDetail.start?.dateTime || !eventDetail.end?.dateTime) return;
-    const untilTime = mergeTimeToDate(untilDate, new Date(eventDetail.start.dateTime));
-    const untilTimeUTC = convertJSTToUTC(untilTime);
+    const untilTimeUTC = getEndOfDayFormattedAsUTCISO(untilDate);
 
     const data = {
       summary: eventDetail.summary,
@@ -198,7 +197,7 @@ const deleteRecurringEvent = (
         dateTime: eventDetail.end.dateTime,
         timeZone: "Asia/Tokyo",
       },
-      recurrence: ["RRULE:FREQ=WEEKLY;UNTIL=" + format(untilTimeUTC, "yyyyMMdd'T'HHmmss'Z'")],
+      recurrence: ["RRULE:FREQ=WEEKLY;UNTIL=" + untilTimeUTC],
     };
     advancedCalendar.update(data, calendarId, recurringEventId);
   });
@@ -291,7 +290,8 @@ const mergeTimeToDate = (date: Date, time: Date): Date => {
   return set(date, { hours: time.getHours(), minutes: time.getMinutes() });
 };
 
-const convertJSTToUTC = (date: Date): string => {
-  const UTCTime = subHours(date, 9);
-  return UTCTime.toISOString();
+const getEndOfDayFormattedAsUTCISO = (date: Date): string => {
+  const endTime = endOfDay(date);
+  const UTCTime = subHours(endTime, 9);
+  return format(UTCTime, "yyyyMMdd'T'HHmmss'Z'");
 };

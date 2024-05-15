@@ -9,39 +9,17 @@ import {
   insertModificationAndDeletionSheet,
   setValuesModificationAndDeletionSheet,
 } from "./ModificationAndDeletionSheet";
-import { getRecurringEventModificationOrDeletionOrRegistration } from "./RecurringEventSheet";
-import { insertRecurringEventSheet } from "./RecurringEventSheet";
+import {
+  DeleteRecurringEventRow,
+  getRecurringEventModificationOrDeletionOrRegistration,
+  insertRecurringEventSheet,
+  ModificationRecurringEventRow,
+  RegistrationRecurringEventRow,
+} from "./RecurringEventSheet";
 import { getRegistrationRows, insertRegistrationSheet, setValuesRegistrationSheet } from "./RegistrationSheet";
 import { EventInfo, shiftChanger } from "./shift-changer-api";
 
-//TODO: APIで用いている型を用いる、今はAPIで用いている型をコピーしている
-// const RecurringEventNotification = z.object({
-//   after: z.date(),
-//   events: z
-//     .object({
-//       dayOfWeek: z
-//         .literal("月曜日")
-//         .or(z.literal("火曜日"))
-//         .or(z.literal("水曜日"))
-//         .or(z.literal("木曜日"))
-//         .or(z.literal("金曜日"))
-//         .optional(),
-//       dayOfWeeks: z
-//         .literal("月曜日")
-//         .or(z.literal("火曜日"))
-//         .or(z.literal("水曜日"))
-//         .or(z.literal("木曜日"))
-//         .or(z.literal("金曜日"))
-//         .array()
-//         .optional(),
-//       title: z.string().optional(),
-//       startTime: z.date().optional(),
-//       endTime: z.date().optional(),
-//     })
-//     .array(),
-// });
-// type RecurringEventNotification = z.infer<typeof RecurringEventNotification>;
-
+type recurringType = RegistrationRecurringEventRow[] | ModificationRecurringEventRow[] | DeleteRecurringEventRow[];
 type SheetType = "registration" | "modificationAndDeletion" | "recurringEvent";
 type OperationType = "registration" | "modificationAndDeletion" | "showEvents" | "recurringEvent";
 export const doGet = () => {
@@ -422,9 +400,9 @@ export const callRecurringEvent = () => {
   const messageTitle = `${job}${lastName}さんの以下の繰り返し予定が変更されました`; //NOTE: ここに記述することで1回のみ通知される
   const RecurringEventMessageToNotify = [
     `${messageTitle}`,
-    // createRecurringEventMessage({after,events:registrationInfos}, "registration"),
-    // createRecurringEventMessage({after,events:modificationInfos}, "modification"),
-    // createRecurringEventMessage({after,events:deleteDayOfWeeks}, "deletion"),//HACK: ここで型エラーが発生する
+    createRecurringEventMessage(registrationRows),
+    createRecurringEventMessage(modificationRows),
+    createRecurringEventMessage(deletionRows), //HACK: ここで型エラーが発生する
     comment ? `コメント: ${comment}` : undefined,
   ]
     .filter(Boolean)
@@ -523,40 +501,26 @@ const createTitleFromEventInfo = (
   }
 };
 //TODO: メッセージを作成する関数のエラーを解消する
-// const createRecurringEventMessage = (
-//   registrationRecurringEventRows: RecurringEventNotification,
-//   type: "registration" | "modification" | "deletion",
-// ): string => {
-//   const messageTitle = {
-//     modification: "以下の繰り返し予定が変更されました",
-//     registration: "以下の繰り返し予定が追加されました",
-//     deletion: "以下の繰り返し予定が削除されました",
-//   };
-//   const messages = registrationRecurringEventRows.events.map((registrationRecurringEventRow) => {
-//     if (type === "registration") {
-//       //TODO: 一旦ここで型にparseしているがそのほかの案を検討する
-//       const tmpRegistrationRecurringEventRow = RecurringEventNotification.parse(registrationRecurringEventRow);
-//       const startTime = format(tmpRegistrationRecurringEventRow.startTime ?? "", "HH:mm");
-//       const endTime = format(tmpRegistrationRecurringEventRow.endTime ?? "", "HH:mm");
-//       const dayOfWeek = tmpRegistrationRecurringEventRow.newDayOfWeek;
-//       const selectMessageTitle = messageTitle[type];
-//       const title = tmpRegistrationRecurringEventRow.title;
-//       return `${selectMessageTitle}\n${dayOfWeek} : ${title} ${startTime}~${endTime}`;
-//     } else if (type === "modification") {
-//       const tmpModificationRecurringEventRow = RecurringEventNotification.parse(registrationRecurringEventRow);
-//       const startTime = format(tmpModificationRecurringEventRow.startTime ?? "", "HH:mm");
-//       const endTime = format(tmpModificationRecurringEventRow.endTime ?? "", "HH:mm");
-//       const oldDayOfWeek = tmpModificationRecurringEventRow.oldDayOfWeek;
-//       const newDayOfWeek = tmpModificationRecurringEventRow.newDayOfWeek;
-//       const title = tmpModificationRecurringEventRow.title;
-//       const selectMessageTitle = messageTitle[type];
-//       return `${selectMessageTitle}\n${oldDayOfWeek} → ${newDayOfWeek} : ${title} ${startTime}~${endTime}`;
-//     } else if (type === "deletion") {
-//       const tmpDeleteRecurringEventRow = DeletionRecurringEvent.parse(registrationRecurringEventRow);
-//       const dayOfWeek = tmpDeleteRecurringEventRow.date.getDay(); //TODO: ここで曜日を取得する方法を検討する
-//       const selectMessageTitle = messageTitle[type];
-//       return `${selectMessageTitle}\n${dayOfWeek}`;
-//     }
-//   });
-//   return `${messages.join("\n")}`;
-// };
+const createRecurringEventMessage = (recurringEventInfos: recurringType): string => {
+  const messageTitle = {
+    modification: "以下の繰り返し予定が変更されました",
+    registration: "以下の繰り返し予定が追加されました",
+    delete: "以下の繰り返し予定が削除されました",
+  };
+  const messages = recurringEventInfos.map((recurringEventInfo) => {
+    if (recurringEventInfo.type === "registration") {
+      const { dayOfWeek, startTime, endTime } = recurringEventInfo;
+      return `${dayOfWeek} : ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
+    } else if (recurringEventInfo.type === "modification") {
+      const { dayOfWeek, startTime, endTime } = recurringEventInfo;
+
+      return `${dayOfWeek} : ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
+    } else if (recurringEventInfo.type === "delete") {
+      //TODO: deleteではなくdeletionにする
+      const { dayOfWeek } = recurringEventInfo;
+
+      return `${dayOfWeek}`;
+    }
+  });
+  return `${messageTitle[recurringEventInfos[0].type]}\n${messages.join("\n")}`;
+};

@@ -323,6 +323,7 @@ export const callRecurringEvent = () => {
   const { registrationRows, modificationRows, deletionRows } =
     getRecurringEventModificationOrDeletionOrRegistration(sheet);
   const after = new Date(sheet.getRange("A5").getValue());
+  console.log(registrationRows, modificationRows, deletionRows);
 
   const registrationInfos = registrationRows.map((registrationRow) => {
     const title = createTitleFromEventInfo(
@@ -360,6 +361,9 @@ export const callRecurringEvent = () => {
   const deleteDayOfWeeks = deletionRows.map((deletionRow) => {
     return deletionRow.dayOfWeek;
   });
+  if (modificationInfos.length == 0 && deletionRows.length == 0 && registrationInfos.length == 0) {
+    throw new Error("追加・変更・削除する予定がありません。");
+  }
 
   const { API_URL, SLACK_CHANNEL_TO_POST } = getConfig();
   if (registrationInfos.length > 0) {
@@ -367,7 +371,7 @@ export const callRecurringEvent = () => {
       apiId: "shift-changer",
       operationType: "registerRecurringEvent",
       userEmail: userEmail,
-      recurringEventModification: JSON.stringify({ after, events: registrationInfos }),
+      recurringEventRegistration: JSON.stringify({ after, events: registrationInfos }),
     };
     const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
       method: "post",
@@ -384,7 +388,7 @@ export const callRecurringEvent = () => {
       apiId: "shift-changer",
       operationType: "modifyRecurringEvent",
       userEmail: userEmail,
-      modificationInfos: JSON.stringify({ after, events: modificationInfos }),
+      recurringEventModification: JSON.stringify({ after, events: modificationInfos }),
     };
     const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
       method: "post",
@@ -401,7 +405,7 @@ export const callRecurringEvent = () => {
       apiId: "shift-changer",
       operationType: "deleteRecurringEvent",
       userEmail: userEmail,
-      deletionInfos: JSON.stringify({ after, dayOfWeeks: deleteDayOfWeeks }),
+      recurringEventDeletion: JSON.stringify({ after, dayOfWeeks: deleteDayOfWeeks }),
     };
     const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
       method: "post",
@@ -414,9 +418,6 @@ export const callRecurringEvent = () => {
     }
   }
 
-  if (modificationInfos.length == 0 && deletionRows.length == 0 && registrationInfos.length == 0) {
-    throw new Error("追加・変更・削除する予定がありません。");
-  }
   const { job, lastName } = partTimerProfile;
   const messageTitle = `${job}${lastName}さんの以下の繰り返し予定が変更されました`; //NOTE: ここに記述することで1回のみ通知される
   const RecurringEventMessageToNotify = [

@@ -270,6 +270,8 @@ const convertJapaneseToNumberDayOfWeek = (dayOfWeek: DayOfWeek) => {
 
 const getNextDay = (date: Date, dayOfWeek: DayOfWeek): Date => {
   const targetDayOfWeek = convertJapaneseToNumberDayOfWeek(dayOfWeek);
+  if (date.getDay() === targetDayOfWeek) return date;
+
   const nextDate = nextDay(date, targetDayOfWeek);
 
   return nextDate;

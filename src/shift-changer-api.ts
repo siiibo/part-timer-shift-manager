@@ -272,7 +272,8 @@ const modifyRecurringEvent = (modificationRecurringEvent: ModificationRecurringE
 
   detailedEventItems.forEach(({ eventDetail, untilDate, recurringEventId }) => {
     if (!eventDetail.start?.dateTime || !eventDetail.end?.dateTime) return;
-    const untilTime = mergeTimeToDate(untilDate, new Date(eventDetail.start.dateTime));
+    const untilTimeUTC = getEndOfDayFormattedAsUTCISO(untilDate);
+
     const data = {
       summary: eventDetail.summary,
       attendees: [{ email: userEmail }],
@@ -284,7 +285,7 @@ const modifyRecurringEvent = (modificationRecurringEvent: ModificationRecurringE
         dateTime: eventDetail.end.dateTime,
         timeZone: "Asia/Tokyo",
       },
-      recurrence: ["RRULE:FREQ=WEEKLY;UNTIL=" + format(untilTime, "yyyyMMdd'T'HHmmss'Z'")],
+      recurrence: ["RRULE:FREQ=WEEKLY;UNTIL=" + untilTimeUTC],
     };
     advancedCalendar.update(data, calendarId, recurringEventId);
   });

@@ -276,9 +276,9 @@ const getRecurrenceStartDate = (after: Date, dayOfWeek: DayOfWeek): Date => {
   return nextDate;
 };
 
-const getRecurrenceEndDate = (date: Date, dayOfWeek: DayOfWeek): Date => {
+const getRecurrenceEndDate = (after: Date, dayOfWeek: DayOfWeek): Date => {
   const targetDayOfWeek = convertJapaneseToNumberDayOfWeek(dayOfWeek);
-  const previousDate = previousDay(date, targetDayOfWeek);
+  const previousDate = previousDay(after, targetDayOfWeek);
 
   return previousDate;
 };

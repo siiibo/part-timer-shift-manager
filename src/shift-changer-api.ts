@@ -1,4 +1,4 @@
-import { addWeeks, endOfDay, format, nextDay, set, startOfDay } from "date-fns";
+import { addWeeks, endOfDay, format, nextDay, previousDay, set, startOfDay, subHours } from "date-fns";
 import { z } from "zod";
 
 import { getConfig } from "./config";
@@ -138,7 +138,7 @@ const modification = (
 const registerRecurringEvent = ({ after, events }: RegisterRecurringEventRequest, userEmail: string) => {
   const calendar = getCalendar();
   events.forEach(({ title, startTime, endTime, dayOfWeek }) => {
-    const recurrenceStartDate = getNextDay(after, dayOfWeek);
+    const recurrenceStartDate = getRecurrenceStartDate(after, dayOfWeek);
     const eventStartTime = mergeTimeToDate(recurrenceStartDate, startTime);
     const eventEndTime = mergeTimeToDate(recurrenceStartDate, endTime);
     const englishDayOfWeek = convertJapaneseToEnglishDayOfWeek(dayOfWeek);
@@ -161,29 +161,30 @@ const deleteRecurringEvent = (
   const eventItems = dayOfWeeks
     .map((dayOfWeek) => {
       //NOTE: 仕様的にstartTimeの日付に最初の予定が指定されるため、指定された日付の後で一番近い指定曜日の日付に変更する
-      const untilDate = getNextDay(after, dayOfWeek);
+      const recurrenceEndDate = getRecurrenceEndDate(after, dayOfWeek);
       const events =
         advancedCalendar.list(calendarId, {
-          timeMin: startOfDay(untilDate).toISOString(),
-          timeMax: endOfDay(untilDate).toISOString(),
+          timeMin: startOfDay(recurrenceEndDate).toISOString(),
+          timeMax: endOfDay(recurrenceEndDate).toISOString(),
           singleEvents: true,
           orderBy: "startTime",
           maxResults: 1,
           q: userEmail,
         }).items ?? [];
       const recurringEventId = events[0]?.recurringEventId;
-      return recurringEventId ? { recurringEventId, untilDate } : undefined;
+      return recurringEventId ? { recurringEventId, recurrenceEndDate } : undefined;
     })
     .filter(isNotUndefined);
   if (eventItems.length === 0) return { responseCode: 400, comment: "消去するイベントの取得に失敗しました" };
 
-  const detailedEventItems = eventItems.map(({ recurringEventId, untilDate }) => {
+  const detailedEventItems = eventItems.map(({ recurringEventId, recurrenceEndDate }) => {
     const eventDetail = advancedCalendar.get(calendarId, recurringEventId);
-    return { eventDetail, untilDate, recurringEventId };
+    return { eventDetail, recurrenceEndDate, recurringEventId };
   });
 
-  detailedEventItems.forEach(({ eventDetail, untilDate, recurringEventId }) => {
+  detailedEventItems.forEach(({ eventDetail, recurrenceEndDate, recurringEventId }) => {
     if (!eventDetail.start?.dateTime || !eventDetail.end?.dateTime) return;
+    const untilTimeUTC = getEndOfDayFormattedAsUTCISO(recurrenceEndDate);
 
     const data = {
       summary: eventDetail.summary,
@@ -196,7 +197,7 @@ const deleteRecurringEvent = (
         dateTime: eventDetail.end.dateTime,
         timeZone: "Asia/Tokyo",
       },
-      recurrence: ["RRULE:FREQ=WEEKLY;UNTIL=" + format(untilDate, "yyyyMMdd'T'HHmmss'Z'")],
+      recurrence: ["RRULE:FREQ=WEEKLY;UNTIL=" + untilTimeUTC],
     };
     advancedCalendar.update(data, calendarId, recurringEventId);
   });
@@ -267,11 +268,19 @@ const convertJapaneseToNumberDayOfWeek = (dayOfWeek: DayOfWeek) => {
   }
 };
 
-const getNextDay = (date: Date, dayOfWeek: DayOfWeek): Date => {
+const getRecurrenceStartDate = (after: Date, dayOfWeek: DayOfWeek): Date => {
   const targetDayOfWeek = convertJapaneseToNumberDayOfWeek(dayOfWeek);
-  const nextDate = nextDay(date, targetDayOfWeek);
+  if (after.getDay() === targetDayOfWeek) return after;
+  const nextDate = nextDay(after, targetDayOfWeek);
 
   return nextDate;
+};
+
+const getRecurrenceEndDate = (after: Date, dayOfWeek: DayOfWeek): Date => {
+  const targetDayOfWeek = convertJapaneseToNumberDayOfWeek(dayOfWeek);
+  const previousDate = previousDay(after, targetDayOfWeek);
+
+  return previousDate;
 };
 
 const isNotUndefined = <T>(value: T | undefined): value is T => {
@@ -280,4 +289,10 @@ const isNotUndefined = <T>(value: T | undefined): value is T => {
 
 const mergeTimeToDate = (date: Date, time: Date): Date => {
   return set(date, { hours: time.getHours(), minutes: time.getMinutes() });
+};
+
+const getEndOfDayFormattedAsUTCISO = (date: Date): string => {
+  const endTime = endOfDay(date);
+  const UTCTime = subHours(endTime, 9);
+  return format(UTCTime, "yyyyMMdd'T'HHmmss'Z'");
 };

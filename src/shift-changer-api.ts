@@ -233,15 +233,9 @@ const modifyRecurringEvent = (modificationRecurringEvent: ModificationRecurringE
   const after = modificationRecurringEvent.after;
   const deleteDayOfWeeks = modificationRecurringEvent.events.map(({ dayOfWeek }) => dayOfWeek);
   const deletionRecurringEvents = DeletionRecurringEvent.parse({ after, dayOfWeeks: deleteDayOfWeeks });
-  const registerRecurringEvents = modificationRecurringEvent.events.map(({ title, startTime, endTime, dayOfWeek }) => ({
-    title,
-    startTime,
-    endTime,
-    dayOfWeek,
-  }));
   const registerRecurringEventRequest = RegisterRecurringEventRequest.parse({
     after,
-    events: registerRecurringEvents,
+    events: modificationRecurringEvent.events,
   });
 
   //NOTE: 繰り返し予定を消去する機能

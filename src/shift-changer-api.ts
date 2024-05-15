@@ -157,7 +157,7 @@ const modification = (
 const registerRecurringEvent = ({ after, events }: RegisterRecurringEventRequest, userEmail: string) => {
   const calendar = getCalendar();
   events.forEach(({ title, startTime, endTime, dayOfWeek }) => {
-    const recurrenceStartDate = getNextDay(after, dayOfWeek);
+    const recurrenceStartDate = getRecurrenceStartDate(after, dayOfWeek);
     const eventStartTime = mergeTimeToDate(recurrenceStartDate, startTime);
     const eventEndTime = mergeTimeToDate(recurrenceStartDate, endTime);
     const englishDayOfWeek = convertJapaneseToEnglishDayOfWeek(dayOfWeek);
@@ -180,30 +180,30 @@ const deleteRecurringEvent = (
   const eventItems = dayOfWeeks
     .map((dayOfWeek) => {
       //NOTE: 仕様的にstartTimeの日付に最初の予定が指定されるため、指定された日付の後で一番近い指定曜日の日付に変更する
-      const untilDate = getPreviousDay(after, dayOfWeek);
+      const recurrenceEndDate = getRecurrenceEndDate(after, dayOfWeek);
       const events =
         advancedCalendar.list(calendarId, {
-          timeMin: startOfDay(untilDate).toISOString(),
-          timeMax: endOfDay(untilDate).toISOString(),
+          timeMin: startOfDay(recurrenceEndDate).toISOString(),
+          timeMax: endOfDay(recurrenceEndDate).toISOString(),
           singleEvents: true,
           orderBy: "startTime",
           maxResults: 1,
           q: userEmail,
         }).items ?? [];
       const recurringEventId = events[0]?.recurringEventId;
-      return recurringEventId ? { recurringEventId, untilDate } : undefined;
+      return recurringEventId ? { recurringEventId, recurrenceEndDate } : undefined;
     })
     .filter(isNotUndefined);
   if (eventItems.length === 0) return { responseCode: 400, comment: "消去するイベントの取得に失敗しました" };
 
-  const detailedEventItems = eventItems.map(({ recurringEventId, untilDate }) => {
+  const detailedEventItems = eventItems.map(({ recurringEventId, recurrenceEndDate }) => {
     const eventDetail = advancedCalendar.get(calendarId, recurringEventId);
-    return { eventDetail, untilDate, recurringEventId };
+    return { eventDetail, recurrenceEndDate, recurringEventId };
   });
 
-  detailedEventItems.forEach(({ eventDetail, untilDate, recurringEventId }) => {
+  detailedEventItems.forEach(({ eventDetail, recurrenceEndDate, recurringEventId }) => {
     if (!eventDetail.start?.dateTime || !eventDetail.end?.dateTime) return;
-    const untilTimeUTC = getEndOfDayFormattedAsUTCISO(untilDate);
+    const untilTimeUTC = getEndOfDayFormattedAsUTCISO(recurrenceEndDate);
 
     const data = {
       summary: eventDetail.summary,
@@ -249,7 +249,7 @@ const modifyRecurringEvent = (modificationRecurringEvent: ModificationRecurringE
   const eventItems = dayOfWeeks
     .map((dayOfWeek) => {
       //NOTE: 仕様的にstartTimeの日付に最初の予定が指定されるため、指定された日付の前で一番近い指定曜日の日付に変更する
-      const untilDate = getPreviousDay(after, dayOfWeek);
+      const untilDate = getRecurrenceEndDate(after, dayOfWeek);
       const events =
         advancedCalendar.list(calendarId, {
           timeMin: startOfDay(untilDate).toISOString(),
@@ -292,7 +292,7 @@ const modifyRecurringEvent = (modificationRecurringEvent: ModificationRecurringE
 
   //NOTE: 繰り返し予定を登録する機能
   registerRecurringEventRequest.events.forEach(({ title, startTime, endTime, dayOfWeek }) => {
-    const recurrenceStartDate = getNextDay(after, dayOfWeek);
+    const recurrenceStartDate = getRecurrenceStartDate(after, dayOfWeek);
     console.log(recurrenceStartDate);
     const eventStartTime = mergeTimeToDate(recurrenceStartDate, startTime);
     const eventEndTime = mergeTimeToDate(recurrenceStartDate, endTime);
@@ -369,17 +369,17 @@ const convertJapaneseToNumberDayOfWeek = (dayOfWeek: DayOfWeek) => {
   }
 };
 
-const getNextDay = (date: Date, dayOfWeek: DayOfWeek): Date => {
+const getRecurrenceStartDate = (after: Date, dayOfWeek: DayOfWeek): Date => {
   const targetDayOfWeek = convertJapaneseToNumberDayOfWeek(dayOfWeek);
-  if (date.getDay() === targetDayOfWeek) return date;
-  const nextDate = nextDay(date, targetDayOfWeek);
+  if (after.getDay() === targetDayOfWeek) return after;
+  const nextDate = nextDay(after, targetDayOfWeek);
 
   return nextDate;
 };
 
-const getPreviousDay = (date: Date, dayOfWeek: DayOfWeek): Date => {
+const getRecurrenceEndDate = (after: Date, dayOfWeek: DayOfWeek): Date => {
   const targetDayOfWeek = convertJapaneseToNumberDayOfWeek(dayOfWeek);
-  const previousDate = previousDay(date, targetDayOfWeek);
+  const previousDate = previousDay(after, targetDayOfWeek);
 
   return previousDate;
 };

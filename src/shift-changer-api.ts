@@ -233,10 +233,6 @@ const modifyRecurringEvent = (modificationRecurringEvent: ModificationRecurringE
   const after = modificationRecurringEvent.after;
   const deleteDayOfWeeks = modificationRecurringEvent.events.map(({ dayOfWeek }) => dayOfWeek);
   const deletionRecurringEvents = DeletionRecurringEvent.parse({ after, dayOfWeeks: deleteDayOfWeeks });
-  const registerRecurringEventRequest = RegisterRecurringEventRequest.parse({
-    after,
-    events: modificationRecurringEvent.events,
-  });
 
   //NOTE: 繰り返し予定を消去する機能
   const dayOfWeeks = deletionRecurringEvents.dayOfWeeks;
@@ -285,9 +281,8 @@ const modifyRecurringEvent = (modificationRecurringEvent: ModificationRecurringE
   });
 
   //NOTE: 繰り返し予定を登録する機能
-  registerRecurringEventRequest.events.forEach(({ title, startTime, endTime, dayOfWeek }) => {
+  modificationRecurringEvent.events.forEach(({ title, startTime, endTime, dayOfWeek }) => {
     const recurrenceStartDate = getRecurrenceStartDate(after, dayOfWeek);
-    console.log(recurrenceStartDate);
     const eventStartTime = mergeTimeToDate(recurrenceStartDate, startTime);
     const eventEndTime = mergeTimeToDate(recurrenceStartDate, endTime);
     const englishDayOfWeek = convertJapaneseToEnglishDayOfWeek(dayOfWeek);

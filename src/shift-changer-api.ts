@@ -227,7 +227,7 @@ const deleteRecurringEvent = (
 const modifyRecurringEvent = (modificationRecurringEvent: ModificationRecurringEvent, userEmail: string) => {
   const calendar = getCalendar();
   const calendarId = getConfig().CALENDAR_ID;
-  const advancedCalendar = Calendar.Events;
+  const advancedCalendar = getAdvancedCalendar();
   if (advancedCalendar === undefined) return { responseCode: 400, comment: "カレンダーの取得に失敗しました" };
 
   const after = modificationRecurringEvent.after;
@@ -385,4 +385,9 @@ const getEndOfDayFormattedAsUTCISO = (date: Date): string => {
   const endTime = endOfDay(date);
   const UTCTime = subHours(endTime, 9);
   return format(UTCTime, "yyyyMMdd'T'HHmmss'Z'");
+};
+
+const getAdvancedCalendar = () => {
+  const advancedCalendar = Calendar.Events;
+  return advancedCalendar;
 };

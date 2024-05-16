@@ -230,11 +230,9 @@ const modifyRecurringEvent = ({ after, events }: ModificationRecurringEvent, use
   const advancedCalendar = getAdvancedCalendar();
   if (advancedCalendar === undefined) return { responseCode: 400, comment: "カレンダーの取得に失敗しました" };
 
-  const deleteDayOfWeeks = events.map(({ dayOfWeek }) => dayOfWeek);
-  const deletionRecurringEvents = DeletionRecurringEvent.parse({ after, dayOfWeeks: deleteDayOfWeeks });
-
   //NOTE: 繰り返し予定を消去する機能
-  const dayOfWeeks = deletionRecurringEvents.dayOfWeeks;
+  const dayOfWeeks = events.map(({ dayOfWeek }) => dayOfWeek);
+
   const eventItems = dayOfWeeks
     .map((dayOfWeek) => {
       //NOTE: 仕様的にstartTimeの日付に最初の予定が指定されるため、指定された日付の前で一番近い指定曜日の日付に変更する

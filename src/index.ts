@@ -10,7 +10,6 @@ import {
   initShiftChanger,
   onOpen,
   onOpenForDev,
-  testRegisterRecurringEvent,
 } from "./shift-changer";
 /**
  * @file GASエディタから実行できる関数を定義する
@@ -30,4 +29,3 @@ global.callShowEvents = callShowEvents;
 global.callModificationAndDeletion = callModificationAndDeletion;
 global.insertRegistrationSheet = insertRegistrationSheet;
 global.insertModificationAndDeletionSheet = insertModificationAndDeletionSheet;
-global.testRegisterRecurringEvent = testRegisterRecurringEvent;

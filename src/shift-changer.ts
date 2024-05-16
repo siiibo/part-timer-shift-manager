@@ -359,31 +359,3 @@ const createTitleFromEventInfo = (
     return title;
   }
 };
-
-export const testRegisterRecurringEvent = () => {
-  const dayOfWeek = "金曜日";
-  const title = "test";
-  const after = new Date("2024-04-25");
-  const startTime = new Date();
-  const endTime = new Date(new Date().setHours(18));
-  console.log(startTime, endTime);
-  const payload = {
-    apiId: "shift-changer",
-    operationType: "registerRecurringEvent",
-    userEmail: "takuya.wada@siiibo.com",
-    recurringEventRegistration: JSON.stringify({
-      after,
-      events: [{ dayOfWeek: dayOfWeek, title: title, startTime: startTime, endTime: endTime }],
-    }),
-  };
-  const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
-    method: "post",
-    payload: payload,
-    muteHttpExceptions: true,
-  };
-  const { API_URL } = getConfig();
-  const response = UrlFetchApp.fetch(API_URL, options);
-  if (response.getResponseCode() !== 200) {
-    throw new Error(response.getContentText());
-  }
-};

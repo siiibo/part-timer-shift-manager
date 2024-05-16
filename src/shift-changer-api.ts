@@ -48,6 +48,19 @@ type DeleteRecurringEventResponse = {
   comment: string;
 };
 
+const ModificationRecurringEvent = z.object({
+  after: z.coerce.date(),
+  events: z
+    .object({
+      title: z.string(),
+      dayOfWeek: DayOfWeek,
+      startTime: z.coerce.date(),
+      endTime: z.coerce.date(),
+    })
+    .array(),
+});
+type ModificationRecurringEvent = z.infer<typeof ModificationRecurringEvent>;
+
 const getCalendar = () => {
   const { CALENDAR_ID } = getConfig();
   const calendar = CalendarApp.getCalendarById(CALENDAR_ID);
@@ -92,6 +105,12 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
       const deletionRecurringEvents = DeletionRecurringEvent.parse(JSON.parse(e.parameter.recurringEventDeletion));
 
       return JSON.stringify(deleteRecurringEvent(deletionRecurringEvents, userEmail));
+    }
+    case "modificationRecurringEvent": {
+      const modificationRecurringEvent = ModificationRecurringEvent.parse(
+        JSON.parse(e.parameter.recurringEventModification),
+      );
+      return JSON.stringify(modifyRecurringEvent(modificationRecurringEvent, userEmail));
     }
   }
   return;
@@ -141,7 +160,7 @@ const registerRecurringEvent = ({ after, events }: RegisterRecurringEventRequest
     const recurrenceStartDate = getRecurrenceStartDate(after, dayOfWeek);
     const eventStartTime = mergeTimeToDate(recurrenceStartDate, startTime);
     const eventEndTime = mergeTimeToDate(recurrenceStartDate, endTime);
-    const englishDayOfWeek = convertJapaneseToEnglishDayOfWeek(dayOfWeek);
+    const englishDayOfWeek = convertDayOfWeekJapaneseToEnglish(dayOfWeek);
 
     const recurrence = CalendarApp.newRecurrence().addWeeklyRule().onlyOnWeekday(englishDayOfWeek);
     calendar.createEventSeries(title, eventStartTime, eventEndTime, recurrence, {
@@ -155,8 +174,7 @@ const deleteRecurringEvent = (
   userEmail: string,
 ): DeleteRecurringEventResponse => {
   const calendarId = getConfig().CALENDAR_ID;
-  const advancedCalendar = Calendar.Events;
-  if (advancedCalendar === undefined) return { responseCode: 400, comment: "カレンダーの取得に失敗しました" };
+  const advancedCalendar = getAdvancedCalendar();
 
   const eventItems = dayOfWeeks
     .map((dayOfWeek) => {
@@ -184,8 +202,8 @@ const deleteRecurringEvent = (
 
   detailedEventItems.forEach(({ eventDetail, recurrenceEndDate, recurringEventId }) => {
     if (!eventDetail.start?.dateTime || !eventDetail.end?.dateTime) return;
-    const untilTimeUTC = getEndOfDayFormattedAsUTCISO(recurrenceEndDate);
 
+    const untilTimeUTC = getEndOfDayFormattedAsUTCISO(recurrenceEndDate);
     const data = {
       summary: eventDetail.summary,
       attendees: [{ email: userEmail }],
@@ -203,6 +221,72 @@ const deleteRecurringEvent = (
   });
 
   return { responseCode: 200, comment: "イベントの消去が成功しました" };
+};
+
+const modifyRecurringEvent = ({ after, events }: ModificationRecurringEvent, userEmail: string) => {
+  const calendar = getCalendar();
+  const calendarId = getConfig().CALENDAR_ID;
+  const advancedCalendar = getAdvancedCalendar();
+
+  //NOTE: 繰り返し予定を消去する機能
+  const dayOfWeeks = events.map(({ dayOfWeek }) => dayOfWeek);
+  const eventItems = dayOfWeeks
+    .map((dayOfWeek) => {
+      //NOTE: 仕様的にstartTimeの日付に最初の予定が指定されるため、指定された日付の前で一番近い指定曜日の日付に変更する
+      const recurrenceEndDate = getRecurrenceEndDate(after, dayOfWeek);
+      const events =
+        advancedCalendar.list(calendarId, {
+          timeMin: startOfDay(recurrenceEndDate).toISOString(),
+          timeMax: endOfDay(recurrenceEndDate).toISOString(),
+          singleEvents: true,
+          orderBy: "startTime",
+          maxResults: 1,
+          q: userEmail,
+        }).items ?? [];
+      const recurringEventId = events[0].recurringEventId;
+      return recurringEventId ? { recurringEventId, recurrenceEndDate } : undefined;
+    })
+    .filter(isNotUndefined);
+  if (eventItems.length === 0) return { responseCode: 400, comment: "消去するイベントの取得に失敗しました" };
+
+  const detailedEventItems = eventItems.map(({ recurringEventId, recurrenceEndDate }) => {
+    const eventDetail = advancedCalendar.get(calendarId, recurringEventId);
+    return { eventDetail, recurrenceEndDate, recurringEventId };
+  });
+
+  detailedEventItems.forEach(({ eventDetail, recurrenceEndDate, recurringEventId }) => {
+    if (!eventDetail.start?.dateTime || !eventDetail.end?.dateTime) return;
+
+    const untilTimeUTC = getEndOfDayFormattedAsUTCISO(recurrenceEndDate);
+    const data = {
+      summary: eventDetail.summary,
+      attendees: [{ email: userEmail }],
+      start: {
+        dateTime: eventDetail.start.dateTime,
+        timeZone: "Asia/Tokyo",
+      },
+      end: {
+        dateTime: eventDetail.end.dateTime,
+        timeZone: "Asia/Tokyo",
+      },
+      recurrence: ["RRULE:FREQ=WEEKLY;UNTIL=" + untilTimeUTC],
+    };
+    advancedCalendar.update(data, calendarId, recurringEventId);
+  });
+
+  //NOTE: 繰り返し予定を登録する機能
+  events.forEach(({ title, startTime, endTime, dayOfWeek }) => {
+    const recurrenceStartDate = getRecurrenceStartDate(after, dayOfWeek);
+    const eventStartTime = mergeTimeToDate(recurrenceStartDate, startTime);
+    const eventEndTime = mergeTimeToDate(recurrenceStartDate, endTime);
+    const englishDayOfWeek = convertDayOfWeekJapaneseToEnglish(dayOfWeek);
+
+    const recurrence = CalendarApp.newRecurrence().addWeeklyRule().onlyOnWeekday(englishDayOfWeek);
+    calendar.createEventSeries(title, eventStartTime, eventEndTime, recurrence, {
+      guests: userEmail,
+    });
+  });
+  return { responseCode: 200, comment: "イベントの変更が成功しました" };
 };
 
 const modifyEvent = (
@@ -234,7 +318,7 @@ const deleteEvent = (eventInfo: EventInfo, calendar: GoogleAppsScript.Calendar.C
   event.deleteEvent();
 };
 
-const convertJapaneseToEnglishDayOfWeek = (dayOfWeek: DayOfWeek) => {
+const convertDayOfWeekJapaneseToEnglish = (dayOfWeek: DayOfWeek) => {
   switch (dayOfWeek) {
     case "月曜日":
       return CalendarApp.Weekday.MONDAY;
@@ -251,7 +335,7 @@ const convertJapaneseToEnglishDayOfWeek = (dayOfWeek: DayOfWeek) => {
   }
 };
 
-const convertJapaneseToNumberDayOfWeek = (dayOfWeek: DayOfWeek) => {
+const convertDayOfWeekJapaneseToNumber = (dayOfWeek: DayOfWeek) => {
   switch (dayOfWeek) {
     case "月曜日":
       return 1;
@@ -269,7 +353,7 @@ const convertJapaneseToNumberDayOfWeek = (dayOfWeek: DayOfWeek) => {
 };
 
 const getRecurrenceStartDate = (after: Date, dayOfWeek: DayOfWeek): Date => {
-  const targetDayOfWeek = convertJapaneseToNumberDayOfWeek(dayOfWeek);
+  const targetDayOfWeek = convertDayOfWeekJapaneseToNumber(dayOfWeek);
   if (after.getDay() === targetDayOfWeek) return after;
   const nextDate = nextDay(after, targetDayOfWeek);
 
@@ -277,7 +361,7 @@ const getRecurrenceStartDate = (after: Date, dayOfWeek: DayOfWeek): Date => {
 };
 
 const getRecurrenceEndDate = (after: Date, dayOfWeek: DayOfWeek): Date => {
-  const targetDayOfWeek = convertJapaneseToNumberDayOfWeek(dayOfWeek);
+  const targetDayOfWeek = convertDayOfWeekJapaneseToNumber(dayOfWeek);
   const previousDate = previousDay(after, targetDayOfWeek);
 
   return previousDate;
@@ -295,4 +379,10 @@ const getEndOfDayFormattedAsUTCISO = (date: Date): string => {
   const endTime = endOfDay(date);
   const UTCTime = subHours(endTime, 9);
   return format(UTCTime, "yyyyMMdd'T'HHmmss'Z'");
+};
+
+const getAdvancedCalendar = () => {
+  const advancedCalendar = Calendar.Events;
+  if (advancedCalendar === undefined) throw new Error("カレンダーの取得に失敗しました");
+  return advancedCalendar;
 };

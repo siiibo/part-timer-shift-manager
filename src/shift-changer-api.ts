@@ -224,14 +224,13 @@ const deleteRecurringEvent = (
   return { responseCode: 200, comment: "イベントの消去が成功しました" };
 };
 
-const modifyRecurringEvent = (modificationRecurringEvent: ModificationRecurringEvent, userEmail: string) => {
+const modifyRecurringEvent = ({ after, events }: ModificationRecurringEvent, userEmail: string) => {
   const calendar = getCalendar();
   const calendarId = getConfig().CALENDAR_ID;
   const advancedCalendar = getAdvancedCalendar();
   if (advancedCalendar === undefined) return { responseCode: 400, comment: "カレンダーの取得に失敗しました" };
 
-  const after = modificationRecurringEvent.after;
-  const deleteDayOfWeeks = modificationRecurringEvent.events.map(({ dayOfWeek }) => dayOfWeek);
+  const deleteDayOfWeeks = events.map(({ dayOfWeek }) => dayOfWeek);
   const deletionRecurringEvents = DeletionRecurringEvent.parse({ after, dayOfWeeks: deleteDayOfWeeks });
 
   //NOTE: 繰り返し予定を消去する機能
@@ -281,7 +280,7 @@ const modifyRecurringEvent = (modificationRecurringEvent: ModificationRecurringE
   });
 
   //NOTE: 繰り返し予定を登録する機能
-  modificationRecurringEvent.events.forEach(({ title, startTime, endTime, dayOfWeek }) => {
+  events.forEach(({ title, startTime, endTime, dayOfWeek }) => {
     const recurrenceStartDate = getRecurrenceStartDate(after, dayOfWeek);
     const eventStartTime = mergeTimeToDate(recurrenceStartDate, startTime);
     const eventEndTime = mergeTimeToDate(recurrenceStartDate, endTime);

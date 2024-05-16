@@ -126,6 +126,7 @@ const setValuesRecurringEventSheet = (sheet: GoogleAppsScript.Spreadsheet.Sheet)
   sheet.setColumnWidth(1, 370);
   sheet.setColumnWidth(2, 150);
 };
+
 const getRecurringEventReSheetValues = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
 ): (DeleteRecurringEventRow | ModificationRecurringEventRow | RegistrationRecurringEventRow | NoOperationRow)[] => {
@@ -146,7 +147,6 @@ const getRecurringEventReSheetValues = (
       }),
     )
     .map((row) => {
-      console.log(row);
       if (row.operation === "消去") {
         return DeleteRecurringEventRow.parse({
           type: "delete",
@@ -164,7 +164,7 @@ const getRecurringEventReSheetValues = (
           restEndTime: row.restEndTime,
           workingStyle: row.workingStyle,
         });
-      } else if (row.operation === "時間変更" && row.dayOfWeek && row.startTime && row.endTime && row.after) {
+      } else if (row.operation === "時間変更" && row.dayOfWeek && row.startTime && row.endTime) {
         return ModificationRecurringEventRow.parse({
           type: "modification",
           after: row.after,

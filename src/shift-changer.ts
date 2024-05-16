@@ -301,7 +301,6 @@ export const callRecurringEvent = () => {
   const { registrationRows, modificationRows, deletionRows } =
     getRecurringEventModificationOrDeletionOrRegistration(sheet);
   const after = new Date(sheet.getRange("A5").getValue());
-  console.log(registrationRows, modificationRows, deletionRows);
 
   const registrationInfos = registrationRows.map((registrationRow) => {
     const title = createTitleFromEventInfo(
@@ -397,7 +396,7 @@ export const callRecurringEvent = () => {
   }
 
   const { job, lastName } = partTimerProfile;
-  const messageTitle = `${job}${lastName}さんの以下の繰り返し予定が変更されました`; //NOTE: ここに記述することで1回のみ通知される
+  const messageTitle = `${job}${lastName}さんの以下の繰り返し予定が変更されました`;
   const RecurringEventMessageToNotify = [
     `${messageTitle}`,
     createRecurringEventMessage(registrationRows),

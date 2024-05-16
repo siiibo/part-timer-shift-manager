@@ -500,23 +500,31 @@ const createTitleFromEventInfo = (
     return title;
   }
 };
-//TODO: メッセージを作成する関数のエラーを解消する
+
 const createRecurringEventMessage = (recurringEventInfos: recurringType): string => {
   const messageTitle = {
     modification: "以下の繰り返し予定が変更されました",
     registration: "以下の繰り返し予定が追加されました",
-    delete: "以下の繰り返し予定が削除されました",
+    deletion: "以下の繰り返し予定が削除されました",
   };
   const messages = recurringEventInfos.map((recurringEventInfo) => {
     if (recurringEventInfo.type === "registration") {
-      const { dayOfWeek, startTime, endTime } = recurringEventInfo;
-      return `${dayOfWeek} : ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
-    } else if (recurringEventInfo.type === "modification") {
-      const { dayOfWeek, startTime, endTime } = recurringEventInfo;
+      const { dayOfWeek, startTime, endTime, restStartTime, restEndTime, workingStyle } = recurringEventInfo;
 
-      return `${dayOfWeek} : ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
-    } else if (recurringEventInfo.type === "delete") {
-      //TODO: deleteではなくdeletionにする
+      if (restStartTime && restEndTime) {
+        return `${dayOfWeek} : ${workingStyle} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} (休憩: ${format(restStartTime, "HH:mm")}~${format(restEndTime, "HH:mm")})`;
+      } else {
+        return `${dayOfWeek} : ${workingStyle} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
+      }
+    } else if (recurringEventInfo.type === "modification") {
+      const { dayOfWeek, startTime, endTime, restStartTime, restEndTime, workingStyle } = recurringEventInfo;
+
+      if (restStartTime && restEndTime) {
+        return `${dayOfWeek} : ${workingStyle} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} (休憩: ${format(restStartTime, "HH:mm")}~${format(restEndTime, "HH:mm")})`;
+      } else {
+        return `${dayOfWeek} : ${workingStyle} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
+      }
+    } else if (recurringEventInfo.type === "deletion") {
       const { dayOfWeek } = recurringEventInfo;
 
       return `${dayOfWeek}`;

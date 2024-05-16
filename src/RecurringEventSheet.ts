@@ -28,7 +28,7 @@ const OperationString = z.preprocess(
 );
 
 export const DeleteRecurringEventRow = z.object({
-  type: z.literal("delete"),
+  type: z.literal("deletion"),
   after: z.date(),
   dayOfWeek: DayOfWeek,
 });
@@ -189,7 +189,7 @@ const isModificationRow = (
 ): row is ModificationRecurringEventRow => row.type === "modification";
 const isDeletionRow = (
   row: ModificationRecurringEventRow | DeleteRecurringEventRow | RegistrationRecurringEventRow | NoOperationRow,
-): row is DeleteRecurringEventRow => row.type === "delete";
+): row is DeleteRecurringEventRow => row.type === "deletion";
 const isRegistrationRow = (
   row: ModificationRecurringEventRow | DeleteRecurringEventRow | RegistrationRecurringEventRow | NoOperationRow,
 ): row is RegistrationRecurringEventRow => row.type === "registration";

@@ -8,7 +8,6 @@ import {
   doGet,
   doPost,
   initShiftChanger,
-  modificationTest,
   onOpen,
   onOpenForDev,
 } from "./shift-changer";
@@ -30,4 +29,3 @@ global.callShowEvents = callShowEvents;
 global.callModificationAndDeletion = callModificationAndDeletion;
 global.insertRegistrationSheet = insertRegistrationSheet;
 global.insertModificationAndDeletionSheet = insertModificationAndDeletionSheet;
-global.modificationTest = modificationTest;

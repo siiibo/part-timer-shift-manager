@@ -160,7 +160,7 @@ const registerRecurringEvent = ({ after, events }: RegisterRecurringEventRequest
     const recurrenceStartDate = getRecurrenceStartDate(after, dayOfWeek);
     const eventStartTime = mergeTimeToDate(recurrenceStartDate, startTime);
     const eventEndTime = mergeTimeToDate(recurrenceStartDate, endTime);
-    const englishDayOfWeek = convertJapaneseToEnglishDayOfWeek(dayOfWeek);
+    const englishDayOfWeek = convertDayOfWeekJapaneseToEnglish(dayOfWeek);
 
     const recurrence = CalendarApp.newRecurrence().addWeeklyRule().onlyOnWeekday(englishDayOfWeek);
     calendar.createEventSeries(title, eventStartTime, eventEndTime, recurrence, {
@@ -282,7 +282,7 @@ const modifyRecurringEvent = ({ after, events }: ModificationRecurringEvent, use
     const recurrenceStartDate = getRecurrenceStartDate(after, dayOfWeek);
     const eventStartTime = mergeTimeToDate(recurrenceStartDate, startTime);
     const eventEndTime = mergeTimeToDate(recurrenceStartDate, endTime);
-    const englishDayOfWeek = convertJapaneseToEnglishDayOfWeek(dayOfWeek);
+    const englishDayOfWeek = convertDayOfWeekJapaneseToEnglish(dayOfWeek);
 
     const recurrence = CalendarApp.newRecurrence().addWeeklyRule().onlyOnWeekday(englishDayOfWeek);
     calendar.createEventSeries(title, eventStartTime, eventEndTime, recurrence, {
@@ -321,7 +321,7 @@ const deleteEvent = (eventInfo: EventInfo, calendar: GoogleAppsScript.Calendar.C
   event.deleteEvent();
 };
 
-const convertJapaneseToEnglishDayOfWeek = (dayOfWeek: DayOfWeek) => {
+const convertDayOfWeekJapaneseToEnglish = (dayOfWeek: DayOfWeek) => {
   switch (dayOfWeek) {
     case "月曜日":
       return CalendarApp.Weekday.MONDAY;
@@ -338,7 +338,7 @@ const convertJapaneseToEnglishDayOfWeek = (dayOfWeek: DayOfWeek) => {
   }
 };
 
-const convertJapaneseToNumberDayOfWeek = (dayOfWeek: DayOfWeek) => {
+const convertDayOfWeekJapaneseToNumber = (dayOfWeek: DayOfWeek) => {
   switch (dayOfWeek) {
     case "月曜日":
       return 1;
@@ -356,7 +356,7 @@ const convertJapaneseToNumberDayOfWeek = (dayOfWeek: DayOfWeek) => {
 };
 
 const getRecurrenceStartDate = (after: Date, dayOfWeek: DayOfWeek): Date => {
-  const targetDayOfWeek = convertJapaneseToNumberDayOfWeek(dayOfWeek);
+  const targetDayOfWeek = convertDayOfWeekJapaneseToNumber(dayOfWeek);
   if (after.getDay() === targetDayOfWeek) return after;
   const nextDate = nextDay(after, targetDayOfWeek);
 
@@ -364,7 +364,7 @@ const getRecurrenceStartDate = (after: Date, dayOfWeek: DayOfWeek): Date => {
 };
 
 const getRecurrenceEndDate = (after: Date, dayOfWeek: DayOfWeek): Date => {
-  const targetDayOfWeek = convertJapaneseToNumberDayOfWeek(dayOfWeek);
+  const targetDayOfWeek = convertDayOfWeekJapaneseToNumber(dayOfWeek);
   const previousDate = previousDay(after, targetDayOfWeek);
 
   return previousDate;

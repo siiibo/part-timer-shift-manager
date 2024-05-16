@@ -202,8 +202,8 @@ const deleteRecurringEvent = (
 
   detailedEventItems.forEach(({ eventDetail, recurrenceEndDate, recurringEventId }) => {
     if (!eventDetail.start?.dateTime || !eventDetail.end?.dateTime) return;
-    const untilTimeUTC = getEndOfDayFormattedAsUTCISO(recurrenceEndDate);
 
+    const untilTimeUTC = getEndOfDayFormattedAsUTCISO(recurrenceEndDate);
     const data = {
       summary: eventDetail.summary,
       attendees: [{ email: userEmail }],
@@ -230,7 +230,6 @@ const modifyRecurringEvent = ({ after, events }: ModificationRecurringEvent, use
 
   //NOTE: 繰り返し予定を消去する機能
   const dayOfWeeks = events.map(({ dayOfWeek }) => dayOfWeek);
-
   const eventItems = dayOfWeeks
     .map((dayOfWeek) => {
       //NOTE: 仕様的にstartTimeの日付に最初の予定が指定されるため、指定された日付の前で一番近い指定曜日の日付に変更する
@@ -244,7 +243,7 @@ const modifyRecurringEvent = ({ after, events }: ModificationRecurringEvent, use
           maxResults: 1,
           q: userEmail,
         }).items ?? [];
-      const recurringEventId = events[0]?.recurringEventId;
+      const recurringEventId = events[0].recurringEventId;
       return recurringEventId ? { recurringEventId, recurrenceEndDate } : undefined;
     })
     .filter(isNotUndefined);
@@ -257,8 +256,8 @@ const modifyRecurringEvent = ({ after, events }: ModificationRecurringEvent, use
 
   detailedEventItems.forEach(({ eventDetail, recurrenceEndDate, recurringEventId }) => {
     if (!eventDetail.start?.dateTime || !eventDetail.end?.dateTime) return;
-    const untilTimeUTC = getEndOfDayFormattedAsUTCISO(recurrenceEndDate);
 
+    const untilTimeUTC = getEndOfDayFormattedAsUTCISO(recurrenceEndDate);
     const data = {
       summary: eventDetail.summary,
       attendees: [{ email: userEmail }],

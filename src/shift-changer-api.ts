@@ -106,7 +106,7 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
 
       return JSON.stringify(deleteRecurringEvent(deletionRecurringEvents, userEmail));
     }
-    case "modificationRecurringEvent": {
+    case "modifyRecurringEvent": {
       const modificationRecurringEvent = ModificationRecurringEvent.parse(
         JSON.parse(e.parameter.recurringEventModification),
       );

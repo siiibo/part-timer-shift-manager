@@ -506,6 +506,8 @@ const createRecurringEventMessage = (recurringEventInfos: recurringType): string
     registration: "以下の繰り返し予定が追加されました",
     deletion: "以下の繰り返し予定が削除されました",
   };
+  if (recurringEventInfos.length === 0) return "";
+
   const messages = recurringEventInfos.map((recurringEventInfo) => {
     if (recurringEventInfo.type === "registration") {
       const { dayOfWeek, startTime, endTime, restStartTime, restEndTime, workingStyle } = recurringEventInfo;
@@ -518,12 +520,12 @@ const createRecurringEventMessage = (recurringEventInfos: recurringType): string
     } else if (recurringEventInfo.type === "modification") {
       const { dayOfWeek, startTime, endTime, restStartTime, restEndTime, workingStyle } = recurringEventInfo;
 
-      if (restStartTime && restEndTime) {
+      if (restEndTime && restStartTime) {
         return `${dayOfWeek} : ${workingStyle} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} (休憩: ${format(restStartTime, "HH:mm")}~${format(restEndTime, "HH:mm")})`;
       } else {
         return `${dayOfWeek} : ${workingStyle} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
       }
-    } else if (recurringEventInfo.type === "deletion") {
+    } else if (recurringEventInfo && recurringEventInfo.type === "deletion") {
       const { dayOfWeek } = recurringEventInfo;
 
       return `${dayOfWeek}`;

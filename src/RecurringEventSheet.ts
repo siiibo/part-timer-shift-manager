@@ -149,7 +149,7 @@ const getRecurringEventReSheetValues = (
     .map((row) => {
       if (row.operation === "消去") {
         return DeleteRecurringEventRow.parse({
-          type: "delete",
+          type: "deletion",
           after: row.after,
           dayOfWeek: row.dayOfWeek,
         });

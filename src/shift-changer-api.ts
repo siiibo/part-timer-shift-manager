@@ -174,8 +174,7 @@ const deleteRecurringEvent = (
   userEmail: string,
 ): DeleteRecurringEventResponse => {
   const calendarId = getConfig().CALENDAR_ID;
-  const advancedCalendar = Calendar.Events;
-  if (advancedCalendar === undefined) return { responseCode: 400, comment: "カレンダーの取得に失敗しました" };
+  const advancedCalendar = getAdvancedCalendar();
 
   const eventItems = dayOfWeeks
     .map((dayOfWeek) => {
@@ -228,7 +227,6 @@ const modifyRecurringEvent = ({ after, events }: ModificationRecurringEvent, use
   const calendar = getCalendar();
   const calendarId = getConfig().CALENDAR_ID;
   const advancedCalendar = getAdvancedCalendar();
-  if (advancedCalendar === undefined) return { responseCode: 400, comment: "カレンダーの取得に失敗しました" };
 
   //NOTE: 繰り返し予定を消去する機能
   const dayOfWeeks = events.map(({ dayOfWeek }) => dayOfWeek);
@@ -386,5 +384,6 @@ const getEndOfDayFormattedAsUTCISO = (date: Date): string => {
 
 const getAdvancedCalendar = () => {
   const advancedCalendar = Calendar.Events;
+  if (advancedCalendar === undefined) throw new Error("カレンダーの取得に失敗しました");
   return advancedCalendar;
 };

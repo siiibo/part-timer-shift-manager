@@ -402,7 +402,7 @@ export const callRecurringEvent = () => {
     `${messageTitle}`,
     createRecurringEventMessage(registrationRows),
     createRecurringEventMessage(modificationRows),
-    createRecurringEventMessage(deletionRows), //HACK: ここで型エラーが発生する
+    createRecurringEventMessage(deletionRows),
     comment ? `コメント: ${comment}` : undefined,
   ]
     .filter(Boolean)

@@ -70,10 +70,9 @@ const RecurringEventSheetRow = z.object({
 });
 type RecurringEventSheetRow = z.infer<typeof RecurringEventSheetRow>;
 
-const NoOperationRow = z.object({
-  type: z.literal("no-operation"),
-});
-type NoOperationRow = z.infer<typeof NoOperationRow>;
+type NoOperationRow = {
+  type: "no-operation";
+};
 
 export const insertRecurringEventSheet = () => {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
@@ -178,7 +177,7 @@ const getRecurringEventReSheetValues = (
       } else {
         return {
           type: "no-operation",
-        } as NoOperationRow;
+        } satisfies NoOperationRow;
       }
     });
   return sheetValues;

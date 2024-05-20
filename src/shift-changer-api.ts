@@ -61,6 +61,25 @@ const ModificationRecurringEvent = z.object({
 });
 type ModificationRecurringEvent = z.infer<typeof ModificationRecurringEvent>;
 
+export const ShiftChangeRequestSchema = z.object({
+  operationType: z
+    .literal("registration")
+    .or(z.literal("modificationAndDeletion"))
+    .or(z.literal("showEvents"))
+    .or(z.literal("registerRecurringEvent"))
+    .or(z.literal("deleteRecurringEvent"))
+    .or(z.literal("modificationRecurringEvent")),
+  userEmail: z.string(),
+  registrationInfos: EventInfo.array().optional(),
+  modificationInfos: ModificationInfo.array().optional(),
+  deletionInfos: EventInfo.array().optional(),
+  startDate: z.coerce.date().optional(),
+  recurringEventRegistration: RegisterRecurringEventRequest.optional(),
+  recurringEventDeletion: DeletionRecurringEvent.optional(),
+  recurringEventModification: ModificationRecurringEvent.optional(),
+});
+export type ShiftChangeRequest = z.infer<typeof ShiftChangeRequestSchema>;
+
 const getCalendar = () => {
   const { CALENDAR_ID } = getConfig();
   const calendar = CalendarApp.getCalendarById(CALENDAR_ID);
@@ -73,31 +92,34 @@ const isEventGuest = (event: GoogleAppsScript.Calendar.CalendarEvent, email: str
 };
 
 export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
-  const operationType = e.parameter.operationType;
-  const userEmail = e.parameter.userEmail;
+  const parameter = ShiftChangeRequestSchema.parse(e.parameter);
+  const operationType = parameter.operationType;
+  const userEmail = parameter.userEmail;
   switch (operationType) {
     case "registration": {
-      const registrationInfos = EventInfo.array().parse(JSON.parse(e.parameter.registrationInfos));
+      if (!parameter.registrationInfos) throw new Error("registrationInfos is required");
+      const registrationInfos = parameter.registrationInfos;
       registration(userEmail, registrationInfos);
       break;
     }
     case "modificationAndDeletion": {
-      const modificationInfos = ModificationInfo.array().parse(JSON.parse(e.parameter.modificationInfos));
-      const deletionInfos = EventInfo.array().parse(JSON.parse(e.parameter.deletionInfos));
+      if (!parameter.modificationInfos || !parameter.deletionInfos) throw new Error("modificationInfos is required");
+      const modificationInfos = parameter.modificationInfos;
+      const deletionInfos = parameter.deletionInfos;
 
       modification(modificationInfos, userEmail);
       deletion(deletionInfos, userEmail);
       break;
     }
     case "showEvents": {
-      const startDate = new Date(e.parameter.startDate);
+      if (!parameter.startDate) throw new Error("startDate is required");
+      const startDate = parameter.startDate;
       const eventInfos = showEvents(userEmail, startDate);
       return JSON.stringify(eventInfos);
     }
     case "registerRecurringEvent": {
-      const registerRecurringEventRequest = RegisterRecurringEventRequest.parse(
-        JSON.parse(e.parameter.recurringEventRegistration),
-      );
+      if (!parameter.recurringEventRegistration) throw new Error("recurringEventRegistration is required");
+      const registerRecurringEventRequest = parameter.recurringEventRegistration;
       registerRecurringEvent(registerRecurringEventRequest, userEmail);
       break;
     }

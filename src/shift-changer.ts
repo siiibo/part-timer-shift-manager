@@ -283,6 +283,7 @@ const createModificationMessage = (
   const messageTitle = `${job}${lastName}さんの以下の予定が変更されました。`;
   return `${messageTitle}\n${messages.join("\n\n")}`;
 };
+
 const createDeletionMessage = (deletionInfos: EventInfo[], partTimerProfile: PartTimerProfile): string | undefined => {
   const messages = deletionInfos.map(createMessageFromEventInfo);
   if (messages.length == 0) return;
@@ -430,6 +431,7 @@ const getSheet = (sheetType: SheetType, spreadsheetUrl: string): GoogleAppsScrip
 
   return sheet;
 };
+
 const slackIdToMention = (slackId: string) => `<@${slackId}>`;
 const postMessageToSlackChannel = (
   client: SlackClient,
@@ -462,6 +464,7 @@ const getManagerSlackIds = (managerEmails: string[], client: SlackClient): strin
 
   return managerSlackIds;
 };
+
 const createMessageFromEventInfo = (eventInfo: EventInfo) => {
   const date = format(eventInfo.date, "MM/dd");
   const { workingStyle, restStartTime, restEndTime } = getEventInfoFromTitle(eventInfo.title);
@@ -471,6 +474,7 @@ const createMessageFromEventInfo = (eventInfo: EventInfo) => {
     return `【${workingStyle}】 ${date} ${startTime}~${endTime}`;
   else return `【${workingStyle}】 ${date} ${startTime}~${endTime} (休憩: ${restStartTime}~${restEndTime})`;
 };
+
 const getEventInfoFromTitle = (
   title: string,
 ): { workingStyle?: string; restStartTime?: string; restEndTime?: string } => {
@@ -483,6 +487,7 @@ const getEventInfoFromTitle = (
   const [restStartTime, restEndTime] = restTimeResult ? restTimeResult.split("~") : [];
   return { workingStyle, restStartTime, restEndTime };
 };
+
 const createTitleFromEventInfo = (
   eventInfo: {
     restStartTime?: Date;

@@ -85,6 +85,7 @@ export const insertRecurringEventSheet = () => {
   sheet.addDeveloperMetadata(`part-timer-shift-manager-recurringEvent`);
   setValuesRecurringEventSheet(sheet);
 };
+
 const setValuesRecurringEventSheet = (sheet: GoogleAppsScript.Spreadsheet.Sheet) => {
   const description1 = "コメント欄 (下の色付きセルに記入してください)";
   sheet.getRange("A1").setValue(description1).setFontWeight("bold");
@@ -126,7 +127,7 @@ const setValuesRecurringEventSheet = (sheet: GoogleAppsScript.Spreadsheet.Sheet)
   sheet.setColumnWidth(2, 150);
 };
 
-const getRecurringEventReSheetValues = (
+const getRecurringEventSheetValues = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
 ): (DeletionRecurringEventRow | ModificationRecurringEventRow | RegistrationRecurringEventRow | NoOperationRow)[] => {
   const after = sheet.getRange("A5").getValue();
@@ -200,7 +201,7 @@ export const getRecurringEventModificationOrDeletionOrRegistration = (
   modificationRows: ModificationRecurringEventRow[];
   deletionRows: DeletionRecurringEventRow[];
 } => {
-  const sheetValues = getRecurringEventReSheetValues(sheet);
+  const sheetValues = getRecurringEventSheetValues(sheet);
   return {
     registrationRows: sheetValues.filter(isRegistrationRow),
     modificationRows: sheetValues.filter(isModificationRow),

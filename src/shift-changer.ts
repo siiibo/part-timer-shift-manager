@@ -21,7 +21,13 @@ import { EventInfo, shiftChanger } from "./shift-changer-api";
 
 type RecurringType = RegistrationRecurringEventRow[] | ModificationRecurringEventRow[] | DeletionRecurringEventRow[];
 type SheetType = "registration" | "modificationAndDeletion" | "recurringEvent";
-type OperationType = "registration" | "modificationAndDeletion" | "showEvents" | "recurringEvent";
+type OperationType =
+  | "registration"
+  | "modificationAndDeletion"
+  | "showEvents"
+  | "registerRecurringEvent"
+  | "modifyRecurringEvent"
+  | "deleteRecurringEvent";
 export const doGet = () => {
   return ContentService.createTextOutput("ok");
 };

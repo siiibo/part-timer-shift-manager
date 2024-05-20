@@ -10,14 +10,17 @@ import {
   setValuesModificationAndDeletionSheet,
 } from "./ModificationAndDeletionSheet";
 import {
-  DeletionRecurringEventRow,
   getRecurringEventModificationOrDeletionOrRegistration,
   insertRecurringEventSheet,
-  ModificationRecurringEventRow,
-  RegistrationRecurringEventRow,
 } from "./RecurringShiftSheet";
 import { getRegistrationRows, insertRegistrationSheet, setValuesRegistrationSheet } from "./RegistrationSheet";
-import { EventInfo, shiftChanger } from "./shift-changer-api";
+import {
+  DeletionRecurringEvent,
+  EventInfo,
+  ModificationRecurringEvent,
+  RegisterRecurringEventRequest,
+  shiftChanger,
+} from "./shift-changer-api";
 
 type SheetType = "registration" | "modificationAndDeletion" | "recurringEvent";
 type OperationType =
@@ -405,9 +408,9 @@ export const callRecurringEvent = () => {
   const messageTitle = `${job}${lastName}さんの以下の繰り返し予定が変更されました`;
   const RecurringEventMessageToNotify = [
     `${messageTitle}`,
-    createMessageForRecurringEvent(registrationRows),
-    createMessageForRecurringEvent(modificationRows),
-    createMessageForRecurringEvent(deletionRows),
+    createMessageForRecurringEvent("registration", { after, events: registrationInfos }),
+    createMessageForRecurringEvent("modification", { after, events: modificationInfos }),
+    createMessageForRecurringEvent("deletion", { after, dayOfWeeks: deleteDayOfWeeks }),
     comment ? `コメント: ${comment}` : undefined,
   ]
     .filter(Boolean)
@@ -511,37 +514,59 @@ const createTitleFromEventInfo = (
 };
 
 const createMessageForRecurringEvent = (
-  recurringEventInfos: RegistrationRecurringEventRow[] | ModificationRecurringEventRow[] | DeletionRecurringEventRow[],
-): string => {
+  type: "registration" | "modification" | "deletion",
+  recurringEventInfo: DeletionRecurringEvent | RegisterRecurringEventRequest | ModificationRecurringEvent,
+) => {
   const messageTitle = {
     modification: "以下の繰り返し予定が変更されました",
     registration: "以下の繰り返し予定が追加されました",
     deletion: "以下の繰り返し予定が削除されました",
   };
-  if (recurringEventInfos.length === 0) return "";
 
-  const messages = recurringEventInfos.map((recurringEventInfo) => {
-    if (recurringEventInfo.type === "registration") {
-      const { dayOfWeek, startTime, endTime, restStartTime, restEndTime, workingStyle } = recurringEventInfo;
+  if (type === "registration") {
+    const { events } = recurringEventInfo as RegisterRecurringEventRequest;
+    if (events.length === 0) return;
+    const messages = events.map((event) => {
+      const { title, dayOfWeek, startTime, endTime } = event;
+      return `${dayOfWeek} : ${title} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
+    });
+    return `${messageTitle[type]}\n${messages.join("\n")}`;
+  } else if (type === "modification") {
+    const { events } = recurringEventInfo as ModificationRecurringEvent;
+    if (events.length === 0) return;
+    const messages = events.map((event) => {
+      const { title, dayOfWeek, startTime, endTime } = event;
+      return `${dayOfWeek} : ${title} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
+    });
+    return `${messageTitle[type]}\n${messages.join("\n")}`;
+  } else if (type === "deletion") {
+    const { dayOfWeeks } = recurringEventInfo as DeletionRecurringEvent;
+    if (dayOfWeeks.length === 0) return;
+    return `${messageTitle[type]}\n${dayOfWeeks.join("\n")}`;
+  }
 
-      if (restStartTime && restEndTime) {
-        return `${dayOfWeek} : ${workingStyle} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} (休憩: ${format(restStartTime, "HH:mm")}~${format(restEndTime, "HH:mm")})`;
-      } else {
-        return `${dayOfWeek} : ${workingStyle} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
-      }
-    } else if (recurringEventInfo.type === "modification") {
-      const { dayOfWeek, startTime, endTime, restStartTime, restEndTime, workingStyle } = recurringEventInfo;
+  // const messages = recurringEventInfos.map((recurringEventInfo) => {
+  //   if (recurringEventInfo.type === "registration") {
+  //     const { dayOfWeek, startTime, endTime, restStartTime, restEndTime, workingStyle } = recurringEventInfo;
 
-      if (restEndTime && restStartTime) {
-        return `${dayOfWeek} : ${workingStyle} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} (休憩: ${format(restStartTime, "HH:mm")}~${format(restEndTime, "HH:mm")})`;
-      } else {
-        return `${dayOfWeek} : ${workingStyle} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
-      }
-    } else if (recurringEventInfo && recurringEventInfo.type === "deletion") {
-      const { dayOfWeek } = recurringEventInfo;
+  //     if (restStartTime && restEndTime) {
+  //       return `${dayOfWeek} : ${workingStyle} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} (休憩: ${format(restStartTime, "HH:mm")}~${format(restEndTime, "HH:mm")})`;
+  //     } else {
+  //       return `${dayOfWeek} : ${workingStyle} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
+  //     }
+  //   } else if (recurringEventInfo.type === "modification") {
+  //     const { dayOfWeek, startTime, endTime, restStartTime, restEndTime, workingStyle } = recurringEventInfo;
 
-      return `${dayOfWeek}`;
-    }
-  });
-  return `${messageTitle[recurringEventInfos[0].type]}\n${messages.join("\n")}`;
+  //     if (restEndTime && restStartTime) {
+  //       return `${dayOfWeek} : ${workingStyle} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} (休憩: ${format(restStartTime, "HH:mm")}~${format(restEndTime, "HH:mm")})`;
+  //     } else {
+  //       return `${dayOfWeek} : ${workingStyle} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
+  //     }
+  //   } else if (recurringEventInfo && recurringEventInfo.type === "deletion") {
+  //     const { dayOfWeek } = recurringEventInfo;
+
+  //     return `${dayOfWeek}`;
+  //   }
+  // });
+  // return `${messageTitle[recurringEventInfos[0].type]}\n${messages.join("\n")}`;
 };

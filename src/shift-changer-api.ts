@@ -48,7 +48,7 @@ type DeleteRecurringEventResponse = {
   comment: string;
 };
 
-const ModificationRecurringEvent = z.object({
+export const ModificationRecurringEvent = z.object({
   after: z.coerce.date(),
   events: z
     .object({
@@ -59,7 +59,7 @@ const ModificationRecurringEvent = z.object({
     })
     .array(),
 });
-type ModificationRecurringEvent = z.infer<typeof ModificationRecurringEvent>;
+export type ModificationRecurringEvent = z.infer<typeof ModificationRecurringEvent>;
 
 const getCalendar = () => {
   const { CALENDAR_ID } = getConfig();

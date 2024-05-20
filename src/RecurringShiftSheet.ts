@@ -27,14 +27,14 @@ const OperationString = z.preprocess(
   z.literal("時間変更").or(z.literal("消去")).or(z.literal("追加")).optional(),
 );
 
-export const DeletionRecurringEventRow = z.object({
+const DeletionRecurringEventRow = z.object({
   type: z.literal("deletion"),
   after: z.date(),
   dayOfWeek: DayOfWeek,
 });
-export type DeletionRecurringEventRow = z.infer<typeof DeletionRecurringEventRow>;
+type DeletionRecurringEventRow = z.infer<typeof DeletionRecurringEventRow>;
 
-export const ModificationRecurringEventRow = z.object({
+const ModificationRecurringEventRow = z.object({
   type: z.literal("modification"),
   after: z.date(),
   dayOfWeek: DayOfWeek,
@@ -44,9 +44,9 @@ export const ModificationRecurringEventRow = z.object({
   restEndTime: z.date().optional(),
   workingStyle: z.literal("リモート").or(z.literal("出勤")),
 });
-export type ModificationRecurringEventRow = z.infer<typeof ModificationRecurringEventRow>;
+type ModificationRecurringEventRow = z.infer<typeof ModificationRecurringEventRow>;
 
-export const RegistrationRecurringEventRow = z.object({
+const RegistrationRecurringEventRow = z.object({
   type: z.literal("registration"),
   after: z.date(),
   dayOfWeek: DayOfWeek,
@@ -56,7 +56,7 @@ export const RegistrationRecurringEventRow = z.object({
   restEndTime: z.date().optional(),
   workingStyle: z.literal("リモート").or(z.literal("出勤")),
 });
-export type RegistrationRecurringEventRow = z.infer<typeof RegistrationRecurringEventRow>;
+type RegistrationRecurringEventRow = z.infer<typeof RegistrationRecurringEventRow>;
 
 const RecurringEventSheetRow = z.object({
   after: z.date(),

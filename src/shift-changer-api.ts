@@ -124,14 +124,14 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
       break;
     }
     case "deleteRecurringEvent": {
-      const deletionRecurringEvents = DeletionRecurringEvent.parse(JSON.parse(e.parameter.recurringEventDeletion));
+      if (!parameter.recurringEventDeletion) throw new Error("recurringEventDeletion is required");
+      const deletionRecurringEvents = parameter.recurringEventDeletion;
 
       return JSON.stringify(deleteRecurringEvent(deletionRecurringEvents, userEmail));
     }
     case "modificationRecurringEvent": {
-      const modificationRecurringEvent = ModificationRecurringEvent.parse(
-        JSON.parse(e.parameter.recurringEventModification),
-      );
+      if (!parameter.recurringEventModification) throw new Error("recurringEventModification is required");
+      const modificationRecurringEvent = parameter.recurringEventModification;
       return JSON.stringify(modifyRecurringEvent(modificationRecurringEvent, userEmail));
     }
   }

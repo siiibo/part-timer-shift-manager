@@ -67,7 +67,7 @@ const RegisterRequest = z.object({
   registrationInfos: EventInfo.array(),
 });
 
-const ModifyRequest = z.object({
+const ModifyOrDeleteEvent = z.object({
   operationType: z.literal("modifyAndDelete"),
   userEmail: z.string(),
   modificationInfos: ModificationInfo.array(),
@@ -100,7 +100,7 @@ const ModifyRecurringEventRequest = z.object({
 
 const ShiftChangeRequestSchema = z.union([
   RegisterRequest,
-  ModifyRequest,
+  ModifyOrDeleteEvent,
   ShowEventsRequest,
   RegisterRecurringEventRequest,
   DeleteRecurringEventRequest,

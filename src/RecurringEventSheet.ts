@@ -176,9 +176,9 @@ const getRecurringEventReSheetValues = (
           workingStyle: row.workingStyle,
         });
       } else {
-        return NoOperationRow.parse({
+        return {
           type: "no-operation",
-        });
+        } as NoOperationRow;
       }
     });
   return sheetValues;

@@ -19,7 +19,6 @@ import {
 import { getRegistrationRows, insertRegistrationSheet, setValuesRegistrationSheet } from "./RegistrationSheet";
 import { EventInfo, shiftChanger } from "./shift-changer-api";
 
-type RecurringType = RegistrationRecurringEventRow[] | ModificationRecurringEventRow[] | DeletionRecurringEventRow[];
 type SheetType = "registration" | "modificationAndDeletion" | "recurringEvent";
 type OperationType =
   | "registration"
@@ -511,7 +510,9 @@ const createTitleFromEventInfo = (
   }
 };
 
-const createMessageForRecurringEvent = (recurringEventInfos: RecurringType): string => {
+const createMessageForRecurringEvent = (
+  recurringEventInfos: RegistrationRecurringEventRow[] | ModificationRecurringEventRow[] | DeletionRecurringEventRow[],
+): string => {
   const messageTitle = {
     modification: "以下の繰り返し予定が変更されました",
     registration: "以下の繰り返し予定が追加されました",

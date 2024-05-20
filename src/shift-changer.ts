@@ -399,9 +399,9 @@ export const callRecurringEvent = () => {
   const messageTitle = `${job}${lastName}さんの以下の繰り返し予定が変更されました`;
   const RecurringEventMessageToNotify = [
     `${messageTitle}`,
-    createRecurringEventMessage(registrationRows),
-    createRecurringEventMessage(modificationRows),
-    createRecurringEventMessage(deletionRows),
+    createMessageForRecurringEvent(registrationRows),
+    createMessageForRecurringEvent(modificationRows),
+    createMessageForRecurringEvent(deletionRows),
     comment ? `コメント: ${comment}` : undefined,
   ]
     .filter(Boolean)
@@ -500,7 +500,7 @@ const createTitleFromEventInfo = (
   }
 };
 
-const createRecurringEventMessage = (recurringEventInfos: RecurringType): string => {
+const createMessageForRecurringEvent = (recurringEventInfos: RecurringType): string => {
   const messageTitle = {
     modification: "以下の繰り返し予定が変更されました",
     registration: "以下の繰り返し予定が追加されました",

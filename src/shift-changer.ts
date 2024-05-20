@@ -15,7 +15,7 @@ import {
   insertRecurringEventSheet,
   ModificationRecurringEventRow,
   RegistrationRecurringEventRow,
-} from "./RecurringEventSheet";
+} from "./RecurringShiftSheet";
 import { getRegistrationRows, insertRegistrationSheet, setValuesRegistrationSheet } from "./RegistrationSheet";
 import { EventInfo, shiftChanger } from "./shift-changer-api";
 

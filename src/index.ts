@@ -1,6 +1,6 @@
 import { insertModificationAndDeletionSheet } from "./ModificationAndDeletionSheet";
 import { initNotifyDailyShift, notifyDailyShift } from "./notify-daily-shift";
-import { insertRecurringEventSheet } from "./RecurringEventSheet";
+import { insertRecurringEventSheet } from "./RecurringShiftSheet";
 import { insertRegistrationSheet } from "./RegistrationSheet";
 import {
   callModificationAndDeletion,

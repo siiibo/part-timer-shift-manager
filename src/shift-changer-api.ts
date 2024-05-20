@@ -64,14 +64,14 @@ type ModifyRecurringEvent = z.infer<typeof ModifyRecurringEvent>;
 const RegisterRequest = z.object({
   operationType: z.literal("register"),
   userEmail: z.string(),
-  registrationInfos: EventInfo.array(),
+  registerInfos: EventInfo.array(),
 });
 
 const ModifyOrDeleteEvent = z.object({
   operationType: z.literal("modifyAndDelete"),
   userEmail: z.string(),
-  modificationInfos: ModifyInfo.array(),
-  deletionInfos: EventInfo.array(),
+  modifyInfos: ModifyInfo.array(),
+  deleteInfos: EventInfo.array(),
 });
 
 const ShowEventsRequest = z.object({
@@ -83,19 +83,19 @@ const ShowEventsRequest = z.object({
 const RegisterRecurringEventRequest = z.object({
   operationType: z.literal("registerRecurringEvent"),
   userEmail: z.string(),
-  recurringEventRegistration: RegisterRecurringEvent,
+  registerRecurringInfos: RegisterRecurringEvent,
 });
 
 const DeleteRecurringEventRequest = z.object({
   operationType: z.literal("deleteRecurringEvent"),
   userEmail: z.string(),
-  recurringEventDeletion: DeleteRecurringEvent,
+  deleteRecurringInfos: DeleteRecurringEvent,
 });
 
 const ModifyRecurringEventRequest = z.object({
   operationType: z.literal("modifyRecurringEvent"),
   userEmail: z.string(),
-  recurringEventModification: ModifyRecurringEvent,
+  modifyRecurringInfos: ModifyRecurringEvent,
 });
 
 const ShiftChangeRequestSchema = z.union([
@@ -124,17 +124,17 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
   const userEmail = parameter.userEmail;
   switch (operationType) {
     case "register": {
-      const registrationInfos = parameter.registrationInfos;
+      const registerInfos = parameter.registerInfos;
 
-      registration(userEmail, registrationInfos);
+      registration(userEmail, registerInfos);
       break;
     }
     case "modifyAndDelete": {
-      const modificationInfos = parameter.modificationInfos;
-      const deletionInfos = parameter.deletionInfos;
+      const modifyInfos = parameter.modifyInfos;
+      const deleteInfos = parameter.deleteInfos;
 
-      modification(modificationInfos, userEmail);
-      deletion(deletionInfos, userEmail);
+      modification(modifyInfos, userEmail);
+      deletion(deleteInfos, userEmail);
       break;
     }
     case "showEvents": {
@@ -144,20 +144,20 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
       return JSON.stringify(eventInfos);
     }
     case "registerRecurringEvent": {
-      const registrationRecurringEvent = parameter.recurringEventRegistration;
+      const registerRecurringInfos = parameter.registerRecurringInfos;
 
-      registerRecurringEvent(registrationRecurringEvent, userEmail);
+      registerRecurringEvent(registerRecurringInfos, userEmail);
       break;
     }
     case "deleteRecurringEvent": {
-      const deleteRecurringEvents = parameter.recurringEventDeletion;
+      const deleteRecurringInfos = parameter.deleteRecurringInfos;
 
-      return JSON.stringify(deleteRecurringEvent(deleteRecurringEvents, userEmail));
+      return JSON.stringify(deleteRecurringEvent(deleteRecurringInfos, userEmail));
     }
     case "modifyRecurringEvent": {
-      const modificationRecurringEvent = parameter.recurringEventModification;
+      const modifyRecurringInfos = parameter.modifyRecurringInfos;
 
-      return JSON.stringify(modifyRecurringEvent(modificationRecurringEvent, userEmail));
+      return JSON.stringify(modifyRecurringEvent(modifyRecurringInfos, userEmail));
     }
   }
   return;

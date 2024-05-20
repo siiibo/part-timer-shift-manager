@@ -27,12 +27,12 @@ const OperationString = z.preprocess(
   z.literal("時間変更").or(z.literal("消去")).or(z.literal("追加")).optional(),
 );
 
-export const DeleteRecurringEventRow = z.object({
+export const DeletionRecurringEventRow = z.object({
   type: z.literal("deletion"),
   after: z.date(),
   dayOfWeek: DayOfWeek,
 });
-export type DeleteRecurringEventRow = z.infer<typeof DeleteRecurringEventRow>;
+export type DeletionRecurringEventRow = z.infer<typeof DeletionRecurringEventRow>;
 
 export const ModificationRecurringEventRow = z.object({
   type: z.literal("modification"),
@@ -129,7 +129,7 @@ const setValuesRecurringEventSheet = (sheet: GoogleAppsScript.Spreadsheet.Sheet)
 
 const getRecurringEventReSheetValues = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
-): (DeleteRecurringEventRow | ModificationRecurringEventRow | RegistrationRecurringEventRow | NoOperationRow)[] => {
+): (DeletionRecurringEventRow | ModificationRecurringEventRow | RegistrationRecurringEventRow | NoOperationRow)[] => {
   const after = sheet.getRange("A5").getValue();
   const sheetValues = sheet
     .getRange("A9:G13")
@@ -148,7 +148,7 @@ const getRecurringEventReSheetValues = (
     )
     .map((row) => {
       if (row.operation === "消去") {
-        return DeleteRecurringEventRow.parse({
+        return DeletionRecurringEventRow.parse({
           type: "deletion",
           after: row.after,
           dayOfWeek: row.dayOfWeek,
@@ -185,13 +185,13 @@ const getRecurringEventReSheetValues = (
 };
 
 const isModificationRow = (
-  row: ModificationRecurringEventRow | DeleteRecurringEventRow | RegistrationRecurringEventRow | NoOperationRow,
+  row: ModificationRecurringEventRow | DeletionRecurringEventRow | RegistrationRecurringEventRow | NoOperationRow,
 ): row is ModificationRecurringEventRow => row.type === "modification";
 const isDeletionRow = (
-  row: ModificationRecurringEventRow | DeleteRecurringEventRow | RegistrationRecurringEventRow | NoOperationRow,
-): row is DeleteRecurringEventRow => row.type === "deletion";
+  row: ModificationRecurringEventRow | DeletionRecurringEventRow | RegistrationRecurringEventRow | NoOperationRow,
+): row is DeletionRecurringEventRow => row.type === "deletion";
 const isRegistrationRow = (
-  row: ModificationRecurringEventRow | DeleteRecurringEventRow | RegistrationRecurringEventRow | NoOperationRow,
+  row: ModificationRecurringEventRow | DeletionRecurringEventRow | RegistrationRecurringEventRow | NoOperationRow,
 ): row is RegistrationRecurringEventRow => row.type === "registration";
 
 export const getRecurringEventModificationOrDeletionOrRegistration = (
@@ -199,7 +199,7 @@ export const getRecurringEventModificationOrDeletionOrRegistration = (
 ): {
   registrationRows: RegistrationRecurringEventRow[];
   modificationRows: ModificationRecurringEventRow[];
-  deletionRows: DeleteRecurringEventRow[];
+  deletionRows: DeletionRecurringEventRow[];
 } => {
   const sheetValues = getRecurringEventReSheetValues(sheet);
   return {

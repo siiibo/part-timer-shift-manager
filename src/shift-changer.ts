@@ -10,7 +10,7 @@ import {
   setValuesModificationAndDeletionSheet,
 } from "./ModificationAndDeletionSheet";
 import {
-  DeleteRecurringEventRow,
+  DeletionRecurringEventRow,
   getRecurringEventModificationOrDeletionOrRegistration,
   insertRecurringEventSheet,
   ModificationRecurringEventRow,
@@ -19,7 +19,7 @@ import {
 import { getRegistrationRows, insertRegistrationSheet, setValuesRegistrationSheet } from "./RegistrationSheet";
 import { EventInfo, shiftChanger } from "./shift-changer-api";
 
-type RecurringType = RegistrationRecurringEventRow[] | ModificationRecurringEventRow[] | DeleteRecurringEventRow[];
+type RecurringType = RegistrationRecurringEventRow[] | ModificationRecurringEventRow[] | DeletionRecurringEventRow[];
 type SheetType = "registration" | "modificationAndDeletion" | "recurringEvent";
 type OperationType = "registration" | "modificationAndDeletion" | "showEvents" | "recurringEvent";
 export const doGet = () => {

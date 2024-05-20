@@ -19,7 +19,7 @@ export const EventInfo = z.object({
 });
 export type EventInfo = z.infer<typeof EventInfo>;
 
-const ModificationInfo = z.object({
+const ModifyInfo = z.object({
   previousEventInfo: EventInfo,
   newEventInfo: EventInfo,
 });
@@ -37,18 +37,18 @@ const RegisterRecurringEvent = z.object({
 });
 type RegisterRecurringEvent = z.infer<typeof RegisterRecurringEvent>;
 
-const DeletionRecurringEvent = z.object({
+const DeleteRecurringEvent = z.object({
   after: z.coerce.date(),
   dayOfWeeks: DayOfWeek.array(),
 });
-type DeletionRecurringEvent = z.infer<typeof DeletionRecurringEvent>;
+type DeleteRecurringEvent = z.infer<typeof DeleteRecurringEvent>;
 
 type DeleteRecurringEventResponse = {
   responseCode: number;
   comment: string;
 };
 
-const ModificationRecurringEvent = z.object({
+const ModifyRecurringEvent = z.object({
   after: z.coerce.date(),
   events: z
     .object({
@@ -59,7 +59,7 @@ const ModificationRecurringEvent = z.object({
     })
     .array(),
 });
-type ModificationRecurringEvent = z.infer<typeof ModificationRecurringEvent>;
+type ModifyRecurringEvent = z.infer<typeof ModifyRecurringEvent>;
 
 const RegisterRequest = z.object({
   operationType: z.literal("register"),
@@ -70,7 +70,7 @@ const RegisterRequest = z.object({
 const ModifyOrDeleteEvent = z.object({
   operationType: z.literal("modifyAndDelete"),
   userEmail: z.string(),
-  modificationInfos: ModificationInfo.array(),
+  modificationInfos: ModifyInfo.array(),
   deletionInfos: EventInfo.array(),
 });
 
@@ -89,13 +89,13 @@ const RegisterRecurringEventRequest = z.object({
 const DeleteRecurringEventRequest = z.object({
   operationType: z.literal("deleteRecurringEvent"),
   userEmail: z.string(),
-  recurringEventDeletion: DeletionRecurringEvent,
+  recurringEventDeletion: DeleteRecurringEvent,
 });
 
 const ModifyRecurringEventRequest = z.object({
   operationType: z.literal("modifyRecurringEvent"),
   userEmail: z.string(),
-  recurringEventModification: ModificationRecurringEvent,
+  recurringEventModification: ModifyRecurringEvent,
 });
 
 const ShiftChangeRequestSchema = z.union([
@@ -217,7 +217,7 @@ const registerRecurringEvent = ({ after, events }: RegisterRecurringEvent, userE
 };
 
 const deleteRecurringEvent = (
-  { dayOfWeeks, after }: DeletionRecurringEvent,
+  { dayOfWeeks, after }: DeleteRecurringEvent,
   userEmail: string,
 ): DeleteRecurringEventResponse => {
   const calendarId = getConfig().CALENDAR_ID;
@@ -270,7 +270,7 @@ const deleteRecurringEvent = (
   return { responseCode: 200, comment: "イベントの消去が成功しました" };
 };
 
-const modifyRecurringEvent = ({ after, events }: ModificationRecurringEvent, userEmail: string) => {
+const modifyRecurringEvent = ({ after, events }: ModifyRecurringEvent, userEmail: string) => {
   const calendar = getCalendar();
   const calendarId = getConfig().CALENDAR_ID;
   const advancedCalendar = getAdvancedCalendar();

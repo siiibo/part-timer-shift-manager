@@ -62,13 +62,13 @@ const ModifyRecurringEvent = z.object({
 type ModifyRecurringEvent = z.infer<typeof ModifyRecurringEvent>;
 
 const RegisterRequest = z.object({
-  operationType: z.literal("register"),
+  operationType: z.literal("registerEvent"),
   userEmail: z.string(),
   registerInfos: EventInfo.array(),
 });
 
 const ModifyOrDeleteEvent = z.object({
-  operationType: z.literal("modifyAndDelete"),
+  operationType: z.literal("modifyOrDeleteEvent"),
   userEmail: z.string(),
   modifyInfos: ModifyInfo.array(),
   deleteInfos: EventInfo.array(),
@@ -123,18 +123,18 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
   const operationType = parameter.operationType;
   const userEmail = parameter.userEmail;
   switch (operationType) {
-    case "register": {
+    case "registerEvent": {
       const registerInfos = parameter.registerInfos;
 
-      registration(userEmail, registerInfos);
+      registerEvents(userEmail, registerInfos);
       break;
     }
-    case "modifyAndDelete": {
+    case "modifyOrDeleteEvent": {
       const modifyInfos = parameter.modifyInfos;
       const deleteInfos = parameter.deleteInfos;
 
-      modification(modifyInfos, userEmail);
-      deletion(deleteInfos, userEmail);
+      modifyEvents(modifyInfos, userEmail);
+      deleteEvents(deleteInfos, userEmail);
       break;
     }
     case "showEvents": {
@@ -146,24 +146,24 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
     case "registerRecurringEvent": {
       const registerRecurringInfos = parameter.registerRecurringInfos;
 
-      registerRecurringEvent(registerRecurringInfos, userEmail);
+      registerRecurringEvents(registerRecurringInfos, userEmail);
       break;
     }
     case "deleteRecurringEvent": {
       const deleteRecurringInfos = parameter.deleteRecurringInfos;
 
-      return JSON.stringify(deleteRecurringEvent(deleteRecurringInfos, userEmail));
+      return JSON.stringify(deleteRecurringEvents(deleteRecurringInfos, userEmail));
     }
     case "modifyRecurringEvent": {
       const modifyRecurringInfos = parameter.modifyRecurringInfos;
 
-      return JSON.stringify(modifyRecurringEvent(modifyRecurringInfos, userEmail));
+      return JSON.stringify(modifyRecurringEvents(modifyRecurringInfos, userEmail));
     }
   }
   return;
 };
 
-const registration = (userEmail: string, registrationInfos: EventInfo[]) => {
+const registerEvents = (userEmail: string, registrationInfos: EventInfo[]) => {
   registrationInfos.forEach((registrationInfo) => {
     registerEvent(registrationInfo, userEmail);
   });
@@ -190,7 +190,7 @@ const showEvents = (userEmail: string, startDate: Date): EventInfo[] => {
   return eventInfos;
 };
 
-const modification = (
+const modifyEvents = (
   modificationInfos: {
     previousEventInfo: EventInfo;
     newEventInfo: EventInfo;
@@ -201,7 +201,7 @@ const modification = (
   modificationInfos.forEach((eventInfo) => modifyEvent(eventInfo, calendar, userEmail));
 };
 
-const registerRecurringEvent = ({ after, events }: RegisterRecurringEvent, userEmail: string) => {
+const registerRecurringEvents = ({ after, events }: RegisterRecurringEvent, userEmail: string) => {
   const calendar = getCalendar();
   events.forEach(({ title, startTime, endTime, dayOfWeek }) => {
     const recurrenceStartDate = getRecurrenceStartDate(after, dayOfWeek);
@@ -216,7 +216,7 @@ const registerRecurringEvent = ({ after, events }: RegisterRecurringEvent, userE
   });
 };
 
-const deleteRecurringEvent = (
+const deleteRecurringEvents = (
   { dayOfWeeks, after }: DeleteRecurringEvent,
   userEmail: string,
 ): DeleteRecurringEventResponse => {
@@ -270,7 +270,7 @@ const deleteRecurringEvent = (
   return { responseCode: 200, comment: "イベントの消去が成功しました" };
 };
 
-const modifyRecurringEvent = ({ after, events }: ModifyRecurringEvent, userEmail: string) => {
+const modifyRecurringEvents = ({ after, events }: ModifyRecurringEvent, userEmail: string) => {
   const calendar = getCalendar();
   const calendarId = getConfig().CALENDAR_ID;
   const advancedCalendar = getAdvancedCalendar();
@@ -353,7 +353,7 @@ const modifyEvent = (
   event.setTitle(newTitle);
 };
 
-const deletion = (deletionInfos: EventInfo[], userEmail: string) => {
+const deleteEvents = (deletionInfos: EventInfo[], userEmail: string) => {
   const calendar = getCalendar();
   deletionInfos.forEach((eventInfo) => deleteEvent(eventInfo, calendar, userEmail));
 };

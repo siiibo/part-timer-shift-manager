@@ -61,24 +61,51 @@ const ModificationRecurringEvent = z.object({
 });
 type ModificationRecurringEvent = z.infer<typeof ModificationRecurringEvent>;
 
-export const ShiftChangeRequestSchema = z.object({
-  operationType: z
-    .literal("registration")
-    .or(z.literal("modificationAndDeletion"))
-    .or(z.literal("showEvents"))
-    .or(z.literal("registerRecurringEvent"))
-    .or(z.literal("deleteRecurringEvent"))
-    .or(z.literal("modificationRecurringEvent")),
+const RegistrationRequest = z.object({
+  operationType: z.literal("registration"),
   userEmail: z.string(),
-  registrationInfos: EventInfo.array().optional(),
-  modificationInfos: ModificationInfo.array().optional(),
-  deletionInfos: EventInfo.array().optional(),
-  startDate: z.coerce.date().optional(),
-  recurringEventRegistration: RegisterRecurringEventRequest.optional(),
-  recurringEventDeletion: DeletionRecurringEvent.optional(),
-  recurringEventModification: ModificationRecurringEvent.optional(),
+  registrationInfos: EventInfo.array(),
 });
-export type ShiftChangeRequest = z.infer<typeof ShiftChangeRequestSchema>;
+
+const ModificationRequest = z.object({
+  operationType: z.literal("modificationAndDeletion"),
+  userEmail: z.string(),
+  modificationInfos: ModificationInfo.array(),
+  deletionInfos: EventInfo.array(),
+});
+
+const ShowEventsRequest = z.object({
+  operationType: z.literal("showEvents"),
+  userEmail: z.string(),
+  startDate: z.coerce.date(),
+});
+
+const RegistrationRecurringEventRequestSchema = z.object({
+  operationType: z.literal("registrationRecurringEvent"),
+  userEmail: z.string(),
+  recurringEventRegistration: RegisterRecurringEventRequest,
+});
+
+const DeletionRecurringEventRequestSchema = z.object({
+  operationType: z.literal("deletionRecurringEvent"),
+  userEmail: z.string(),
+  recurringEventDeletion: DeletionRecurringEvent,
+});
+
+const ModificationRecurringEventRequestSchema = z.object({
+  operationType: z.literal("modificationRecurringEvent"),
+  userEmail: z.string(),
+  recurringEventModification: ModificationRecurringEvent,
+});
+
+const ShiftChangeRequestSchema = z.union([
+  RegistrationRequest,
+  ModificationRequest,
+  ShowEventsRequest,
+  RegistrationRecurringEventRequestSchema,
+  DeletionRecurringEventRequestSchema,
+  ModificationRecurringEventRequestSchema,
+]);
 
 const getCalendar = () => {
   const { CALENDAR_ID } = getConfig();
@@ -97,13 +124,11 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
   const userEmail = parameter.userEmail;
   switch (operationType) {
     case "registration": {
-      if (!parameter.registrationInfos) throw new Error("registrationInfos is required");
       const registrationInfos = parameter.registrationInfos;
       registration(userEmail, registrationInfos);
       break;
     }
     case "modificationAndDeletion": {
-      if (!parameter.modificationInfos || !parameter.deletionInfos) throw new Error("modificationInfos is required");
       const modificationInfos = parameter.modificationInfos;
       const deletionInfos = parameter.deletionInfos;
 
@@ -112,25 +137,21 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
       break;
     }
     case "showEvents": {
-      if (!parameter.startDate) throw new Error("startDate is required");
       const startDate = parameter.startDate;
       const eventInfos = showEvents(userEmail, startDate);
       return JSON.stringify(eventInfos);
     }
-    case "registerRecurringEvent": {
-      if (!parameter.recurringEventRegistration) throw new Error("recurringEventRegistration is required");
-      const registerRecurringEventRequest = parameter.recurringEventRegistration;
-      registerRecurringEvent(registerRecurringEventRequest, userEmail);
+    case "registrationRecurringEvent": {
+      const registrationRecurringEvent = parameter.recurringEventRegistration;
+      registerRecurringEvent(registrationRecurringEvent, userEmail);
       break;
     }
-    case "deleteRecurringEvent": {
-      if (!parameter.recurringEventDeletion) throw new Error("recurringEventDeletion is required");
+    case "deletionRecurringEvent": {
       const deletionRecurringEvents = parameter.recurringEventDeletion;
 
       return JSON.stringify(deleteRecurringEvent(deletionRecurringEvents, userEmail));
     }
     case "modificationRecurringEvent": {
-      if (!parameter.recurringEventModification) throw new Error("recurringEventModification is required");
       const modificationRecurringEvent = parameter.recurringEventModification;
       return JSON.stringify(modifyRecurringEvent(modificationRecurringEvent, userEmail));
     }

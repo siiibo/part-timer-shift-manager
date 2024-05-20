@@ -544,29 +544,4 @@ const createMessageForRecurringEvent = (
     if (dayOfWeeks.length === 0) return;
     return `${messageTitle[type]}\n${dayOfWeeks.join("\n")}`;
   }
-
-  // const messages = recurringEventInfos.map((recurringEventInfo) => {
-  //   if (recurringEventInfo.type === "registration") {
-  //     const { dayOfWeek, startTime, endTime, restStartTime, restEndTime, workingStyle } = recurringEventInfo;
-
-  //     if (restStartTime && restEndTime) {
-  //       return `${dayOfWeek} : ${workingStyle} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} (休憩: ${format(restStartTime, "HH:mm")}~${format(restEndTime, "HH:mm")})`;
-  //     } else {
-  //       return `${dayOfWeek} : ${workingStyle} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
-  //     }
-  //   } else if (recurringEventInfo.type === "modification") {
-  //     const { dayOfWeek, startTime, endTime, restStartTime, restEndTime, workingStyle } = recurringEventInfo;
-
-  //     if (restEndTime && restStartTime) {
-  //       return `${dayOfWeek} : ${workingStyle} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} (休憩: ${format(restStartTime, "HH:mm")}~${format(restEndTime, "HH:mm")})`;
-  //     } else {
-  //       return `${dayOfWeek} : ${workingStyle} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
-  //     }
-  //   } else if (recurringEventInfo && recurringEventInfo.type === "deletion") {
-  //     const { dayOfWeek } = recurringEventInfo;
-
-  //     return `${dayOfWeek}`;
-  //   }
-  // });
-  // return `${messageTitle[recurringEventInfos[0].type]}\n${messages.join("\n")}`;
 };

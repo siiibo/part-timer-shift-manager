@@ -86,7 +86,7 @@ export const insertRecurringEventSheet = () => {
   setValuesRecurringEventSheet(sheet);
 };
 
-const setValuesRecurringEventSheet = (sheet: GoogleAppsScript.Spreadsheet.Sheet) => {
+export const setValuesRecurringEventSheet = (sheet: GoogleAppsScript.Spreadsheet.Sheet) => {
   const description1 = "コメント欄 (下の色付きセルに記入してください)";
   sheet.getRange("A1").setValue(description1).setFontWeight("bold");
   const commentCell = sheet.getRange("A2");

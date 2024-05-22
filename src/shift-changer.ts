@@ -417,6 +417,10 @@ export const callRecurringEvent = () => {
     .join("\n---\n");
 
   postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, RecurringEventMessageToNotify, partTimerProfile);
+  //NOTE: 本番環境にマージする際にはコメントアウトを外す
+  // sheet.clear();
+  // SpreadsheetApp.flush();
+  // setValuesRecurringEventSheet(sheet);
 };
 
 const getSlackClient = (slackToken: string): SlackClient => {

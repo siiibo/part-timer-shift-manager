@@ -13,7 +13,7 @@ import { getRegistrationRows, insertRegistrationSheet, setValuesRegistrationShee
 import { Event, Events, shiftChanger } from "./shift-changer-api";
 
 type SheetType = "registration" | "modificationAndDeletion";
-type OperationType = "registration" | "modificationAndDeletion" | "showEvents";
+type OperationType = "registerEvent" | "modifyOrDeleteEvent" | "showEvents";
 export const doGet = () => {
   return ContentService.createTextOutput("ok");
 };
@@ -76,7 +76,7 @@ export const callRegistration = () => {
 
   const sheetType: SheetType = "registration";
   const sheet = getSheet(sheetType, spreadsheetUrl);
-  const operationType: OperationType = "registration";
+  const operationType: OperationType = "registerEvent";
   const comment = sheet.getRange("A2").getValue();
   const registrationRows = getRegistrationRows(sheet);
   const registrationInfos = registrationRows.map((registrationRow) => {
@@ -99,7 +99,7 @@ export const callRegistration = () => {
     apiId: "shift-changer",
     operationType: operationType,
     userEmail: userEmail,
-    registrationInfos: JSON.stringify(registrationInfos),
+    registerEvent: JSON.stringify(registrationInfos),
   };
   const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
     method: "post",
@@ -187,7 +187,7 @@ export const callModificationAndDeletion = () => {
   const sheetType: SheetType = "modificationAndDeletion";
   const sheet = getSheet(sheetType, spreadsheetUrl);
   const comment = sheet.getRange("A2").getValue();
-  const operationType: OperationType = "modificationAndDeletion";
+  const operationType: OperationType = "modifyOrDeleteEvent";
   const { modificationRows, deletionRows } = getModificationOrDeletion(sheet);
   const modificationInfos = modificationRows.map((modificationRow) => {
     const newTitle = createTitleFromEventInfo(
@@ -217,8 +217,8 @@ export const callModificationAndDeletion = () => {
     apiId: "shift-changer",
     operationType: operationType,
     userEmail: userEmail,
-    modificationInfos: JSON.stringify(modificationInfos),
-    deletionInfos: JSON.stringify(deletionRows),
+    modificationEvent: JSON.stringify(modificationInfos),
+    deletionEvent: JSON.stringify(deletionRows),
   };
   const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
     method: "post",

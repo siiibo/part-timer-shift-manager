@@ -1,5 +1,6 @@
 import { addWeeks, endOfDay, format, nextDay, previousDay, set, startOfDay, subHours } from "date-fns";
 import { z } from "zod";
+import { zu } from "zod_utilz";
 
 import { getConfig } from "./config";
 
@@ -64,14 +65,14 @@ type ModifyRecurringEvent = z.infer<typeof ModifyRecurringEvent>;
 const RegisterEventRequest = z.object({
   operationType: z.literal("registerEvent"),
   userEmail: z.string(),
-  registerInfos: EventInfo.array(),
+  registerInfos: zu.stringToJSON().pipe(EventInfo.array()),
 });
 
 const ModifyOrDeleteEventRequest = z.object({
   operationType: z.literal("modifyOrDeleteEvent"),
   userEmail: z.string(),
-  modificationEvent: ModificationEvent.array(),
-  deletionEvent: EventInfo.array(),
+  modificationEvent: zu.stringToJSON().pipe(ModificationEvent.array()),
+  deletionEvent: zu.stringToJSON().pipe(EventInfo.array()),
 });
 
 const ShowEventRequest = z.object({
@@ -83,19 +84,19 @@ const ShowEventRequest = z.object({
 const RegisterRecurringEventRequest = z.object({
   operationType: z.literal("registerRecurringEvent"),
   userEmail: z.string(),
-  registerRecurringInfos: RegistrationEvent,
+  registerRecurringInfos: zu.stringToJSON().pipe(RegistrationEvent),
 });
 
 const DeleteRecurringEventRequest = z.object({
   operationType: z.literal("deleteRecurringEvent"),
   userEmail: z.string(),
-  deleteRecurringInfos: DeleteRecurringEvent,
+  deleteRecurringInfos: zu.stringToJSON().pipe(DeleteRecurringEvent),
 });
 
 const ModifyRecurringEventRequest = z.object({
   operationType: z.literal("modifyRecurringEvent"),
   userEmail: z.string(),
-  modifyRecurringInfos: ModifyRecurringEvent,
+  modifyRecurringInfos: zu.stringToJSON().pipe(ModifyRecurringEvent),
 });
 
 const ShiftChangeRequestSchema = z.union([

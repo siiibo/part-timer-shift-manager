@@ -20,6 +20,9 @@ export const Event = z.object({
 });
 export type Event = z.infer<typeof Event>;
 
+export const Events = z.array(Event);
+export type Events = z.infer<typeof Events>;
+
 const ModificationEvent = z.object({
   previousEvent: Event,
   newEvent: Event,
@@ -65,14 +68,14 @@ type ModificationRecurringEvent = z.infer<typeof ModificationRecurringEvent>;
 const RegisterEventRequest = z.object({
   operationType: z.literal("registerEvent"),
   userEmail: z.string(),
-  registerEvent: zu.stringToJSON().pipe(Event.array()),
+  registerEvent: zu.stringToJSON().pipe(Events),
 });
 
 const ModifyOrDeleteEventRequest = z.object({
   operationType: z.literal("modifyOrDeleteEvent"),
   userEmail: z.string(),
   modificationEvent: zu.stringToJSON().pipe(ModificationEvent.array()),
-  deletionEvent: zu.stringToJSON().pipe(Event.array()),
+  deletionEvent: zu.stringToJSON().pipe(Events),
 });
 
 const ShowEventRequest = z.object({
@@ -164,7 +167,7 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
   return;
 };
 
-const registerEvents = (userEmail: string, registerInfos: Event[]) => {
+const registerEvents = (userEmail: string, registerInfos: Events) => {
   registerInfos.forEach((registerInfo) => {
     registerEvent(registerInfo, userEmail);
   });
@@ -176,7 +179,7 @@ const registerEvent = (eventInfo: Event, userEmail: string) => {
   calendar.createEvent(eventInfo.title, startDate, endDate, { guests: userEmail });
 };
 
-const showEvents = (userEmail: string, startDate: Date): Event[] => {
+const showEvents = (userEmail: string, startDate: Date): Events => {
   const endDate = addWeeks(startDate, 4);
   const calendar = getCalendar();
   const events = calendar.getEvents(startDate, endDate).filter((event) => isEventGuest(event, userEmail));
@@ -354,7 +357,7 @@ const modifyEvent = (
   event.setTitle(newTitle);
 };
 
-const deletionEvents = (deleteInfos: Event[], userEmail: string) => {
+const deletionEvents = (deleteInfos: Events, userEmail: string) => {
   const calendar = getCalendar();
   deleteInfos.forEach((eventInfo) => deletionEvent(eventInfo, calendar, userEmail));
 };

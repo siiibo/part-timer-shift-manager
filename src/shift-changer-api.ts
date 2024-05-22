@@ -23,11 +23,6 @@ export type Event = z.infer<typeof Event>;
 export const Events = z.array(Event);
 export type Events = z.infer<typeof Events>;
 
-const ModificationEvent = z.object({
-  previousEvent: Event,
-  newEvent: Event,
-});
-
 const RegistrationRecurringEvent = z.object({
   after: z.coerce.date(),
   events: z
@@ -74,7 +69,14 @@ const RegisterEventRequest = z.object({
 const ModifyOrDeleteEventRequest = z.object({
   operationType: z.literal("modifyOrDeleteEvent"),
   userEmail: z.string(),
-  modificationEvent: zu.stringToJSON().pipe(ModificationEvent.array()),
+  modificationEvent: zu.stringToJSON().pipe(
+    z
+      .object({
+        previousEvent: Event,
+        newEvent: Event,
+      })
+      .array(),
+  ),
   deletionEvent: zu.stringToJSON().pipe(Events),
 });
 
@@ -87,19 +89,48 @@ const ShowEventRequest = z.object({
 const RegisterRecurringEventRequest = z.object({
   operationType: z.literal("registerRecurringEvent"),
   userEmail: z.string(),
-  registerRecurringEvent: zu.stringToJSON().pipe(RegistrationRecurringEvent),
+  registerRecurringEvent: zu.stringToJSON().pipe(
+    z.object({
+      after: z.coerce.date(),
+      events: z
+        .object({
+          dayOfWeek: DayOfWeek,
+          title: z.string(),
+          startTime: z.coerce.date(),
+          endTime: z.coerce.date(),
+        })
+        .array(),
+    }),
+  ),
 });
 
 const DeleteRecurringEventRequest = z.object({
   operationType: z.literal("deleteRecurringEvent"),
   userEmail: z.string(),
-  deleteRecurringEvent: zu.stringToJSON().pipe(DeletionRecurringEvent),
+  deleteRecurringEvent: zu.stringToJSON().pipe(
+    z.object({
+      after: z.coerce.date(),
+      dayOfWeeks: DayOfWeek.array(),
+    }),
+  ),
 });
 
 const ModifyRecurringEventRequest = z.object({
   operationType: z.literal("modifyRecurringEvent"),
   userEmail: z.string(),
-  modifyRecurringEvent: zu.stringToJSON().pipe(ModificationRecurringEvent),
+  modifyRecurringEvent: zu.stringToJSON().pipe(
+    z.object({
+      after: z.coerce.date(),
+      events: z
+        .object({
+          title: z.string(),
+          dayOfWeek: DayOfWeek,
+          startTime: z.coerce.date(),
+          endTime: z.coerce.date(),
+        })
+        .array(),
+    }),
+  ),
 });
 
 const ShiftChangeRequestSchema = z.union([

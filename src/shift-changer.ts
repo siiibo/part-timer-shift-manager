@@ -10,7 +10,7 @@ import {
   setValuesModificationAndDeletionSheet,
 } from "./ModificationAndDeletionSheet";
 import { getRegistrationRows, insertRegistrationSheet, setValuesRegistrationSheet } from "./RegistrationSheet";
-import { EventInfo, shiftChanger } from "./shift-changer-api";
+import { Event, shiftChanger } from "./shift-changer-api";
 
 type SheetType = "registration" | "modificationAndDeletion";
 type OperationType = "registration" | "modificationAndDeletion" | "showEvents";
@@ -119,7 +119,7 @@ export const callRegistration = () => {
 };
 
 const createRegistrationMessage = (
-  registrationInfos: EventInfo[],
+  registrationInfos: Event[],
   comment: string,
   partTimerProfile: PartTimerProfile,
 ): string => {
@@ -156,7 +156,7 @@ export const callShowEvents = () => {
   if (response.getResponseCode() !== 200) {
     throw new Error(response.getContentText());
   }
-  const eventInfos = EventInfo.array().parse(JSON.parse(response.getContentText()));
+  const eventInfos = Event.array().parse(JSON.parse(response.getContentText()));
 
   if (eventInfos.length === 0) throw new Error("no events");
 
@@ -249,8 +249,8 @@ export const callModificationAndDeletion = () => {
 
 const createModificationMessage = (
   modificationInfos: {
-    previousEventInfo: EventInfo;
-    newEventInfo: EventInfo;
+    previousEventInfo: Event;
+    newEventInfo: Event;
   }[],
   partTimerProfile: PartTimerProfile,
 ): string | undefined => {
@@ -262,7 +262,7 @@ const createModificationMessage = (
   const messageTitle = `${job}${lastName}さんの以下の予定が変更されました。`;
   return `${messageTitle}\n${messages.join("\n\n")}`;
 };
-const createDeletionMessage = (deletionInfos: EventInfo[], partTimerProfile: PartTimerProfile): string | undefined => {
+const createDeletionMessage = (deletionInfos: Event[], partTimerProfile: PartTimerProfile): string | undefined => {
   const messages = deletionInfos.map(createMessageFromEventInfo);
   if (messages.length == 0) return;
   const { job, lastName } = partTimerProfile;
@@ -316,7 +316,7 @@ const getManagerSlackIds = (managerEmails: string[], client: SlackClient): strin
 
   return managerSlackIds;
 };
-const createMessageFromEventInfo = (eventInfo: EventInfo) => {
+const createMessageFromEventInfo = (eventInfo: Event) => {
   const date = format(eventInfo.date, "MM/dd");
   const { workingStyle, restStartTime, restEndTime } = getEventInfoFromTitle(eventInfo.title);
   const startTime = format(eventInfo.startTime, "HH:mm");

@@ -10,7 +10,7 @@ import {
   setValuesModificationAndDeletionSheet,
 } from "./ModificationAndDeletionSheet";
 import { getRegistrationRows, insertRegistrationSheet, setValuesRegistrationSheet } from "./RegistrationSheet";
-import { EventInfo, shiftChanger } from "./shift-changer-api";
+import { Event, shiftChanger } from "./shift-changer-api";
 
 type SheetType = "registration" | "modificationAndDeletion";
 type OperationType = "registration" | "modificationAndDeletion" | "showEvents";
@@ -80,7 +80,7 @@ export const callRegistration = () => {
   const comment = sheet.getRange("A2").getValue();
   const registrationRows = getRegistrationRows(sheet);
   const registrationInfos = registrationRows.map((registrationRow) => {
-    const title = createTitleFromEventInfo(
+    const title = createTitleFromEvent(
       {
         ...(registrationRow.restStartTime && { restStartTime: registrationRow.restStartTime }),
         ...(registrationRow.restEndTime && { restEndTime: registrationRow.restEndTime }),
@@ -119,11 +119,11 @@ export const callRegistration = () => {
 };
 
 const createRegistrationMessage = (
-  registrationInfos: EventInfo[],
+  registrationInfos: Event[],
   comment: string,
   partTimerProfile: PartTimerProfile,
 ): string => {
-  const messages = registrationInfos.map(createMessageFromEventInfo);
+  const messages = registrationInfos.map(createMessageFromEvent);
   const { job, lastName } = partTimerProfile;
   const messageTitle = `${job}${lastName}さんの以下の予定が追加されました。`;
   return comment
@@ -156,11 +156,11 @@ export const callShowEvents = () => {
   if (response.getResponseCode() !== 200) {
     throw new Error(response.getContentText());
   }
-  const eventInfos = EventInfo.array().parse(JSON.parse(response.getContentText()));
+  const eventInfos = Event.array().parse(JSON.parse(response.getContentText()));
 
   if (eventInfos.length === 0) throw new Error("no events");
 
-  const moldedEventInfos = eventInfos.map(({ title, date, startTime, endTime }) => {
+  const moldedEvents = eventInfos.map(({ title, date, startTime, endTime }) => {
     const dateStr = format(date, "yyyy/MM/dd");
     const startTimeStr = format(startTime, "HH:mm");
     const endTimeStr = format(endTime, "HH:mm");
@@ -171,7 +171,7 @@ export const callShowEvents = () => {
     sheet.getRange(9, 1, sheet.getLastRow() - 8, sheet.getLastColumn()).clearContent();
   }
 
-  sheet.getRange(9, 1, moldedEventInfos.length, moldedEventInfos[0].length).setValues(moldedEventInfos);
+  sheet.getRange(9, 1, moldedEvents.length, moldedEvents[0].length).setValues(moldedEvents);
 };
 
 export const callModificationAndDeletion = () => {
@@ -190,7 +190,7 @@ export const callModificationAndDeletion = () => {
   const operationType: OperationType = "modificationAndDeletion";
   const { modificationRows, deletionRows } = getModificationOrDeletion(sheet);
   const modificationInfos = modificationRows.map((modificationRow) => {
-    const newTitle = createTitleFromEventInfo(
+    const newTitle = createTitleFromEvent(
       {
         ...(modificationRow.newRestStartTime && { restStartTime: modificationRow.newRestStartTime }),
         ...(modificationRow.newRestEndTime && { restEndTime: modificationRow.newRestEndTime }),
@@ -199,13 +199,13 @@ export const callModificationAndDeletion = () => {
       partTimerProfile,
     );
     return {
-      previousEventInfo: {
+      previousEvent: {
         title: modificationRow.title,
         date: modificationRow.startTime,
         startTime: modificationRow.startTime,
         endTime: modificationRow.endTime,
       },
-      newEventInfo: {
+      newEvent: {
         title: newTitle,
         date: modificationRow.newStartTime,
         startTime: modificationRow.newStartTime,
@@ -249,21 +249,21 @@ export const callModificationAndDeletion = () => {
 
 const createModificationMessage = (
   modificationInfos: {
-    previousEventInfo: EventInfo;
-    newEventInfo: EventInfo;
+    previousEvent: Event;
+    newEvent: Event;
   }[],
   partTimerProfile: PartTimerProfile,
 ): string | undefined => {
-  const messages = modificationInfos.map(({ previousEventInfo, newEventInfo }) => {
-    return `${createMessageFromEventInfo(previousEventInfo)}\n↓\n${createMessageFromEventInfo(newEventInfo)}`;
+  const messages = modificationInfos.map(({ previousEvent, newEvent }) => {
+    return `${createMessageFromEvent(previousEvent)}\n↓\n${createMessageFromEvent(newEvent)}`;
   });
   if (messages.length == 0) return;
   const { job, lastName } = partTimerProfile;
   const messageTitle = `${job}${lastName}さんの以下の予定が変更されました。`;
   return `${messageTitle}\n${messages.join("\n\n")}`;
 };
-const createDeletionMessage = (deletionInfos: EventInfo[], partTimerProfile: PartTimerProfile): string | undefined => {
-  const messages = deletionInfos.map(createMessageFromEventInfo);
+const createDeletionMessage = (deletionInfos: Event[], partTimerProfile: PartTimerProfile): string | undefined => {
+  const messages = deletionInfos.map(createMessageFromEvent);
   if (messages.length == 0) return;
   const { job, lastName } = partTimerProfile;
   const messageTitle = `${job}${lastName}さんの以下の予定が削除されました。`;
@@ -316,18 +316,16 @@ const getManagerSlackIds = (managerEmails: string[], client: SlackClient): strin
 
   return managerSlackIds;
 };
-const createMessageFromEventInfo = (eventInfo: EventInfo) => {
+const createMessageFromEvent = (eventInfo: Event) => {
   const date = format(eventInfo.date, "MM/dd");
-  const { workingStyle, restStartTime, restEndTime } = getEventInfoFromTitle(eventInfo.title);
+  const { workingStyle, restStartTime, restEndTime } = getEventFromTitle(eventInfo.title);
   const startTime = format(eventInfo.startTime, "HH:mm");
   const endTime = format(eventInfo.endTime, "HH:mm");
   if (restStartTime === undefined || restEndTime === undefined)
     return `【${workingStyle}】 ${date} ${startTime}~${endTime}`;
   else return `【${workingStyle}】 ${date} ${startTime}~${endTime} (休憩: ${restStartTime}~${restEndTime})`;
 };
-const getEventInfoFromTitle = (
-  title: string,
-): { workingStyle?: string; restStartTime?: string; restEndTime?: string } => {
+const getEventFromTitle = (title: string): { workingStyle?: string; restStartTime?: string; restEndTime?: string } => {
   const workingStyleRegex = /【(.*?)】/;
   const matchResult = title.match(workingStyleRegex)?.[1];
   const workingStyle = matchResult ?? "未設定";
@@ -337,7 +335,7 @@ const getEventInfoFromTitle = (
   const [restStartTime, restEndTime] = restTimeResult ? restTimeResult.split("~") : [];
   return { workingStyle, restStartTime, restEndTime };
 };
-const createTitleFromEventInfo = (
+const createTitleFromEvent = (
   eventInfo: {
     restStartTime?: Date;
     restEndTime?: Date;

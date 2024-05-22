@@ -61,13 +61,13 @@ const ModifyRecurringEvent = z.object({
 });
 type ModifyRecurringEvent = z.infer<typeof ModifyRecurringEvent>;
 
-const RegisterRequest = z.object({
+const RegisterEventRequest = z.object({
   operationType: z.literal("registerEvent"),
   userEmail: z.string(),
   registerInfos: EventInfo.array(),
 });
 
-const ModifyOrDeleteEvent = z.object({
+const ModifyOrDeleteEventRequest = z.object({
   operationType: z.literal("modifyOrDeleteEvent"),
   userEmail: z.string(),
   modifyInfos: ModifyInfo.array(),
@@ -99,8 +99,8 @@ const ModifyRecurringEventRequest = z.object({
 });
 
 const ShiftChangeRequestSchema = z.union([
-  RegisterRequest,
-  ModifyOrDeleteEvent,
+  RegisterEventRequest,
+  ModifyOrDeleteEventRequest,
   ShowEventsRequest,
   RegisterRecurringEventRequest,
   DeleteRecurringEventRequest,
@@ -163,9 +163,9 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
   return;
 };
 
-const registerEvents = (userEmail: string, registrationInfos: EventInfo[]) => {
-  registrationInfos.forEach((registrationInfo) => {
-    registerEvent(registrationInfo, userEmail);
+const registerEvents = (userEmail: string, registerInfos: EventInfo[]) => {
+  registerInfos.forEach((registerInfo) => {
+    registerEvent(registerInfo, userEmail);
   });
 };
 
@@ -191,14 +191,14 @@ const showEvents = (userEmail: string, startDate: Date): EventInfo[] => {
 };
 
 const modifyEvents = (
-  modificationInfos: {
+  modifyInfos: {
     previousEventInfo: EventInfo;
     newEventInfo: EventInfo;
   }[],
   userEmail: string,
 ) => {
   const calendar = getCalendar();
-  modificationInfos.forEach((eventInfo) => modifyEvent(eventInfo, calendar, userEmail));
+  modifyInfos.forEach((eventInfo) => modifyEvent(eventInfo, calendar, userEmail));
 };
 
 const registerRecurringEvents = ({ after, events }: RegisterRecurringEvent, userEmail: string) => {
@@ -353,9 +353,9 @@ const modifyEvent = (
   event.setTitle(newTitle);
 };
 
-const deleteEvents = (deletionInfos: EventInfo[], userEmail: string) => {
+const deleteEvents = (deleteInfos: EventInfo[], userEmail: string) => {
   const calendar = getCalendar();
-  deletionInfos.forEach((eventInfo) => deleteEvent(eventInfo, calendar, userEmail));
+  deleteInfos.forEach((eventInfo) => deleteEvent(eventInfo, calendar, userEmail));
 };
 
 const deleteEvent = (eventInfo: EventInfo, calendar: GoogleAppsScript.Calendar.Calendar, userEmail: string) => {

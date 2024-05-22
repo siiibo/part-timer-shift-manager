@@ -71,8 +71,8 @@ const RegisterEventRequest = z.object({
 const ModifyOrDeleteEventRequest = z.object({
   operationType: z.literal("modifyOrDeleteEvent"),
   userEmail: z.string(),
-  modificationEvent: zu.stringToJSON().pipe(ModificationEvent.array()),
-  deletionEvent: zu.stringToJSON().pipe(EventInfo.array()),
+  modifyEvent: zu.stringToJSON().pipe(ModificationEvent.array()),
+  deleteEvent: zu.stringToJSON().pipe(EventInfo.array()),
 });
 
 const ShowEventRequest = z.object({
@@ -131,8 +131,8 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
       break;
     }
     case "modifyOrDeleteEvent": {
-      const modifyInfos = parameter.modificationEvent;
-      const deleteInfos = parameter.deletionEvent;
+      const modifyInfos = parameter.modifyEvent;
+      const deleteInfos = parameter.deleteEvent;
 
       modifyEvents(modifyInfos, userEmail);
       deleteEvents(deleteInfos, userEmail);

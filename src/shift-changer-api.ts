@@ -21,8 +21,8 @@ export const EventInfo = z.object({
 export type EventInfo = z.infer<typeof EventInfo>;
 
 const ModificationEvent = z.object({
-  previousEventInfo: EventInfo,
-  newEventInfo: EventInfo,
+  previousEvent: EventInfo,
+  newEvent: EventInfo,
 });
 
 const RegistrationRecurringEvent = z.object({
@@ -193,8 +193,8 @@ const showEvents = (userEmail: string, startDate: Date): EventInfo[] => {
 
 const modificationEvents = (
   modifyInfos: {
-    previousEventInfo: EventInfo;
-    newEventInfo: EventInfo;
+    previousEvent: EventInfo;
+    newEvent: EventInfo;
   }[],
   userEmail: string,
 ) => {
@@ -339,15 +339,15 @@ const modifyRecurringEvents = ({ after, events }: ModificationRecurringEvent, us
 
 const modifyEvent = (
   eventInfo: {
-    previousEventInfo: EventInfo;
-    newEventInfo: EventInfo;
+    previousEvent: EventInfo;
+    newEvent: EventInfo;
   },
   calendar: GoogleAppsScript.Calendar.Calendar,
   userEmail: string,
 ) => {
-  const [startDate, endDate] = [eventInfo.previousEventInfo.startTime, eventInfo.previousEventInfo.endTime];
-  const newTitle = eventInfo.newEventInfo.title;
-  const [newStartDate, newEndDate] = [eventInfo.newEventInfo.startTime, eventInfo.newEventInfo.endTime];
+  const [startDate, endDate] = [eventInfo.previousEvent.startTime, eventInfo.previousEvent.endTime];
+  const newTitle = eventInfo.newEvent.title;
+  const [newStartDate, newEndDate] = [eventInfo.newEvent.startTime, eventInfo.newEvent.endTime];
   const event = calendar.getEvents(startDate, endDate).find((event) => isEventGuest(event, userEmail));
   if (!event) return;
   event.setTime(newStartDate, newEndDate);

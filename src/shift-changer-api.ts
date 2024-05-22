@@ -12,17 +12,17 @@ const DayOfWeek = z
   .or(z.literal("金曜日"));
 type DayOfWeek = z.infer<typeof DayOfWeek>;
 
-export const Event = z.object({
+export const EventInfo = z.object({
   title: z.string(),
   date: z.coerce.date(), //TODO: 日付情報だけの変数dateを消去する
   startTime: z.coerce.date(),
   endTime: z.coerce.date(),
 });
-export type Event = z.infer<typeof Event>;
+export type EventInfo = z.infer<typeof EventInfo>;
 
 const ModificationEvent = z.object({
-  previousEvent: Event,
-  newEvent: Event,
+  previousEvent: EventInfo,
+  newEvent: EventInfo,
 });
 
 const RegistrationRecurringEvent = z.object({
@@ -65,14 +65,14 @@ type ModificationRecurringEvent = z.infer<typeof ModificationRecurringEvent>;
 const RegisterEventRequest = z.object({
   operationType: z.literal("registerEvent"),
   userEmail: z.string(),
-  registerEvent: zu.stringToJSON().pipe(Event.array()),
+  registerEvent: zu.stringToJSON().pipe(EventInfo.array()),
 });
 
 const ModifyOrDeleteEventRequest = z.object({
   operationType: z.literal("modifyOrDeleteEvent"),
   userEmail: z.string(),
   modifyEvent: zu.stringToJSON().pipe(ModificationEvent.array()),
-  deleteEvent: zu.stringToJSON().pipe(Event.array()),
+  deleteEvent: zu.stringToJSON().pipe(EventInfo.array()),
 });
 
 const ShowEventRequest = z.object({
@@ -164,19 +164,19 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
   return;
 };
 
-const registerEvents = (userEmail: string, registerInfos: Event[]) => {
+const registerEvents = (userEmail: string, registerInfos: EventInfo[]) => {
   registerInfos.forEach((registerInfo) => {
     registerEvent(registerInfo, userEmail);
   });
 };
 
-const registerEvent = (eventInfo: Event, userEmail: string) => {
+const registerEvent = (eventInfo: EventInfo, userEmail: string) => {
   const calendar = getCalendar();
   const [startDate, endDate] = [eventInfo.startTime, eventInfo.endTime];
   calendar.createEvent(eventInfo.title, startDate, endDate, { guests: userEmail });
 };
 
-const showEvents = (userEmail: string, startDate: Date): Event[] => {
+const showEvents = (userEmail: string, startDate: Date): EventInfo[] => {
   const endDate = addWeeks(startDate, 4);
   const calendar = getCalendar();
   const events = calendar.getEvents(startDate, endDate).filter((event) => isEventGuest(event, userEmail));
@@ -193,8 +193,8 @@ const showEvents = (userEmail: string, startDate: Date): Event[] => {
 
 const modificationEvents = (
   modifyInfos: {
-    previousEvent: Event;
-    newEvent: Event;
+    previousEvent: EventInfo;
+    newEvent: EventInfo;
   }[],
   userEmail: string,
 ) => {
@@ -339,8 +339,8 @@ const modifyRecurringEvents = ({ after, events }: ModificationRecurringEvent, us
 
 const modifyEvent = (
   eventInfo: {
-    previousEvent: Event;
-    newEvent: Event;
+    previousEvent: EventInfo;
+    newEvent: EventInfo;
   },
   calendar: GoogleAppsScript.Calendar.Calendar,
   userEmail: string,
@@ -354,12 +354,12 @@ const modifyEvent = (
   event.setTitle(newTitle);
 };
 
-const deletionEvents = (deleteInfos: Event[], userEmail: string) => {
+const deletionEvents = (deleteInfos: EventInfo[], userEmail: string) => {
   const calendar = getCalendar();
   deleteInfos.forEach((eventInfo) => deletionEvent(eventInfo, calendar, userEmail));
 };
 
-const deletionEvent = (eventInfo: Event, calendar: GoogleAppsScript.Calendar.Calendar, userEmail: string) => {
+const deletionEvent = (eventInfo: EventInfo, calendar: GoogleAppsScript.Calendar.Calendar, userEmail: string) => {
   const [startDate, endDate] = [eventInfo.startTime, eventInfo.endTime];
   const event = calendar.getEvents(startDate, endDate).find((event) => isEventGuest(event, userEmail));
   if (!event) return;

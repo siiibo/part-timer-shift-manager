@@ -31,8 +31,8 @@ const RegisterEventRequest = z.object({
   events: zu.stringToJSON().pipe(Event.array()),
 });
 
-const ModifyOrDeleteEventRequest = z.object({
-  operationType: z.literal("modifyOrDeleteEvent"),
+const ModifyAndDeleteEventRequest = z.object({
+  operationType: z.literal("modifyAndDeleteEvent"),
   userEmail: z.string(),
   modificationEvents: zu.stringToJSON().pipe(
     z
@@ -104,7 +104,7 @@ type ModificationRecurringEvent = z.infer<typeof ModifyRecurringEventRequest>;
 
 const ShiftChangeRequestSchema = z.union([
   RegisterEventRequest,
-  ModifyOrDeleteEventRequest,
+  ModifyAndDeleteEventRequest,
   ShowEventRequest,
   RegisterRecurringEventRequest,
   DeleteRecurringEventRequest,
@@ -131,7 +131,7 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
       registerEvents(userEmail, parameter.events);
       break;
     }
-    case "modifyOrDeleteEvent": {
+    case "modifyAndDeleteEvent": {
       modifyEvents(parameter.modificationEvents, userEmail);
       deleteEvents(parameter.deletionEvents, userEmail);
       break;

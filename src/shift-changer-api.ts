@@ -199,9 +199,11 @@ const modificationEvents = (
   modifyInfos.forEach((eventInfo) => modifyEvent(eventInfo, calendar, userEmail));
 };
 
-const registerRecurringEvents = ({ registerRecurringEvents }: RegisterRecurringEventRequest, userEmail: string) => {
+const registerRecurringEvents = (
+  { registerRecurringEvents: { after, events } }: RegisterRecurringEventRequest,
+  userEmail: string,
+) => {
   const calendar = getCalendar();
-  const { after, events } = registerRecurringEvents;
 
   events.forEach(({ title, startTime, endTime, dayOfWeek }) => {
     const recurrenceStartDate = getRecurrenceStartDate(after, dayOfWeek);
@@ -217,10 +219,9 @@ const registerRecurringEvents = ({ registerRecurringEvents }: RegisterRecurringE
 };
 
 const deleteRecurringEvents = (
-  { deleteRecurringEvents }: DeleteRecurringEventRequest,
+  { deleteRecurringEvents: { after, dayOfWeeks } }: DeleteRecurringEventRequest,
   userEmail: string,
 ): DeletionRecurringEventResponse => {
-  const { after, dayOfWeeks } = deleteRecurringEvents;
   const calendarId = getConfig().CALENDAR_ID;
   const advancedCalendar = getAdvancedCalendar();
 
@@ -271,8 +272,10 @@ const deleteRecurringEvents = (
   return { responseCode: 200, comment: "イベントの消去が成功しました" };
 };
 
-const modifyRecurringEvents = ({ modifyRecurringEvent }: ModificationRecurringEvent, userEmail: string) => {
-  const { after, events } = modifyRecurringEvent;
+const modifyRecurringEvents = (
+  { modifyRecurringEvent: { after, events } }: ModificationRecurringEvent,
+  userEmail: string,
+) => {
   const calendar = getCalendar();
   const calendarId = getConfig().CALENDAR_ID;
   const advancedCalendar = getAdvancedCalendar();

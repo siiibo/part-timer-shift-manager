@@ -158,11 +158,11 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
 
 const registerEvents = (userEmail: string, registerInfos: Event[]) => {
   registerInfos.forEach((registerInfo) => {
-    registerEventToCalendar(registerInfo, userEmail);
+    registerEvent(registerInfo, userEmail);
   });
 };
 
-const registerEventToCalendar = (eventInfo: Event, userEmail: string) => {
+const registerEvent = (eventInfo: Event, userEmail: string) => {
   const calendar = getCalendar();
   const [startDate, endDate] = [eventInfo.startTime, eventInfo.endTime];
   calendar.createEvent(eventInfo.title, startDate, endDate, { guests: userEmail });
@@ -191,7 +191,7 @@ const modifyEvents = (
   userEmail: string,
 ) => {
   const calendar = getCalendar();
-  modifyInfos.forEach((eventInfo) => modifyEventToCalendar(eventInfo, calendar, userEmail));
+  modifyInfos.forEach((eventInfo) => modifyEvent(eventInfo, calendar, userEmail));
 };
 
 const registerRecurringEvents = (
@@ -336,7 +336,7 @@ const modifyRecurringEvents = (
   return { responseCode: 200, comment: "イベントの変更が成功しました" };
 };
 
-const modifyEventToCalendar = (
+const modifyEvent = (
   eventInfo: {
     previousEvent: Event;
     newEvent: Event;
@@ -355,10 +355,10 @@ const modifyEventToCalendar = (
 
 const deleteEvents = (deleteInfos: Event[], userEmail: string) => {
   const calendar = getCalendar();
-  deleteInfos.forEach((eventInfo) => deleteEventToCalendar(eventInfo, calendar, userEmail));
+  deleteInfos.forEach((eventInfo) => deleteEvent(eventInfo, calendar, userEmail));
 };
 
-const deleteEventToCalendar = (eventInfo: Event, calendar: GoogleAppsScript.Calendar.Calendar, userEmail: string) => {
+const deleteEvent = (eventInfo: Event, calendar: GoogleAppsScript.Calendar.Calendar, userEmail: string) => {
   const [startDate, endDate] = [eventInfo.startTime, eventInfo.endTime];
   const event = calendar.getEvents(startDate, endDate).find((event) => isEventGuest(event, userEmail));
   if (!event) return;

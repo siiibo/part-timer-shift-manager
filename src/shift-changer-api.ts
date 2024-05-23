@@ -28,7 +28,7 @@ type DeleteRecurringEventResponse = {
 const RegisterEventRequest = z.object({
   operationType: z.literal("registerEvent"),
   userEmail: z.string(),
-  registerEvents: zu.stringToJSON().pipe(Event.array()),
+  events: zu.stringToJSON().pipe(Event.array()),
 });
 
 const ModifyOrDeleteEventRequest = z.object({
@@ -128,7 +128,7 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
   const userEmail = parameter.userEmail;
   switch (operationType) {
     case "registerEvent": {
-      registerEvents(userEmail, parameter.registerEvents);
+      registerEvents(userEmail, parameter.events);
       break;
     }
     case "modifyOrDeleteEvent": {

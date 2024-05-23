@@ -28,7 +28,7 @@ type DeleteRecurringEventResponse = {
 const RegisterEventRequest = z.object({
   operationType: z.literal("registerEvent"),
   userEmail: z.string(),
-  events: zu.stringToJSON().pipe(Event.array()),
+  registrationEvents: zu.stringToJSON().pipe(Event.array()),
 });
 
 const ModifyAndDeleteEventRequest = z.object({
@@ -55,7 +55,7 @@ type ShowEventRequest = z.infer<typeof ShowEventRequest>;
 const RegisterRecurringEventRequest = z.object({
   operationType: z.literal("registerRecurringEvent"),
   userEmail: z.string(),
-  events: zu.stringToJSON().pipe(
+  registrationRecurringEvents: zu.stringToJSON().pipe(
     z.object({
       after: z.coerce.date(),
       events: z
@@ -74,7 +74,7 @@ type RegisterRecurringEventRequest = z.infer<typeof RegisterRecurringEventReques
 const DeleteRecurringEventRequest = z.object({
   operationType: z.literal("deleteRecurringEvent"),
   userEmail: z.string(),
-  events: zu.stringToJSON().pipe(
+  deletionRecurringEvents: zu.stringToJSON().pipe(
     z.object({
       after: z.coerce.date(),
       dayOfWeeks: DayOfWeek.array(),
@@ -86,7 +86,7 @@ type DeleteRecurringEventRequest = z.infer<typeof DeleteRecurringEventRequest>;
 const ModifyRecurringEventRequest = z.object({
   operationType: z.literal("modifyRecurringEvent"),
   userEmail: z.string(),
-  events: zu.stringToJSON().pipe(
+  modificationRecurringEvents: zu.stringToJSON().pipe(
     z.object({
       after: z.coerce.date(),
       events: z
@@ -128,7 +128,7 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
   const userEmail = parameter.userEmail;
   switch (operationType) {
     case "registerEvent": {
-      registerEvents(userEmail, parameter.events);
+      registerEvents(userEmail, parameter.registrationEvents);
       break;
     }
     case "modifyAndDeleteEvent": {
@@ -194,7 +194,10 @@ const modifyEvents = (
   modifyInfos.forEach((eventInfo) => modifyEvent(eventInfo, calendar, userEmail));
 };
 
-const registerRecurringEvents = ({ events: { after, events } }: RegisterRecurringEventRequest, userEmail: string) => {
+const registerRecurringEvents = (
+  { registrationRecurringEvents: { after, events } }: RegisterRecurringEventRequest,
+  userEmail: string,
+) => {
   const calendar = getCalendar();
 
   events.forEach(({ title, startTime, endTime, dayOfWeek }) => {
@@ -211,7 +214,7 @@ const registerRecurringEvents = ({ events: { after, events } }: RegisterRecurrin
 };
 
 const deleteRecurringEvents = (
-  { events: { after, dayOfWeeks } }: DeleteRecurringEventRequest,
+  { deletionRecurringEvents: { after, dayOfWeeks } }: DeleteRecurringEventRequest,
   userEmail: string,
 ): DeleteRecurringEventResponse => {
   const calendarId = getConfig().CALENDAR_ID;
@@ -264,7 +267,10 @@ const deleteRecurringEvents = (
   return { responseCode: 200, comment: "イベントの消去が成功しました" };
 };
 
-const modifyRecurringEvents = ({ events: { after, events } }: ModificationRecurringEvent, userEmail: string) => {
+const modifyRecurringEvents = (
+  { modificationRecurringEvents: { after, events } }: ModificationRecurringEvent,
+  userEmail: string,
+) => {
   const calendar = getCalendar();
   const calendarId = getConfig().CALENDAR_ID;
   const advancedCalendar = getAdvancedCalendar();

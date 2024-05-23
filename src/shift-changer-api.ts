@@ -20,11 +20,6 @@ export const Event = z.object({
 });
 export type Event = z.infer<typeof Event>;
 
-type DeleteRecurringEventResponse = {
-  responseCode: number;
-  comment: string;
-};
-
 const RegisterEventRequest = z.object({
   operationType: z.literal("registerEvent"),
   userEmail: z.string(),
@@ -44,13 +39,7 @@ const ModifyAndDeleteEventRequest = z.object({
   ),
   deletionEvents: zu.stringToJSON().pipe(Event.array()),
 });
-
-const ShowEventRequest = z.object({
-  operationType: z.literal("showEvents"),
-  userEmail: z.string(),
-  startDate: z.coerce.date(),
-});
-type ShowEventRequest = z.infer<typeof ShowEventRequest>;
+type ModifyAndDeleteEventRequest = z.infer<typeof ModifyAndDeleteEventRequest>;
 
 const RegisterRecurringEventRequest = z.object({
   operationType: z.literal("registerRecurringEvent"),
@@ -71,18 +60,6 @@ const RegisterRecurringEventRequest = z.object({
 });
 type RegisterRecurringEventRequest = z.infer<typeof RegisterRecurringEventRequest>;
 
-const DeleteRecurringEventRequest = z.object({
-  operationType: z.literal("deleteRecurringEvent"),
-  userEmail: z.string(),
-  deletionRecurringEvents: zu.stringToJSON().pipe(
-    z.object({
-      after: z.coerce.date(),
-      dayOfWeeks: DayOfWeek.array(),
-    }),
-  ),
-});
-type DeleteRecurringEventRequest = z.infer<typeof DeleteRecurringEventRequest>;
-
 const ModifyRecurringEventRequest = z.object({
   operationType: z.literal("modifyRecurringEvent"),
   userEmail: z.string(),
@@ -101,6 +78,30 @@ const ModifyRecurringEventRequest = z.object({
   ),
 });
 type ModificationRecurringEvent = z.infer<typeof ModifyRecurringEventRequest>;
+
+const DeleteRecurringEventRequest = z.object({
+  operationType: z.literal("deleteRecurringEvent"),
+  userEmail: z.string(),
+  deletionRecurringEvents: zu.stringToJSON().pipe(
+    z.object({
+      after: z.coerce.date(),
+      dayOfWeeks: DayOfWeek.array(),
+    }),
+  ),
+});
+type DeleteRecurringEventRequest = z.infer<typeof DeleteRecurringEventRequest>;
+
+type DeleteRecurringEventResponse = {
+  responseCode: number;
+  comment: string;
+};
+
+const ShowEventRequest = z.object({
+  operationType: z.literal("showEvents"),
+  userEmail: z.string(),
+  startDate: z.coerce.date(),
+});
+type ShowEventRequest = z.infer<typeof ShowEventRequest>;
 
 const ShiftChangeRequestSchema = z.union([
   RegisterEventRequest,

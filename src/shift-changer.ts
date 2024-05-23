@@ -13,7 +13,7 @@ import { getRegistrationRows, insertRegistrationSheet, setValuesRegistrationShee
 import { Event, shiftChanger } from "./shift-changer-api";
 
 type SheetType = "registration" | "modificationAndDeletion";
-type OperationType = "registerEvent" | "modifyOrDeleteEvent" | "showEvents";
+type OperationType = "registerEvent" | "modifyAndDeleteEvent" | "showEvents";
 export const doGet = () => {
   return ContentService.createTextOutput("ok");
 };
@@ -99,7 +99,7 @@ export const callRegistration = () => {
     apiId: "shift-changer",
     operationType: operationType,
     userEmail: userEmail,
-    registerEvents: JSON.stringify(registrationInfos),
+    events: JSON.stringify(registrationInfos),
   };
   const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
     method: "post",
@@ -187,7 +187,7 @@ export const callModificationAndDeletion = () => {
   const sheetType: SheetType = "modificationAndDeletion";
   const sheet = getSheet(sheetType, spreadsheetUrl);
   const comment = sheet.getRange("A2").getValue();
-  const operationType: OperationType = "modifyOrDeleteEvent";
+  const operationType: OperationType = "modifyAndDeleteEvent";
   const { modificationRows, deletionRows } = getModificationOrDeletion(sheet);
   const modificationInfos = modificationRows.map((modificationRow) => {
     const newTitle = createTitleFromEventInfo(
@@ -217,8 +217,8 @@ export const callModificationAndDeletion = () => {
     apiId: "shift-changer",
     operationType: operationType,
     userEmail: userEmail,
-    modifyEvents: JSON.stringify(modificationInfos),
-    deleteEvents: JSON.stringify(deletionRows),
+    modificationEvents: JSON.stringify(modificationInfos),
+    deletionEvents: JSON.stringify(deletionRows),
   };
   const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
     method: "post",

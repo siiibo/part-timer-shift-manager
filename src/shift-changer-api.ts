@@ -20,7 +20,7 @@ export const Event = z.object({
 });
 export type Event = z.infer<typeof Event>;
 
-type DeletionRecurringEventResponse = {
+type DeleteRecurringEventResponse = {
   responseCode: number;
   comment: string;
 };
@@ -216,7 +216,7 @@ const registerRecurringEvents = (
 const deleteRecurringEvents = (
   { deleteRecurringEvents: { after, dayOfWeeks } }: DeleteRecurringEventRequest,
   userEmail: string,
-): DeletionRecurringEventResponse => {
+): DeleteRecurringEventResponse => {
   const calendarId = getConfig().CALENDAR_ID;
   const advancedCalendar = getAdvancedCalendar();
 

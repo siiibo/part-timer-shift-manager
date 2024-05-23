@@ -99,7 +99,7 @@ export const callRegistration = () => {
     apiId: "shift-changer",
     operationType: operationType,
     userEmail: userEmail,
-    registerEvent: JSON.stringify(registrationInfos),
+    registerEvents: JSON.stringify(registrationInfos),
   };
   const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
     method: "post",
@@ -217,8 +217,8 @@ export const callModificationAndDeletion = () => {
     apiId: "shift-changer",
     operationType: operationType,
     userEmail: userEmail,
-    modificationEvent: JSON.stringify(modificationInfos),
-    deletionEvent: JSON.stringify(deletionRows),
+    modifyEvents: JSON.stringify(modificationInfos),
+    deleteEvents: JSON.stringify(deletionRows),
   };
   const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
     method: "post",

@@ -27,24 +27,17 @@ const OperationString = z.preprocess(
   z.literal("時間変更").or(z.literal("消去")).or(z.literal("追加")).optional(),
 );
 
-const DeletionRecurringEventRow = z.object({
-  type: z.literal("deletion"),
+const RecurringEventSheetRow = z.object({
   after: z.date(),
-  dayOfWeek: DayOfWeek,
+  operation: OperationString,
+  dayOfWeek: DayOfWeekOrEmptyString,
+  startTime: DateOrEmptyString,
+  endTime: DateOrEmptyString,
+  restStartTime: DateOrEmptyString,
+  restEndTime: DateOrEmptyString,
+  workingStyle: WorkingStyleOrEmptyString,
 });
-type DeletionRecurringEventRow = z.infer<typeof DeletionRecurringEventRow>;
-
-const ModificationRecurringEventRow = z.object({
-  type: z.literal("modification"),
-  after: z.date(),
-  dayOfWeek: DayOfWeek,
-  startTime: z.date(),
-  endTime: z.date(),
-  restStartTime: z.date().optional(),
-  restEndTime: z.date().optional(),
-  workingStyle: z.literal("リモート").or(z.literal("出勤")),
-});
-type ModificationRecurringEventRow = z.infer<typeof ModificationRecurringEventRow>;
+type RecurringEventSheetRow = z.infer<typeof RecurringEventSheetRow>;
 
 const RegistrationRecurringEventRow = z.object({
   type: z.literal("registration"),
@@ -58,17 +51,24 @@ const RegistrationRecurringEventRow = z.object({
 });
 type RegistrationRecurringEventRow = z.infer<typeof RegistrationRecurringEventRow>;
 
-const RecurringEventSheetRow = z.object({
+const ModificationRecurringEventRow = z.object({
+  type: z.literal("modification"),
   after: z.date(),
-  operation: OperationString,
-  dayOfWeek: DayOfWeekOrEmptyString,
-  startTime: DateOrEmptyString,
-  endTime: DateOrEmptyString,
-  restStartTime: DateOrEmptyString,
-  restEndTime: DateOrEmptyString,
-  workingStyle: WorkingStyleOrEmptyString,
+  dayOfWeek: DayOfWeek,
+  startTime: z.date(),
+  endTime: z.date(),
+  restStartTime: z.date().optional(),
+  restEndTime: z.date().optional(),
+  workingStyle: z.literal("リモート").or(z.literal("出勤")),
 });
-type RecurringEventSheetRow = z.infer<typeof RecurringEventSheetRow>;
+type ModificationRecurringEventRow = z.infer<typeof ModificationRecurringEventRow>;
+
+const DeletionRecurringEventRow = z.object({
+  type: z.literal("deletion"),
+  after: z.date(),
+  dayOfWeek: DayOfWeek,
+});
+type DeletionRecurringEventRow = z.infer<typeof DeletionRecurringEventRow>;
 
 type NoOperationRow = {
   type: "no-operation";
@@ -125,6 +125,21 @@ export const setValuesRecurringEventSheet = (sheet: GoogleAppsScript.Spreadsheet
 
   sheet.setColumnWidth(1, 370);
   sheet.setColumnWidth(2, 150);
+};
+
+export const getRecurringEventModificationOrDeletionOrRegistration = (
+  sheet: GoogleAppsScript.Spreadsheet.Sheet,
+): {
+  registrationRows: RegistrationRecurringEventRow[];
+  modificationRows: ModificationRecurringEventRow[];
+  deletionRows: DeletionRecurringEventRow[];
+} => {
+  const sheetValues = getRecurringEventSheetValues(sheet);
+  return {
+    registrationRows: sheetValues.filter(isRegistrationRow),
+    modificationRows: sheetValues.filter(isModificationRow),
+    deletionRows: sheetValues.filter(isDeletionRow),
+  };
 };
 
 const getRecurringEventSheetValues = (
@@ -193,18 +208,3 @@ const isDeletionRow = (
 const isRegistrationRow = (
   row: ModificationRecurringEventRow | DeletionRecurringEventRow | RegistrationRecurringEventRow | NoOperationRow,
 ): row is RegistrationRecurringEventRow => row.type === "registration";
-
-export const getRecurringEventModificationOrDeletionOrRegistration = (
-  sheet: GoogleAppsScript.Spreadsheet.Sheet,
-): {
-  registrationRows: RegistrationRecurringEventRow[];
-  modificationRows: ModificationRecurringEventRow[];
-  deletionRows: DeletionRecurringEventRow[];
-} => {
-  const sheetValues = getRecurringEventSheetValues(sheet);
-  return {
-    registrationRows: sheetValues.filter(isRegistrationRow),
-    modificationRows: sheetValues.filter(isModificationRow),
-    deletionRows: sheetValues.filter(isDeletionRow),
-  };
-};

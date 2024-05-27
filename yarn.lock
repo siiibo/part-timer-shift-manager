@@ -3787,3 +3787,8 @@ zod@^3.22.4:
   version "3.22.4"
   resolved "https://registry.yarnpkg.com/zod/-/zod-3.22.4.tgz#f31c3a9386f61b1f228af56faa9255e845cf3fff"
   integrity sha512-iC+8Io04lddc+mVqQ9AZ7OQ2MrUKGN+oIQyq1vemgt46jwCwLfhq7/pwnBnNXXXZb8VTVLKwp9EDkx+ryxIWmg==
+
+zod_utilz@^0.8.2:
+  version "0.8.2"
+  resolved "https://registry.yarnpkg.com/zod_utilz/-/zod_utilz-0.8.2.tgz#f599ecdaeda984c348487beaafa1c4a3918bc71b"
+  integrity sha512-z1TQjxPpls9KKNs4JnfYyniA3uqYxHjqEr/pgZTto8LDVT1nWrKgsRX6pOXAp+x6oMMImXiEqgnb4ILdmEHbnQ==

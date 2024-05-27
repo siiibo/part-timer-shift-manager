@@ -41,6 +41,13 @@ const ModifyAndDeleteEventRequest = z.object({
 });
 type ModifyAndDeleteEventRequest = z.infer<typeof ModifyAndDeleteEventRequest>;
 
+const ShowEventRequest = z.object({
+  operationType: z.literal("showEvents"),
+  userEmail: z.string(),
+  startDate: z.coerce.date(),
+});
+type ShowEventRequest = z.infer<typeof ShowEventRequest>;
+
 const RegisterRecurringEventRequest = z.object({
   operationType: z.literal("registerRecurringEvent"),
   userEmail: z.string(),
@@ -77,7 +84,7 @@ const ModifyRecurringEventRequest = z.object({
     }),
   ),
 });
-type ModificationRecurringEvent = z.infer<typeof ModifyRecurringEventRequest>;
+type ModifyRecurringEventRequest = z.infer<typeof ModifyRecurringEventRequest>;
 
 const DeleteRecurringEventRequest = z.object({
   operationType: z.literal("deleteRecurringEvent"),
@@ -96,20 +103,13 @@ type DeleteRecurringEventResponse = {
   comment: string;
 };
 
-const ShowEventRequest = z.object({
-  operationType: z.literal("showEvents"),
-  userEmail: z.string(),
-  startDate: z.coerce.date(),
-});
-type ShowEventRequest = z.infer<typeof ShowEventRequest>;
-
 const ShiftChangeRequestSchema = z.union([
   RegisterEventRequest,
   ModifyAndDeleteEventRequest,
   ShowEventRequest,
   RegisterRecurringEventRequest,
-  DeleteRecurringEventRequest,
   ModifyRecurringEventRequest,
+  DeleteRecurringEventRequest,
 ]);
 
 const getCalendar = () => {
@@ -244,7 +244,7 @@ const registerRecurringEvents = (
 };
 
 const modifyRecurringEvents = (
-  { modificationRecurringEvents: { after, events } }: ModificationRecurringEvent,
+  { modificationRecurringEvents: { after, events } }: ModifyRecurringEventRequest,
   userEmail: string,
 ) => {
   const calendar = getCalendar();

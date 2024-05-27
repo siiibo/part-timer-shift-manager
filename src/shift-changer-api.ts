@@ -111,6 +111,9 @@ const ShiftChangeRequestSchema = z.union([
   ModifyRecurringEventRequest,
   DeleteRecurringEventRequest,
 ]);
+type ShiftChangeRequestSchema = z.infer<typeof ShiftChangeRequestSchema>;
+
+export type OperationType = ShiftChangeRequestSchema["operationType"];
 
 export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
   const parameter = ShiftChangeRequestSchema.parse(e.parameter);

@@ -15,16 +15,9 @@ import {
   insertRecurringEventSheet,
 } from "./RecurringShiftSheet";
 import { getRegistrationRows, insertRegistrationSheet, setValuesRegistrationSheet } from "./RegistrationSheet";
-import { Event, shiftChanger } from "./shift-changer-api";
+import { Event, OperationType, shiftChanger } from "./shift-changer-api";
 
 type SheetType = "registration" | "modificationAndDeletion" | "recurringEvent";
-type OperationType =
-  | "registerEvent"
-  | "modifyAndDeleteEvent"
-  | "showEvents"
-  | "registerRecurringEvent"
-  | "modifyRecurringEvent"
-  | "deleteRecurringEvent";
 
 const RegisterOrModifyRecurringEvent = z.object({
   type: z.literal("registration").or(z.literal("modification")),

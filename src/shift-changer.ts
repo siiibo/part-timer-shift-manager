@@ -16,8 +16,14 @@ import {
 import { getRegistrationRows, insertRegistrationSheet, setValuesRegistrationSheet } from "./RegistrationSheet";
 import { Event, shiftChanger } from "./shift-changer-api";
 
-type SheetType = "registration" | "modificationAndDeletion";
-type OperationType = "registerEvent" | "modifyAndDeleteEvent" | "showEvents";
+type SheetType = "registration" | "modificationAndDeletion" | "recurringEvent";
+type OperationType =
+  | "registerEvent"
+  | "modifyAndDeleteEvent"
+  | "showEvents"
+  | "registerRecurringEvent"
+  | "modifyRecurringEvent"
+  | "deleteRecurringEvent";
 export const doGet = () => {
   return ContentService.createTextOutput("ok");
 };
@@ -344,7 +350,7 @@ export const callRecurringEvent = () => {
       apiId: "shift-changer",
       operationType: "registerRecurringEvent",
       userEmail: userEmail,
-      recurringEventRegistration: JSON.stringify({ after, events: registrationInfos }),
+      registrationRecurringEvents: JSON.stringify({ after, events: registrationInfos }),
     };
     const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
       method: "post",
@@ -361,7 +367,7 @@ export const callRecurringEvent = () => {
       apiId: "shift-changer",
       operationType: "modifyRecurringEvent",
       userEmail: userEmail,
-      recurringEventModification: JSON.stringify({ after, events: modificationInfos }),
+      modificationRecurringEvents: JSON.stringify({ after, events: modificationInfos }),
     };
     const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
       method: "post",
@@ -378,7 +384,7 @@ export const callRecurringEvent = () => {
       apiId: "shift-changer",
       operationType: "deleteRecurringEvent",
       userEmail: userEmail,
-      recurringEventDeletion: JSON.stringify({ after, dayOfWeeks: deleteDayOfWeeks }),
+      deletionRecurringEvents: JSON.stringify({ after, dayOfWeeks: deleteDayOfWeeks }),
     };
     const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
       method: "post",
@@ -395,16 +401,16 @@ export const callRecurringEvent = () => {
   const messageTitle = `${job}${lastName}さんの以下の繰り返し予定が変更されました`;
   const RecurringEventMessageToNotify = [
     `${messageTitle}`,
-    createMessageForRecurringEvent("registration", { after, events: registrationInfos }),
-    createMessageForRecurringEvent("modification", { after, events: modificationInfos }),
-    createMessageForRecurringEvent("deletion", { after, dayOfWeeks: deleteDayOfWeeks }),
+    // createMessageForRecurringEvent("registration", { after, events: registrationInfos }),
+    // createMessageForRecurringEvent("modification", { after, events: modificationInfos }),
+    // createMessageForRecurringEvent("deletion", { after, dayOfWeeks: deleteDayOfWeeks }),
     comment ? `コメント: ${comment}` : undefined,
   ]
     .filter(Boolean)
     .join("\n---\n");
 
   postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, RecurringEventMessageToNotify, partTimerProfile);
-  //NOTE: 本番環境にマージする際にはコメントアウトを外す
+  // NOTE: 本番環境にマージする際にはコメントアウトを外す
   // sheet.clear();
   // SpreadsheetApp.flush();
   // setValuesRecurringEventSheet(sheet);
@@ -503,35 +509,35 @@ const createTitleFromEventInfo = (
   }
 };
 
-const createMessageForRecurringEvent = (
-  type: "registration" | "modification" | "deletion",
-  recurringEventInfo: DeletionRecurringEvent | RegisterRecurringEventRequest | ModificationRecurringEvent,
-) => {
-  const messageTitle = {
-    modification: "以下の繰り返し予定が変更されました",
-    registration: "以下の繰り返し予定が追加されました",
-    deletion: "以下の繰り返し予定が削除されました",
-  };
+// const createMessageForRecurringEvent = (
+//   type: "registration" | "modification" | "deletion",
+//   recurringEventInfo: DeletionRecurringEvent | RegisterRecurringEventRequest | ModificationRecurringEvent,
+// ) => {
+//   const messageTitle = {
+//     modification: "以下の繰り返し予定が変更されました",
+//     registration: "以下の繰り返し予定が追加されました",
+//     deletion: "以下の繰り返し予定が削除されました",
+//   };
 
-  if (type === "registration") {
-    const { events } = recurringEventInfo as RegisterRecurringEventRequest;
-    if (events.length === 0) return;
-    const messages = events.map((event) => {
-      const { title, dayOfWeek, startTime, endTime } = event;
-      return `${dayOfWeek} : ${title} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
-    });
-    return `${messageTitle[type]}\n${messages.join("\n")}`;
-  } else if (type === "modification") {
-    const { events } = recurringEventInfo as ModificationRecurringEvent;
-    if (events.length === 0) return;
-    const messages = events.map((event) => {
-      const { title, dayOfWeek, startTime, endTime } = event;
-      return `${dayOfWeek} : ${title} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
-    });
-    return `${messageTitle[type]}\n${messages.join("\n")}`;
-  } else if (type === "deletion") {
-    const { dayOfWeeks } = recurringEventInfo as DeletionRecurringEvent;
-    if (dayOfWeeks.length === 0) return;
-    return `${messageTitle[type]}\n${dayOfWeeks.join("\n")}`;
-  }
-};
+//   if (type === "registration") {
+//     const { events } = recurringEventInfo as RegisterRecurringEventRequest;
+//     if (events.length === 0) return;
+//     const messages = events.map((event) => {
+//       const { title, dayOfWeek, startTime, endTime } = event;
+//       return `${dayOfWeek} : ${title} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
+//     });
+//     return `${messageTitle[type]}\n${messages.join("\n")}`;
+//   } else if (type === "modification") {
+//     const { events } = recurringEventInfo as ModificationRecurringEvent;
+//     if (events.length === 0) return;
+//     const messages = events.map((event) => {
+//       const { title, dayOfWeek, startTime, endTime } = event;
+//       return `${dayOfWeek} : ${title} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
+//     });
+//     return `${messageTitle[type]}\n${messages.join("\n")}`;
+//   } else if (type === "deletion") {
+//     const { dayOfWeeks } = recurringEventInfo as DeletionRecurringEvent;
+//     if (dayOfWeeks.length === 0) return;
+//     return `${messageTitle[type]}\n${dayOfWeeks.join("\n")}`;
+//   }
+// };

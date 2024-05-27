@@ -199,13 +199,13 @@ export const callModificationAndDeletion = () => {
       partTimerProfile,
     );
     return {
-      previousEventInfo: {
+      previousEvent: {
         title: modificationRow.title,
         date: modificationRow.startTime,
         startTime: modificationRow.startTime,
         endTime: modificationRow.endTime,
       },
-      newEventInfo: {
+      newEvent: {
         title: newTitle,
         date: modificationRow.newStartTime,
         startTime: modificationRow.newStartTime,
@@ -249,13 +249,13 @@ export const callModificationAndDeletion = () => {
 
 const createModificationMessage = (
   modificationInfos: {
-    previousEventInfo: Event;
-    newEventInfo: Event;
+    previousEvent: Event;
+    newEvent: Event;
   }[],
   partTimerProfile: PartTimerProfile,
 ): string | undefined => {
-  const messages = modificationInfos.map(({ previousEventInfo, newEventInfo }) => {
-    return `${createMessageFromEventInfo(previousEventInfo)}\n↓\n${createMessageFromEventInfo(newEventInfo)}`;
+  const messages = modificationInfos.map(({ previousEvent, newEvent }) => {
+    return `${createMessageFromEventInfo(previousEvent)}\n↓\n${createMessageFromEventInfo(newEvent)}`;
   });
   if (messages.length == 0) return;
   const { job, lastName } = partTimerProfile;

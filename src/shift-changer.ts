@@ -509,14 +509,15 @@ const createMessageForRecurringEvent = (recurringEventInfo: RecurringEventMessag
   if (recurringEventInfo.type === "registration" || recurringEventInfo.type === "modification") {
     const { events } = recurringEventInfo;
     if (events.length === 0) return;
-    const messages = events.map((event) => {
-      const { title, dayOfWeek, startTime, endTime } = event;
+    const messages = events.map(({ title, dayOfWeek, startTime, endTime }) => {
       return `${dayOfWeek} : ${title} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
     });
+
     return `${messageTitle[recurringEventInfo.type]}\n${messages.join("\n")}`;
   } else if (recurringEventInfo.type === "deletion") {
     const { dayOfWeeks } = recurringEventInfo;
     if (dayOfWeeks.length === 0) return;
+
     return `${messageTitle[recurringEventInfo.type]}\n${dayOfWeeks.join("\n")}`;
   }
 };

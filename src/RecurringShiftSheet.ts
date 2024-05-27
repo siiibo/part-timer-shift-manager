@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 const DateOrEmptyString = z.preprocess((val) => (val === "" ? undefined : val), z.date().optional());
+const dateAfterNow = z.date().min(new Date(), { message: "今日以降の日付を指定してください" });
 const DayOfWeekOrEmptyString = z.preprocess(
   (val) => (val === "" ? undefined : val),
   z
@@ -28,7 +29,7 @@ const OperationString = z.preprocess(
 );
 
 const RecurringEventSheetRow = z.object({
-  after: z.date(),
+  after: dateAfterNow,
   operation: OperationString,
   dayOfWeek: DayOfWeekOrEmptyString,
   startTime: DateOrEmptyString,

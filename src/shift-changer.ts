@@ -1,5 +1,6 @@
 import { GasWebClient as SlackClient } from "@hi-se/web-api";
 import { format } from "date-fns";
+import { z } from "zod";
 
 import { getConfig } from "./config";
 import { PartTimerProfile } from "./JobSheet";
@@ -24,6 +25,27 @@ type OperationType =
   | "registerRecurringEvent"
   | "modifyRecurringEvent"
   | "deleteRecurringEvent";
+
+const RegisterOrModifyRecurringEvent = z.object({
+  type: z.literal("registration").or(z.literal("modification")),
+  after: z.date(),
+  events: z
+    .object({
+      title: z.string(),
+      dayOfWeek: z.string(),
+      startTime: z.date(),
+      endTime: z.date(),
+    })
+    .array(),
+});
+const DeleteRecurringEvent = z.object({
+  type: z.literal("deletion"),
+  dayOfWeeks: z.string().array(),
+  after: z.date(),
+});
+const RecurringEventMessageInfoSchema = z.union([RegisterOrModifyRecurringEvent, DeleteRecurringEvent]);
+type RecurringEventMessageInfoSchema = z.infer<typeof RecurringEventMessageInfoSchema>;
+
 export const doGet = () => {
   return ContentService.createTextOutput("ok");
 };
@@ -401,9 +423,9 @@ export const callRecurringEvent = () => {
   const messageTitle = `${job}${lastName}さんの以下の繰り返し予定が変更されました`;
   const RecurringEventMessageToNotify = [
     `${messageTitle}`,
-    // createMessageForRecurringEvent("registration", { after, events: registrationInfos }),
-    // createMessageForRecurringEvent("modification", { after, events: modificationInfos }),
-    // createMessageForRecurringEvent("deletion", { after, dayOfWeeks: deleteDayOfWeeks }),
+    createMessageForRecurringEvent({ type: "registration", after, events: registrationInfos }),
+    createMessageForRecurringEvent({ type: "modification", after, events: modificationInfos }),
+    createMessageForRecurringEvent({ type: "deletion", after, dayOfWeeks: deleteDayOfWeeks }),
     comment ? `コメント: ${comment}` : undefined,
   ]
     .filter(Boolean)
@@ -509,35 +531,23 @@ const createTitleFromEventInfo = (
   }
 };
 
-// const createMessageForRecurringEvent = (
-//   type: "registration" | "modification" | "deletion",
-//   recurringEventInfo: DeletionRecurringEvent | RegisterRecurringEventRequest | ModificationRecurringEvent,
-// ) => {
-//   const messageTitle = {
-//     modification: "以下の繰り返し予定が変更されました",
-//     registration: "以下の繰り返し予定が追加されました",
-//     deletion: "以下の繰り返し予定が削除されました",
-//   };
-
-//   if (type === "registration") {
-//     const { events } = recurringEventInfo as RegisterRecurringEventRequest;
-//     if (events.length === 0) return;
-//     const messages = events.map((event) => {
-//       const { title, dayOfWeek, startTime, endTime } = event;
-//       return `${dayOfWeek} : ${title} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
-//     });
-//     return `${messageTitle[type]}\n${messages.join("\n")}`;
-//   } else if (type === "modification") {
-//     const { events } = recurringEventInfo as ModificationRecurringEvent;
-//     if (events.length === 0) return;
-//     const messages = events.map((event) => {
-//       const { title, dayOfWeek, startTime, endTime } = event;
-//       return `${dayOfWeek} : ${title} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
-//     });
-//     return `${messageTitle[type]}\n${messages.join("\n")}`;
-//   } else if (type === "deletion") {
-//     const { dayOfWeeks } = recurringEventInfo as DeletionRecurringEvent;
-//     if (dayOfWeeks.length === 0) return;
-//     return `${messageTitle[type]}\n${dayOfWeeks.join("\n")}`;
-//   }
-// };
+const createMessageForRecurringEvent = (recurringEventInfo: RecurringEventMessageInfoSchema): string | undefined => {
+  const messageTitle = {
+    modification: "以下の繰り返し予定が変更されました",
+    registration: "以下の繰り返し予定が追加されました",
+    deletion: "以下の繰り返し予定が削除されました",
+  };
+  if (recurringEventInfo.type === "registration" || recurringEventInfo.type === "modification") {
+    const { events } = recurringEventInfo;
+    if (events.length === 0) return;
+    const messages = events.map((event) => {
+      const { title, dayOfWeek, startTime, endTime } = event;
+      return `${dayOfWeek} : ${title} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
+    });
+    return `${messageTitle[recurringEventInfo.type]}\n${messages.join("\n")}`;
+  } else if (recurringEventInfo.type === "deletion") {
+    const { dayOfWeeks } = recurringEventInfo;
+    if (dayOfWeeks.length === 0) return;
+    return `${messageTitle[recurringEventInfo.type]}\n${dayOfWeeks.join("\n")}`;
+  }
+};

@@ -1,6 +1,5 @@
 import { GasWebClient as SlackClient } from "@hi-se/web-api";
 import { format } from "date-fns";
-import { z } from "zod";
 
 import { getConfig } from "./config";
 import { PartTimerProfile } from "./JobSheet";
@@ -15,29 +14,9 @@ import {
   insertRecurringEventSheet,
 } from "./RecurringShiftSheet";
 import { getRegistrationRows, insertRegistrationSheet, setValuesRegistrationSheet } from "./RegistrationSheet";
-import { Event, OperationType, shiftChanger } from "./shift-changer-api";
+import { Event, OperationType, RecurringEventMessageInfoSchema, shiftChanger } from "./shift-changer-api";
 
 type SheetType = "registration" | "modificationAndDeletion" | "recurringEvent";
-
-const RegisterOrModifyRecurringEvent = z.object({
-  type: z.literal("registration").or(z.literal("modification")),
-  after: z.date(),
-  events: z
-    .object({
-      title: z.string(),
-      dayOfWeek: z.string(),
-      startTime: z.date(),
-      endTime: z.date(),
-    })
-    .array(),
-});
-const DeleteRecurringEvent = z.object({
-  type: z.literal("deletion"),
-  dayOfWeeks: z.string().array(),
-  after: z.date(),
-});
-const RecurringEventMessageInfoSchema = z.union([RegisterOrModifyRecurringEvent, DeleteRecurringEvent]);
-type RecurringEventMessageInfoSchema = z.infer<typeof RecurringEventMessageInfoSchema>;
 
 export const doGet = () => {
   return ContentService.createTextOutput("ok");

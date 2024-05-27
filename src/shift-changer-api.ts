@@ -115,6 +115,26 @@ type ShiftChangeRequestSchema = z.infer<typeof ShiftChangeRequestSchema>;
 
 export type OperationType = ShiftChangeRequestSchema["operationType"];
 
+const RegisterOrModifyRecurringEvent = z.object({
+  type: z.literal("registration").or(z.literal("modification")),
+  after: z.date(),
+  events: z
+    .object({
+      title: z.string(),
+      dayOfWeek: z.string(),
+      startTime: z.date(),
+      endTime: z.date(),
+    })
+    .array(),
+});
+const DeleteRecurringEvent = z.object({
+  type: z.literal("deletion"),
+  dayOfWeeks: z.string().array(),
+  after: z.date(),
+});
+export const RecurringEventMessageInfoSchema = z.union([RegisterOrModifyRecurringEvent, DeleteRecurringEvent]);
+export type RecurringEventMessageInfoSchema = z.infer<typeof RecurringEventMessageInfoSchema>;
+
 export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
   const parameter = ShiftChangeRequestSchema.parse(e.parameter);
   const operationType = parameter.operationType;

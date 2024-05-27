@@ -14,22 +14,10 @@ import {
   insertRecurringEventSheet,
 } from "./RecurringShiftSheet";
 import { getRegistrationRows, insertRegistrationSheet, setValuesRegistrationSheet } from "./RegistrationSheet";
-import {
-  DeletionRecurringEvent,
-  EventInfo,
-  ModificationRecurringEvent,
-  RegisterRecurringEventRequest,
-  shiftChanger,
-} from "./shift-changer-api";
+import { Event, shiftChanger } from "./shift-changer-api";
 
-type SheetType = "registration" | "modificationAndDeletion" | "recurringEvent";
-type OperationType =
-  | "registration"
-  | "modificationAndDeletion"
-  | "showEvents"
-  | "registerRecurringEvent"
-  | "modifyRecurringEvent"
-  | "deleteRecurringEvent";
+type SheetType = "registration" | "modificationAndDeletion";
+type OperationType = "registerEvent" | "modifyAndDeleteEvent" | "showEvents";
 export const doGet = () => {
   return ContentService.createTextOutput("ok");
 };
@@ -99,7 +87,7 @@ export const callRegistration = () => {
 
   const sheetType: SheetType = "registration";
   const sheet = getSheet(sheetType, spreadsheetUrl);
-  const operationType: OperationType = "registration";
+  const operationType: OperationType = "registerEvent";
   const comment = sheet.getRange("A2").getValue();
   const registrationRows = getRegistrationRows(sheet);
   const registrationInfos = registrationRows.map((registrationRow) => {
@@ -122,7 +110,7 @@ export const callRegistration = () => {
     apiId: "shift-changer",
     operationType: operationType,
     userEmail: userEmail,
-    registrationInfos: JSON.stringify(registrationInfos),
+    registrationEvents: JSON.stringify(registrationInfos),
   };
   const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
     method: "post",
@@ -142,7 +130,7 @@ export const callRegistration = () => {
 };
 
 const createRegistrationMessage = (
-  registrationInfos: EventInfo[],
+  registrationInfos: Event[],
   comment: string,
   partTimerProfile: PartTimerProfile,
 ): string => {
@@ -179,7 +167,7 @@ export const callShowEvents = () => {
   if (response.getResponseCode() !== 200) {
     throw new Error(response.getContentText());
   }
-  const eventInfos = EventInfo.array().parse(JSON.parse(response.getContentText()));
+  const eventInfos = Event.array().parse(JSON.parse(response.getContentText()));
 
   if (eventInfos.length === 0) throw new Error("no events");
 
@@ -210,7 +198,7 @@ export const callModificationAndDeletion = () => {
   const sheetType: SheetType = "modificationAndDeletion";
   const sheet = getSheet(sheetType, spreadsheetUrl);
   const comment = sheet.getRange("A2").getValue();
-  const operationType: OperationType = "modificationAndDeletion";
+  const operationType: OperationType = "modifyAndDeleteEvent";
   const { modificationRows, deletionRows } = getModificationOrDeletion(sheet);
   const modificationInfos = modificationRows.map((modificationRow) => {
     const newTitle = createTitleFromEventInfo(
@@ -222,13 +210,13 @@ export const callModificationAndDeletion = () => {
       partTimerProfile,
     );
     return {
-      previousEventInfo: {
+      previousEvent: {
         title: modificationRow.title,
         date: modificationRow.startTime,
         startTime: modificationRow.startTime,
         endTime: modificationRow.endTime,
       },
-      newEventInfo: {
+      newEvent: {
         title: newTitle,
         date: modificationRow.newStartTime,
         startTime: modificationRow.newStartTime,
@@ -240,8 +228,8 @@ export const callModificationAndDeletion = () => {
     apiId: "shift-changer",
     operationType: operationType,
     userEmail: userEmail,
-    modificationInfos: JSON.stringify(modificationInfos),
-    deletionInfos: JSON.stringify(deletionRows),
+    modificationEvents: JSON.stringify(modificationInfos),
+    deletionEvents: JSON.stringify(deletionRows),
   };
   const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
     method: "post",
@@ -272,21 +260,20 @@ export const callModificationAndDeletion = () => {
 
 const createModificationMessage = (
   modificationInfos: {
-    previousEventInfo: EventInfo;
-    newEventInfo: EventInfo;
+    previousEvent: Event;
+    newEvent: Event;
   }[],
   partTimerProfile: PartTimerProfile,
 ): string | undefined => {
-  const messages = modificationInfos.map(({ previousEventInfo, newEventInfo }) => {
-    return `${createMessageFromEventInfo(previousEventInfo)}\n↓\n${createMessageFromEventInfo(newEventInfo)}`;
+  const messages = modificationInfos.map(({ previousEvent, newEvent }) => {
+    return `${createMessageFromEventInfo(previousEvent)}\n↓\n${createMessageFromEventInfo(newEvent)}`;
   });
   if (messages.length == 0) return;
   const { job, lastName } = partTimerProfile;
   const messageTitle = `${job}${lastName}さんの以下の予定が変更されました。`;
   return `${messageTitle}\n${messages.join("\n\n")}`;
 };
-
-const createDeletionMessage = (deletionInfos: EventInfo[], partTimerProfile: PartTimerProfile): string | undefined => {
+const createDeletionMessage = (deletionInfos: Event[], partTimerProfile: PartTimerProfile): string | undefined => {
   const messages = deletionInfos.map(createMessageFromEventInfo);
   if (messages.length == 0) return;
   const { job, lastName } = partTimerProfile;
@@ -470,8 +457,7 @@ const getManagerSlackIds = (managerEmails: string[], client: SlackClient): strin
 
   return managerSlackIds;
 };
-
-const createMessageFromEventInfo = (eventInfo: EventInfo) => {
+const createMessageFromEventInfo = (eventInfo: Event) => {
   const date = format(eventInfo.date, "MM/dd");
   const { workingStyle, restStartTime, restEndTime } = getEventInfoFromTitle(eventInfo.title);
   const startTime = format(eventInfo.startTime, "HH:mm");

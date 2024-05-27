@@ -112,17 +112,6 @@ const ShiftChangeRequestSchema = z.union([
   DeleteRecurringEventRequest,
 ]);
 
-const getCalendar = () => {
-  const { CALENDAR_ID } = getConfig();
-  const calendar = CalendarApp.getCalendarById(CALENDAR_ID);
-  return calendar;
-};
-
-const isEventGuest = (event: GoogleAppsScript.Calendar.CalendarEvent, email: string) => {
-  const guestEmails = event.getGuestList().map((guest) => guest.getEmail());
-  return guestEmails.includes(email);
-};
-
 export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
   const parameter = ShiftChangeRequestSchema.parse(e.parameter);
   const operationType = parameter.operationType;
@@ -364,6 +353,17 @@ const deleteRecurringEvents = (
   });
 
   return { responseCode: 200, comment: "イベントの消去が成功しました" };
+};
+
+const getCalendar = () => {
+  const { CALENDAR_ID } = getConfig();
+  const calendar = CalendarApp.getCalendarById(CALENDAR_ID);
+  return calendar;
+};
+
+const isEventGuest = (event: GoogleAppsScript.Calendar.CalendarEvent, email: string) => {
+  const guestEmails = event.getGuestList().map((guest) => guest.getEmail());
+  return guestEmails.includes(email);
 };
 
 const convertDayOfWeekJapaneseToEnglish = (dayOfWeek: DayOfWeek) => {

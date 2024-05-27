@@ -169,6 +169,46 @@ const registerEvent = (eventInfo: Event, userEmail: string) => {
   calendar.createEvent(eventInfo.title, startDate, endDate, { guests: userEmail });
 };
 
+const modifyEvents = (
+  modifyInfos: {
+    previousEvent: Event;
+    newEvent: Event;
+  }[],
+  userEmail: string,
+) => {
+  const calendar = getCalendar();
+  modifyInfos.forEach((eventInfo) => modifyEvent(eventInfo, calendar, userEmail));
+};
+
+const modifyEvent = (
+  eventInfo: {
+    previousEvent: Event;
+    newEvent: Event;
+  },
+  calendar: GoogleAppsScript.Calendar.Calendar,
+  userEmail: string,
+) => {
+  const [startDate, endDate] = [eventInfo.previousEvent.startTime, eventInfo.previousEvent.endTime];
+  const newTitle = eventInfo.newEvent.title;
+  const [newStartDate, newEndDate] = [eventInfo.newEvent.startTime, eventInfo.newEvent.endTime];
+  const event = calendar.getEvents(startDate, endDate).find((event) => isEventGuest(event, userEmail));
+  if (!event) return;
+  event.setTime(newStartDate, newEndDate);
+  event.setTitle(newTitle);
+};
+
+const deleteEvents = (deleteInfos: Event[], userEmail: string) => {
+  const calendar = getCalendar();
+  deleteInfos.forEach((eventInfo) => deleteEvent(eventInfo, calendar, userEmail));
+};
+
+const deleteEvent = (eventInfo: Event, calendar: GoogleAppsScript.Calendar.Calendar, userEmail: string) => {
+  const [startDate, endDate] = [eventInfo.startTime, eventInfo.endTime];
+  const event = calendar.getEvents(startDate, endDate).find((event) => isEventGuest(event, userEmail));
+  if (!event) return;
+  event.deleteEvent();
+};
+
 const showEvents = (userEmail: string, startDate: Date): Event[] => {
   const endDate = addWeeks(startDate, 4);
   const calendar = getCalendar();
@@ -182,17 +222,6 @@ const showEvents = (userEmail: string, startDate: Date): Event[] => {
     return { title, date, startTime, endTime };
   });
   return eventInfos;
-};
-
-const modifyEvents = (
-  modifyInfos: {
-    previousEvent: Event;
-    newEvent: Event;
-  }[],
-  userEmail: string,
-) => {
-  const calendar = getCalendar();
-  modifyInfos.forEach((eventInfo) => modifyEvent(eventInfo, calendar, userEmail));
 };
 
 const registerRecurringEvents = (
@@ -212,60 +241,6 @@ const registerRecurringEvents = (
       guests: userEmail,
     });
   });
-};
-
-const deleteRecurringEvents = (
-  { deletionRecurringEvents: { after, dayOfWeeks } }: DeleteRecurringEventRequest,
-  userEmail: string,
-): DeleteRecurringEventResponse => {
-  const calendarId = getConfig().CALENDAR_ID;
-  const advancedCalendar = getAdvancedCalendar();
-
-  const eventItems = dayOfWeeks
-    .map((dayOfWeek) => {
-      //NOTE: 仕様的にstartTimeの日付に最初の予定が指定されるため、指定された日付の後で一番近い指定曜日の日付に変更する
-      const recurrenceEndDate = getRecurrenceEndDate(after, dayOfWeek);
-      const events =
-        advancedCalendar.list(calendarId, {
-          timeMin: startOfDay(recurrenceEndDate).toISOString(),
-          timeMax: endOfDay(recurrenceEndDate).toISOString(),
-          singleEvents: true,
-          orderBy: "startTime",
-          maxResults: 1,
-          q: userEmail,
-        }).items ?? [];
-      const recurringEventId = events[0]?.recurringEventId;
-      return recurringEventId ? { recurringEventId, recurrenceEndDate } : undefined;
-    })
-    .filter(isNotUndefined);
-  if (eventItems.length === 0) return { responseCode: 400, comment: "消去するイベントの取得に失敗しました" };
-
-  const detailedEventItems = eventItems.map(({ recurringEventId, recurrenceEndDate }) => {
-    const eventDetail = advancedCalendar.get(calendarId, recurringEventId);
-    return { eventDetail, recurrenceEndDate, recurringEventId };
-  });
-
-  detailedEventItems.forEach(({ eventDetail, recurrenceEndDate, recurringEventId }) => {
-    if (!eventDetail.start?.dateTime || !eventDetail.end?.dateTime) return;
-
-    const untilTimeUTC = getEndOfDayFormattedAsUTCISO(recurrenceEndDate);
-    const data = {
-      summary: eventDetail.summary,
-      attendees: [{ email: userEmail }],
-      start: {
-        dateTime: eventDetail.start.dateTime,
-        timeZone: "Asia/Tokyo",
-      },
-      end: {
-        dateTime: eventDetail.end.dateTime,
-        timeZone: "Asia/Tokyo",
-      },
-      recurrence: ["RRULE:FREQ=WEEKLY;UNTIL=" + untilTimeUTC],
-    };
-    advancedCalendar.update(data, calendarId, recurringEventId);
-  });
-
-  return { responseCode: 200, comment: "イベントの消去が成功しました" };
 };
 
 const modifyRecurringEvents = (
@@ -337,33 +312,58 @@ const modifyRecurringEvents = (
   return { responseCode: 200, comment: "イベントの変更が成功しました" };
 };
 
-const modifyEvent = (
-  eventInfo: {
-    previousEvent: Event;
-    newEvent: Event;
-  },
-  calendar: GoogleAppsScript.Calendar.Calendar,
+const deleteRecurringEvents = (
+  { deletionRecurringEvents: { after, dayOfWeeks } }: DeleteRecurringEventRequest,
   userEmail: string,
-) => {
-  const [startDate, endDate] = [eventInfo.previousEvent.startTime, eventInfo.previousEvent.endTime];
-  const newTitle = eventInfo.newEvent.title;
-  const [newStartDate, newEndDate] = [eventInfo.newEvent.startTime, eventInfo.newEvent.endTime];
-  const event = calendar.getEvents(startDate, endDate).find((event) => isEventGuest(event, userEmail));
-  if (!event) return;
-  event.setTime(newStartDate, newEndDate);
-  event.setTitle(newTitle);
-};
+): DeleteRecurringEventResponse => {
+  const calendarId = getConfig().CALENDAR_ID;
+  const advancedCalendar = getAdvancedCalendar();
 
-const deleteEvents = (deleteInfos: Event[], userEmail: string) => {
-  const calendar = getCalendar();
-  deleteInfos.forEach((eventInfo) => deleteEvent(eventInfo, calendar, userEmail));
-};
+  const eventItems = dayOfWeeks
+    .map((dayOfWeek) => {
+      //NOTE: 仕様的にstartTimeの日付に最初の予定が指定されるため、指定された日付の後で一番近い指定曜日の日付に変更する
+      const recurrenceEndDate = getRecurrenceEndDate(after, dayOfWeek);
+      const events =
+        advancedCalendar.list(calendarId, {
+          timeMin: startOfDay(recurrenceEndDate).toISOString(),
+          timeMax: endOfDay(recurrenceEndDate).toISOString(),
+          singleEvents: true,
+          orderBy: "startTime",
+          maxResults: 1,
+          q: userEmail,
+        }).items ?? [];
+      const recurringEventId = events[0]?.recurringEventId;
+      return recurringEventId ? { recurringEventId, recurrenceEndDate } : undefined;
+    })
+    .filter(isNotUndefined);
+  if (eventItems.length === 0) return { responseCode: 400, comment: "消去するイベントの取得に失敗しました" };
 
-const deleteEvent = (eventInfo: Event, calendar: GoogleAppsScript.Calendar.Calendar, userEmail: string) => {
-  const [startDate, endDate] = [eventInfo.startTime, eventInfo.endTime];
-  const event = calendar.getEvents(startDate, endDate).find((event) => isEventGuest(event, userEmail));
-  if (!event) return;
-  event.deleteEvent();
+  const detailedEventItems = eventItems.map(({ recurringEventId, recurrenceEndDate }) => {
+    const eventDetail = advancedCalendar.get(calendarId, recurringEventId);
+    return { eventDetail, recurrenceEndDate, recurringEventId };
+  });
+
+  detailedEventItems.forEach(({ eventDetail, recurrenceEndDate, recurringEventId }) => {
+    if (!eventDetail.start?.dateTime || !eventDetail.end?.dateTime) return;
+
+    const untilTimeUTC = getEndOfDayFormattedAsUTCISO(recurrenceEndDate);
+    const data = {
+      summary: eventDetail.summary,
+      attendees: [{ email: userEmail }],
+      start: {
+        dateTime: eventDetail.start.dateTime,
+        timeZone: "Asia/Tokyo",
+      },
+      end: {
+        dateTime: eventDetail.end.dateTime,
+        timeZone: "Asia/Tokyo",
+      },
+      recurrence: ["RRULE:FREQ=WEEKLY;UNTIL=" + untilTimeUTC],
+    };
+    advancedCalendar.update(data, calendarId, recurringEventId);
+  });
+
+  return { responseCode: 200, comment: "イベントの消去が成功しました" };
 };
 
 const convertDayOfWeekJapaneseToEnglish = (dayOfWeek: DayOfWeek) => {

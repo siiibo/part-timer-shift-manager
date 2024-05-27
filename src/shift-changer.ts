@@ -9,10 +9,7 @@ import {
   insertModificationAndDeletionSheet,
   setValuesModificationAndDeletionSheet,
 } from "./ModificationAndDeletionSheet";
-import {
-  getRecurringEventModificationOrDeletionOrRegistration,
-  insertRecurringEventSheet,
-} from "./RecurringShiftSheet";
+import { getRegisterOrModifyOrDeleRecurringEventRows, insertRecurringEventSheet } from "./RecurringShiftSheet";
 import { getRegistrationRows, insertRegistrationSheet, setValuesRegistrationSheet } from "./RegistrationSheet";
 import { Event, OperationType, RecurringEventMessageInfoSchema, shiftChanger } from "./shift-changer-api";
 
@@ -294,8 +291,7 @@ export const callRecurringEvent = () => {
   const sheetType: SheetType = "recurringEvent";
   const sheet = getSheet(sheetType, spreadsheetUrl);
   const comment = sheet.getRange("A2").getValue();
-  const { registrationRows, modificationRows, deletionRows } =
-    getRecurringEventModificationOrDeletionOrRegistration(sheet);
+  const { registrationRows, modificationRows, deletionRows } = getRegisterOrModifyOrDeleRecurringEventRows(sheet);
   const after = new Date(sheet.getRange("A5").getValue());
 
   const registrationInfos = registrationRows.map((registrationRow) => {
@@ -509,6 +505,7 @@ const createMessageForRecurringEvent = (recurringEventInfo: RecurringEventMessag
     registration: "以下の繰り返し予定が追加されました",
     deletion: "以下の繰り返し予定が削除されました",
   };
+
   if (recurringEventInfo.type === "registration" || recurringEventInfo.type === "modification") {
     const { events } = recurringEventInfo;
     if (events.length === 0) return;

@@ -127,22 +127,22 @@ export const setValuesRecurringEventSheet = (sheet: GoogleAppsScript.Spreadsheet
   sheet.setColumnWidth(2, 150);
 };
 
-export const getRecurringEventModificationOrDeletionOrRegistration = (
+export const getRegisterOrModifyOrDeleRecurringEventRows = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
 ): {
   registrationRows: RegisterRecurringEventRow[];
   modificationRows: ModifyRecurringEventRow[];
   deletionRows: DeleteRecurringEventRow[];
 } => {
-  const sheetValues = getRecurringEventSheetValues(sheet);
+  const sheetRows = getRecurringEventSheetRows(sheet);
   return {
-    registrationRows: sheetValues.filter(isRegistrationRow),
-    modificationRows: sheetValues.filter(isModificationRow),
-    deletionRows: sheetValues.filter(isDeletionRow),
+    registrationRows: sheetRows.filter(isRegistrationRow),
+    modificationRows: sheetRows.filter(isModificationRow),
+    deletionRows: sheetRows.filter(isDeletionRow),
   };
 };
 
-const getRecurringEventSheetValues = (
+const getRecurringEventSheetRows = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
 ): (RegisterRecurringEventRow | ModifyRecurringEventRow | DeleteRecurringEventRow | NoOperationRow)[] => {
   const after = sheet.getRange("A5").getValue();
@@ -162,13 +162,7 @@ const getRecurringEventSheetValues = (
       }),
     )
     .map((row) => {
-      if (row.operation === "消去") {
-        return DeleteRecurringEventRow.parse({
-          type: "deleteRecurringEvent",
-          after: row.after,
-          dayOfWeek: row.dayOfWeek,
-        });
-      } else if (row.operation === "追加" && row.dayOfWeek && row.startTime && row.endTime) {
+      if (row.operation === "追加" && row.dayOfWeek && row.startTime && row.endTime) {
         return RegisterRecurringEventRow.parse({
           type: "registerRecurringEvent",
           after: row.after,
@@ -190,6 +184,12 @@ const getRecurringEventSheetValues = (
           restEndTime: row.restEndTime,
           workingStyle: row.workingStyle,
         });
+      } else if (row.operation === "消去") {
+        return DeleteRecurringEventRow.parse({
+          type: "deleteRecurringEvent",
+          after: row.after,
+          dayOfWeek: row.dayOfWeek,
+        });
       } else {
         return {
           type: "no-operation",
@@ -200,11 +200,11 @@ const getRecurringEventSheetValues = (
 };
 
 const isRegistrationRow = (
-  row: ModifyRecurringEventRow | DeleteRecurringEventRow | RegisterRecurringEventRow | NoOperationRow,
+  row: RegisterRecurringEventRow | ModifyRecurringEventRow | DeleteRecurringEventRow | NoOperationRow,
 ): row is RegisterRecurringEventRow => row.type === "registerRecurringEvent";
 const isModificationRow = (
-  row: ModifyRecurringEventRow | DeleteRecurringEventRow | RegisterRecurringEventRow | NoOperationRow,
+  row: RegisterRecurringEventRow | ModifyRecurringEventRow | DeleteRecurringEventRow | NoOperationRow,
 ): row is ModifyRecurringEventRow => row.type === "modifyRecurringEvent";
 const isDeletionRow = (
-  row: ModifyRecurringEventRow | DeleteRecurringEventRow | RegisterRecurringEventRow | NoOperationRow,
+  row: RegisterRecurringEventRow | ModifyRecurringEventRow | DeleteRecurringEventRow | NoOperationRow,
 ): row is DeleteRecurringEventRow => row.type === "deleteRecurringEvent";

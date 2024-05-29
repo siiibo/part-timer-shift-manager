@@ -350,12 +350,12 @@ export const callRecurringEvent = () => {
     return deletionRow.dayOfWeek;
   });
 
+  const payloadBase = { apiId: "shift-changer", userEmail };
   const { API_URL } = getConfig();
   if (registrationInfos.length > 0) {
     const payload = {
-      apiId: "shift-changer",
+      ...payloadBase,
       operationType: "registerRecurringEvent",
-      userEmail: userEmail,
       registrationRecurringEvents: JSON.stringify({ after, events: registrationInfos }),
     };
     const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
@@ -370,9 +370,8 @@ export const callRecurringEvent = () => {
   }
   if (modificationInfos.length > 0) {
     const payload = {
-      apiId: "shift-changer",
+      ...payloadBase,
       operationType: "modifyRecurringEvent",
-      userEmail: userEmail,
       modificationRecurringEvents: JSON.stringify({ after, events: modificationInfos }),
     };
     const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
@@ -387,9 +386,8 @@ export const callRecurringEvent = () => {
   }
   if (deleteDayOfWeeks.length > 0) {
     const payload = {
-      apiId: "shift-changer",
+      ...payloadBase,
       operationType: "deleteRecurringEvent",
-      userEmail: userEmail,
       deletionRecurringEvents: JSON.stringify({ after, dayOfWeeks: deleteDayOfWeeks }),
     };
     const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {

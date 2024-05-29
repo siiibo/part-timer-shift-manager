@@ -1,6 +1,7 @@
 import { GasWebClient as SlackClient } from "@hi-se/web-api";
 import { format } from "date-fns";
 
+import { DayOfWeek } from "./common.schema";
 import { getConfig } from "./config";
 import { PartTimerProfile } from "./JobSheet";
 import { getPartTimerProfile } from "./JobSheet";
@@ -11,13 +12,7 @@ import {
 } from "./ModificationAndDeletionSheet";
 import { getRecurringEventSheetValues, insertRecurringEventSheet } from "./RecurringEventSheet";
 import { getRegistrationRows, insertRegistrationSheet, setValuesRegistrationSheet } from "./RegistrationSheet";
-import {
-  DeleteRecurringEventRequest,
-  Event,
-  ModifyRecurringEventRequest,
-  OperationType,
-  RegisterRecurringEventRequest,
-} from "./shift-changer-api";
+import { Event, OperationType } from "./shift-changer-api";
 
 type SheetType = "registration" | "modificationAndDeletion" | "recurringEvent";
 
@@ -304,7 +299,7 @@ export const callRecurringEvent = () => {
     },
   );
 
-  const deleteDayOfWeeks = deletionRows.map((deletionRow) => {
+  const deletionInfos = deletionRows.map((deletionRow) => {
     return deletionRow.dayOfWeek;
   });
 
@@ -342,11 +337,11 @@ export const callRecurringEvent = () => {
       throw new Error(response.getContentText());
     }
   }
-  if (deleteDayOfWeeks.length > 0) {
+  if (deletionInfos.length > 0) {
     const payload = {
       ...payloadBase,
       operationType: "deleteRecurringEvent",
-      deletionRecurringEvents: JSON.stringify({ after, dayOfWeeks: deleteDayOfWeeks }),
+      deletionRecurringEvents: JSON.stringify({ after, dayOfWeeks: deletionInfos }),
     };
     const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
       method: "post",
@@ -359,32 +354,17 @@ export const callRecurringEvent = () => {
     }
   }
 
-  const RecurringEventMessageToNotify = [
-    createMessageForRecurringEvent(partTimerProfile, {
-      registration: {
-        operationType: "registerRecurringEvent",
-        userEmail,
-        registrationRecurringEvents: { after, events: registrationInfos },
-      },
-      modification: {
-        operationType: "modifyRecurringEvent",
-        userEmail,
-        modificationRecurringEvents: { after, events: modificationInfos },
-      },
-      deletion: {
-        operationType: "deleteRecurringEvent",
-        userEmail,
-        deletionRecurringEvents: { after, dayOfWeeks: deleteDayOfWeeks },
-      },
-    }),
-    comment ? `コメント: ${comment}` : undefined,
-  ]
-    .filter(Boolean)
-    .join("\n---\n");
+  const recurringEventMessageToNotify = createMessageForRecurringEvent(
+    partTimerProfile,
+    registrationInfos,
+    modificationInfos,
+    deletionInfos,
+    comment,
+  );
 
   const { SLACK_ACCESS_TOKEN, SLACK_CHANNEL_TO_POST } = getConfig();
   const client = getSlackClient(SLACK_ACCESS_TOKEN);
-  postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, RecurringEventMessageToNotify, partTimerProfile);
+  postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, recurringEventMessageToNotify, partTimerProfile);
   // TODO: 本番環境にマージする際にはコメントアウトを外す
   // sheet.clear();
   // SpreadsheetApp.flush();
@@ -486,34 +466,32 @@ const createTitleFromEventInfo = (
 
 const createMessageForRecurringEvent = (
   { job, lastName }: PartTimerProfile,
-  recurringEventInfo: {
-    registration: RegisterRecurringEventRequest;
-    modification: ModifyRecurringEventRequest;
-    deletion: DeleteRecurringEventRequest;
-  },
-): string | undefined => {
-  const messageTitle = {
-    registerRecurringEvent: "以下の繰り返し予定が追加されました",
-    modifyRecurringEvent: "以下の繰り返し予定が変更されました",
-    deleteRecurringEvent: "以下の繰り返し予定が削除されました",
-  };
-  const registerRecurringEvents = recurringEventInfo.registration.registrationRecurringEvents.events;
-  const modificationRecurringEvents = recurringEventInfo.modification.modificationRecurringEvents.events;
-  const deletionRecurringEvents = recurringEventInfo.deletion.deletionRecurringEvents.dayOfWeeks;
+  registrationInfos: { title: string; dayOfWeek: DayOfWeek; startTime: Date; endTime: Date }[],
+  modificationInfos: { title: string; dayOfWeek: DayOfWeek; startTime: Date; endTime: Date }[],
+  deletionInfos: DayOfWeek[],
+  comment: string | undefined,
+): string => {
+  const registrationMessages = registrationInfos.map(
+    ({ title, dayOfWeek, startTime, endTime }) =>
+      `${dayOfWeek} : ${title} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`,
+  );
+  const modificationMessages = modificationInfos.map(
+    ({ title, dayOfWeek, startTime, endTime }) =>
+      `${dayOfWeek} : ${title} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`,
+  );
+  const deletionMessage = deletionInfos.join("\n");
 
-  if (registerRecurringEvents.length > 0) {
-    const messages = registerRecurringEvents.map(({ title, dayOfWeek, startTime, endTime }) => {
-      return `${dayOfWeek} : ${title} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
-    });
-    return `${job}${lastName}さんの${messageTitle.registerRecurringEvent}\n${messages.join("\n")}`;
-  }
-  if (modificationRecurringEvents.length > 0) {
-    const messages = modificationRecurringEvents.map(({ title, dayOfWeek, startTime, endTime }) => {
-      return `${dayOfWeek} : ${title} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
-    });
-    return `${job}${lastName}さんの${messageTitle.modifyRecurringEvent}\n${messages.join("\n")}`;
-  }
-  if (deletionRecurringEvents.length > 0) {
-    return `${job}${lastName}さんの${messageTitle.deleteRecurringEvent}\n${deletionRecurringEvents.join("\n")}`;
-  }
+  const message = [
+    registrationMessages.length > 0
+      ? `${job}${lastName}さんの以下の繰り返し予定が追加されました\n${registrationMessages.join("\n")}`
+      : "",
+    modificationMessages.length > 0
+      ? `${job}${lastName}さんの以下の繰り返し予定が変更されました\n${modificationMessages.join("\n")}`
+      : "",
+    deletionInfos.length > 0 ? `${job}${lastName}さんの以下の繰り返し予定が削除されました\n${deletionMessage}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  return comment ? `${message}\n---\nコメント: ${comment}` : message;
 };

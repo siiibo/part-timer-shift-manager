@@ -289,22 +289,24 @@ export const callRecurringEvent = () => {
   const { after, comment, registrationRows, modificationRows, deletionRows } =
     getRegisterOrModifyOrDeleRecurringEventRows(sheet);
 
-  const registrationInfos = registrationRows.map((registrationRow) => {
-    const title = createTitleFromEventInfo(
-      {
-        ...(registrationRow.restStartTime && { restStartTime: registrationRow.restStartTime }),
-        ...(registrationRow.restEndTime && { restEndTime: registrationRow.restEndTime }),
-        workingStyle: registrationRow.workingStyle,
-      },
-      partTimerProfile,
-    );
-    return {
-      title: title,
-      dayOfWeek: registrationRow.dayOfWeek,
-      startTime: registrationRow.startTime,
-      endTime: registrationRow.endTime,
-    };
-  });
+  const registrationInfos = registrationRows.map(
+    ({ startTime, endTime, restStartTime, restEndTime, dayOfWeek, workingStyle }) => {
+      const title = createTitleFromEventInfo(
+        {
+          ...(restStartTime && { restStartTime }),
+          ...(restEndTime && { restEndTime }),
+          workingStyle,
+        },
+        partTimerProfile,
+      );
+      return {
+        title,
+        dayOfWeek,
+        startTime,
+        endTime,
+      };
+    },
+  );
   const modificationInfos = modificationRows.map((modificationRow) => {
     const title = createTitleFromEventInfo(
       {

@@ -273,6 +273,10 @@ export const callRecurringEvent = () => {
   const userEmail = Session.getActiveUser().getEmail();
   const partTimerProfile = getPartTimerProfile(userEmail);
 
+  if (registrationRows.length == 0 && modificationRows.length == 0 && deletionRows.length == 0) {
+    throw new Error("追加・変更・削除する予定がありません。");
+  }
+
   const registrationInfos = registrationRows.map(
     ({ startTime, endTime, restStartTime, restEndTime, dayOfWeek, workingStyle }) => {
       const title = createTitleFromEventInfo(
@@ -300,9 +304,6 @@ export const callRecurringEvent = () => {
     },
   );
 
-  if (modificationInfos.length == 0 && deletionRows.length == 0 && registrationInfos.length == 0) {
-    throw new Error("追加・変更・削除する予定がありません。");
-  }
   const deleteDayOfWeeks = deletionRows.map((deletionRow) => {
     return deletionRow.dayOfWeek;
   });

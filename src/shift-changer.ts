@@ -491,7 +491,7 @@ const createMessageForRecurringEvent = (
     deletionInfos.length > 0 ? `${job}${lastName}さんの以下の繰り返し予定が削除されました\n${deletionMessage}` : "",
   ]
     .filter(Boolean)
-    .join("\n");
+    .join("\n---\n");
 
   return comment ? `${message}\n---\nコメント: ${comment}` : message;
 };

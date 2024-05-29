@@ -9,7 +9,7 @@ import {
   insertModificationAndDeletionSheet,
   setValuesModificationAndDeletionSheet,
 } from "./ModificationAndDeletionSheet";
-import { getRegisterOrModifyOrDeleRecurringEventRows, insertRecurringEventSheet } from "./RecurringShiftSheet";
+import { getAfterDateAndCommentAndRegisterOrModifyOrDeleRows, insertRecurringEventSheet } from "./RecurringShiftSheet";
 import { getRegistrationRows, insertRegistrationSheet, setValuesRegistrationSheet } from "./RegistrationSheet";
 import {
   DeleteRecurringEventRequest,
@@ -282,7 +282,7 @@ export const callRecurringEvent = () => {
   const spreadsheetUrl = SpreadsheetApp.getActiveSpreadsheet().getUrl();
   const sheet = getSheet("recurringEvent", spreadsheetUrl);
   const { after, comment, registrationRows, modificationRows, deletionRows } =
-    getRegisterOrModifyOrDeleRecurringEventRows(sheet);
+    getAfterDateAndCommentAndRegisterOrModifyOrDeleRows(sheet);
   const userEmail = Session.getActiveUser().getEmail();
   const partTimerProfile = getPartTimerProfile(userEmail);
 

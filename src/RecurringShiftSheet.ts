@@ -128,7 +128,7 @@ export const setValuesRecurringEventSheet = (sheet: GoogleAppsScript.Spreadsheet
   sheet.setColumnWidth(2, 150);
 };
 
-export const getRegisterOrModifyOrDeleRecurringEventRows = (
+export const getAfterDateAndCommentAndRegisterOrModifyOrDeleRows = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
 ): {
   after: Date;

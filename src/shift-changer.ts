@@ -503,13 +503,15 @@ const createMessageForRecurringEvent = (
       return `${dayOfWeek} : ${title} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
     });
     return `${job}${lastName}さんの${messageTitle.registerRecurringEvent}\n${messages.join("\n")}`;
-  } else if (recurringEventInfo.modification.modificationRecurringEvents.events.length !== 0) {
+  }
+  if (recurringEventInfo.modification.modificationRecurringEvents.events.length !== 0) {
     const { events } = recurringEventInfo.modification.modificationRecurringEvents;
     const messages = events.map(({ title, dayOfWeek, startTime, endTime }) => {
       return `${dayOfWeek} : ${title} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
     });
     return `${job}${lastName}さんの${messageTitle.modifyRecurringEvent}\n${messages.join("\n")}`;
-  } else if (recurringEventInfo.deletion.deletionRecurringEvents.dayOfWeeks.length !== 0) {
+  }
+  if (recurringEventInfo.deletion.deletionRecurringEvents.dayOfWeeks.length !== 0) {
     const { dayOfWeeks } = recurringEventInfo.deletion.deletionRecurringEvents;
     return `${job}${lastName}さんの${messageTitle.deleteRecurringEvent}\n${dayOfWeeks.join("\n")}`;
   }

@@ -108,6 +108,17 @@ type ShiftChangeRequestSchema = z.infer<typeof ShiftChangeRequestSchema>;
 
 export type OperationType = ShiftChangeRequestSchema["operationType"];
 
+export const doGet = () => {
+  return ContentService.createTextOutput("ok");
+};
+export const doPost = (e: GoogleAppsScript.Events.DoPost): GoogleAppsScript.Content.TextOutput => {
+  if (e.parameter.apiId === "shift-changer") {
+    const response = shiftChanger(e) ?? "";
+    return ContentService.createTextOutput(response).setMimeType(ContentService.MimeType.JSON);
+  }
+  return ContentService.createTextOutput("undefined");
+};
+
 export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
   const parameter = ShiftChangeRequestSchema.parse(e.parameter);
   const operationType = parameter.operationType;

@@ -7,12 +7,11 @@ import {
   callRecurringEvent,
   callRegistration,
   callShowEvents,
-  doGet,
-  doPost,
   initShiftChanger,
   onOpen,
   onOpenForDev,
 } from "./shift-changer";
+import { doGet, doPost } from "./shift-changer-api";
 /**
  * @file GASエディタから実行できる関数を定義する
  */

@@ -359,22 +359,23 @@ export const callRecurringEvent = () => {
     }
   }
 
-  const { job, lastName } = partTimerProfile;
   const RecurringEventMessageToNotify = [
-    createMessageForRecurringEvent(job, lastName, {
-      operationType: "registerRecurringEvent",
-      userEmail,
-      registrationRecurringEvents: { after, events: registrationInfos },
-    }),
-    createMessageForRecurringEvent(job, lastName, {
-      operationType: "modifyRecurringEvent",
-      userEmail,
-      modificationRecurringEvents: { after, events: modificationInfos },
-    }),
-    createMessageForRecurringEvent(job, lastName, {
-      operationType: "deleteRecurringEvent",
-      userEmail,
-      deletionRecurringEvents: { after, dayOfWeeks: deleteDayOfWeeks },
+    createMessageForRecurringEvent(partTimerProfile, {
+      registration: {
+        operationType: "registerRecurringEvent",
+        userEmail,
+        registrationRecurringEvents: { after, events: registrationInfos },
+      },
+      modification: {
+        operationType: "modifyRecurringEvent",
+        userEmail,
+        modificationRecurringEvents: { after, events: modificationInfos },
+      },
+      deletion: {
+        operationType: "deleteRecurringEvent",
+        userEmail,
+        deletionRecurringEvents: { after, dayOfWeeks: deleteDayOfWeeks },
+      },
     }),
     comment ? `コメント: ${comment}` : undefined,
   ]
@@ -484,32 +485,32 @@ const createTitleFromEventInfo = (
 };
 
 const createMessageForRecurringEvent = (
-  job: string,
-  name: string,
-  recurringEventInfo: ModifyRecurringEventRequest | RegisterRecurringEventRequest | DeleteRecurringEventRequest,
+  { job, lastName }: PartTimerProfile,
+  recurringEventInfo: {
+    registration: RegisterRecurringEventRequest;
+    modification: ModifyRecurringEventRequest;
+    deletion: DeleteRecurringEventRequest;
+  },
 ): string | undefined => {
   const messageTitle = {
-    modifyRecurringEvent: "以下の繰り返し予定が変更されました",
     registerRecurringEvent: "以下の繰り返し予定が追加されました",
+    modifyRecurringEvent: "以下の繰り返し予定が変更されました",
     deleteRecurringEvent: "以下の繰り返し予定が削除されました",
   };
-  if (recurringEventInfo.operationType === "registerRecurringEvent") {
-    const { events } = recurringEventInfo.registrationRecurringEvents;
-    if (events.length === 0) return;
+  if (recurringEventInfo.registration.registrationRecurringEvents.events.length !== 0) {
+    const { events } = recurringEventInfo.registration.registrationRecurringEvents;
     const messages = events.map(({ title, dayOfWeek, startTime, endTime }) => {
       return `${dayOfWeek} : ${title} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
     });
-    return `${job}${name}さんの${messageTitle[recurringEventInfo.operationType]}\n${messages.join("\n")}`;
-  } else if (recurringEventInfo.operationType === "modifyRecurringEvent") {
-    const { events } = recurringEventInfo.modificationRecurringEvents;
-    if (events.length === 0) return;
+    return `${job}${lastName}さんの${messageTitle.registerRecurringEvent}\n${messages.join("\n")}`;
+  } else if (recurringEventInfo.modification.modificationRecurringEvents.events.length !== 0) {
+    const { events } = recurringEventInfo.modification.modificationRecurringEvents;
     const messages = events.map(({ title, dayOfWeek, startTime, endTime }) => {
       return `${dayOfWeek} : ${title} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
     });
-    return `${job}${name}さんの${messageTitle[recurringEventInfo.operationType]}\n${messages.join("\n")}`;
-  } else if (recurringEventInfo.operationType === "deleteRecurringEvent") {
-    const { dayOfWeeks } = recurringEventInfo.deletionRecurringEvents;
-    if (dayOfWeeks.length === 0) return;
-    return `${job}${name}さんの${messageTitle[recurringEventInfo.operationType]}\n${dayOfWeeks.join("\n")}`;
+    return `${job}${lastName}さんの${messageTitle.modifyRecurringEvent}\n${messages.join("\n")}`;
+  } else if (recurringEventInfo.deletion.deletionRecurringEvents.dayOfWeeks.length !== 0) {
+    const { dayOfWeeks } = recurringEventInfo.deletion.deletionRecurringEvents;
+    return `${job}${lastName}さんの${messageTitle.deleteRecurringEvent}\n${dayOfWeeks.join("\n")}`;
   }
 };

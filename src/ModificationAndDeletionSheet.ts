@@ -1,17 +1,15 @@
 import { set } from "date-fns";
 import { z } from "zod";
 
-// NOTE: z.object内でz.literal("").or(z.date())を使うと型推論がおかしくなるので、preprocessを使っている
-const dateOrEmptyString = z.preprocess((val) => (val === "" ? undefined : val), z.date().optional());
-const dateAfterNow = z.date().min(new Date(), { message: "過去の時間にシフト変更はできません" });
+import { DateAfterNow, DateOrEmptyString } from "./common.schema";
 
 const ModificationRow = z.object({
   type: z.literal("modification"),
   title: z.string(),
-  startTime: dateAfterNow,
-  endTime: dateAfterNow,
-  newStartTime: dateAfterNow,
-  newEndTime: dateAfterNow,
+  startTime: DateAfterNow,
+  endTime: DateAfterNow,
+  newStartTime: DateAfterNow,
+  newEndTime: DateAfterNow,
   newRestStartTime: z.date().optional(),
   newRestEndTime: z.date().optional(),
   newWorkingStyle: z.literal("出社").or(z.literal("リモート")),
@@ -21,9 +19,9 @@ type ModificationRow = z.infer<typeof ModificationRow>;
 const DeletionRow = z.object({
   type: z.literal("deletion"),
   title: z.string(),
-  date: dateAfterNow, //TODO: 日付情報だけの変数dateを消去する
-  startTime: dateAfterNow,
-  endTime: dateAfterNow,
+  date: DateAfterNow, //TODO: 日付情報だけの変数dateを消去する
+  startTime: DateAfterNow,
+  endTime: DateAfterNow,
 });
 type DeletionRow = z.infer<typeof DeletionRow>;
 
@@ -32,11 +30,11 @@ const ModificationOrDeletionSheetRow = z.object({
   date: z.date(),
   startTime: z.date(),
   endTime: z.date(),
-  newDate: dateOrEmptyString,
-  newStartTime: dateOrEmptyString,
-  newEndTime: dateOrEmptyString,
-  newRestStartTime: dateOrEmptyString,
-  newRestEndTime: dateOrEmptyString,
+  newDate: DateOrEmptyString,
+  newStartTime: DateOrEmptyString,
+  newEndTime: DateOrEmptyString,
+  newRestStartTime: DateOrEmptyString,
+  newRestEndTime: DateOrEmptyString,
   newWorkingStyle: z.literal("出社").or(z.literal("リモート")).or(z.literal("")),
   isDeletionTarget: z.coerce.boolean(),
 });

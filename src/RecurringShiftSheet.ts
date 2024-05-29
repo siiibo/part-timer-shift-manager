@@ -1,23 +1,16 @@
 import { z } from "zod";
 
-import { DayOfWeek } from "./common.schema";
-
-const DateOrEmptyString = z.preprocess((val) => (val === "" ? undefined : val), z.date().optional());
-const dateAfterNow = z.date().min(new Date(), { message: "今日以降の日付を指定してください" });
-
-const DayOfWeekOrEmptyString = z.preprocess((val) => (val === "" ? undefined : val), DayOfWeek.optional());
-const WorkingStyleOrEmptyString = z.preprocess(
-  (val) => (val === "" ? undefined : val),
-  z.literal("リモート").or(z.literal("出勤")).optional(),
-);
-
-const OperationString = z.preprocess(
-  (val) => (val === "" ? undefined : val),
-  z.literal("時間変更").or(z.literal("消去")).or(z.literal("追加")).optional(),
-);
+import {
+  DateAfterNow,
+  DateOrEmptyString,
+  DayOfWeek,
+  DayOfWeekOrEmptyString,
+  OperationString,
+  WorkingStyleOrEmptyString,
+} from "./common.schema";
 
 const RecurringEventSheetRow = z.object({
-  after: dateAfterNow,
+  after: DateAfterNow,
   operation: OperationString,
   dayOfWeek: DayOfWeekOrEmptyString,
   startTime: DateOrEmptyString,

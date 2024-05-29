@@ -9,7 +9,7 @@ import {
   insertModificationAndDeletionSheet,
   setValuesModificationAndDeletionSheet,
 } from "./ModificationAndDeletionSheet";
-import { getRecurringEventSheetValues, insertRecurringEventSheet } from "./RecurringShiftSheet";
+import { getRecurringEventSheetValues, insertRecurringEventSheet } from "./RecurringEventSheet";
 import { getRegistrationRows, insertRegistrationSheet, setValuesRegistrationSheet } from "./RegistrationSheet";
 import {
   DeleteRecurringEventRequest,

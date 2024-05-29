@@ -82,8 +82,7 @@ export const callRegistration = () => {
   const client = getSlackClient(SLACK_ACCESS_TOKEN);
   const partTimerProfile = getPartTimerProfile(userEmail);
 
-  const sheetType: SheetType = "registration";
-  const sheet = getSheet(sheetType, spreadsheetUrl);
+  const sheet = getSheet("registration", spreadsheetUrl);
   const operationType: OperationType = "registerEvent";
   const comment = sheet.getRange("A2").getValue();
   const registrationRows = getRegistrationRows(sheet);
@@ -142,8 +141,7 @@ const createRegistrationMessage = (
 export const callShowEvents = () => {
   const userEmail = Session.getActiveUser().getEmail();
   const spreadsheetUrl = SpreadsheetApp.getActiveSpreadsheet().getUrl();
-  const sheetType: SheetType = "modificationAndDeletion";
-  const sheet = getSheet(sheetType, spreadsheetUrl);
+  const sheet = getSheet("modificationAndDeletion", spreadsheetUrl);
   const operationType: OperationType = "showEvents";
   const startDate: Date = sheet.getRange("A5").getValue();
   if (!startDate) throw new Error("日付を指定してください。");
@@ -192,8 +190,7 @@ export const callModificationAndDeletion = () => {
   const { SLACK_ACCESS_TOKEN } = getConfig();
   const client = getSlackClient(SLACK_ACCESS_TOKEN);
   const partTimerProfile = getPartTimerProfile(userEmail);
-  const sheetType: SheetType = "modificationAndDeletion";
-  const sheet = getSheet(sheetType, spreadsheetUrl);
+  const sheet = getSheet("modificationAndDeletion", spreadsheetUrl);
   const comment = sheet.getRange("A2").getValue();
   const operationType: OperationType = "modifyAndDeleteEvent";
   const { modificationRows, deletionRows } = getModificationOrDeletion(sheet);
@@ -288,8 +285,7 @@ export const callRecurringEvent = () => {
   const { SLACK_ACCESS_TOKEN } = getConfig();
   const client = getSlackClient(SLACK_ACCESS_TOKEN);
   const partTimerProfile = getPartTimerProfile(userEmail);
-  const sheetType: SheetType = "recurringEvent";
-  const sheet = getSheet(sheetType, spreadsheetUrl);
+  const sheet = getSheet("recurringEvent", spreadsheetUrl);
   const comment = sheet.getRange("A2").getValue();
   const { registrationRows, modificationRows, deletionRows } = getRegisterOrModifyOrDeleRecurringEventRows(sheet);
   const after = new Date(sheet.getRange("A5").getValue());

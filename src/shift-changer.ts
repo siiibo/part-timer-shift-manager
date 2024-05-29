@@ -324,12 +324,12 @@ export const callRecurringEvent = () => {
     };
   });
 
-  const deleteDayOfWeeks = deletionRows.map((deletionRow) => {
-    return deletionRow.dayOfWeek;
-  });
   if (modificationInfos.length == 0 && deletionRows.length == 0 && registrationInfos.length == 0) {
     throw new Error("追加・変更・削除する予定がありません。");
   }
+  const deleteDayOfWeeks = deletionRows.map((deletionRow) => {
+    return deletionRow.dayOfWeek;
+  });
 
   const { API_URL, SLACK_CHANNEL_TO_POST } = getConfig();
   if (registrationInfos.length > 0) {

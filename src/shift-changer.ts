@@ -495,9 +495,10 @@ const createTitleFromEventInfo = (
     return title;
   }
 };
-type RecurringEventType = ModifyRecurringEventRequest | RegisterRecurringEventRequest | DeleteRecurringEventRequest;
 
-const createMessageForRecurringEvent = (recurringEventInfo: RecurringEventType): string | undefined => {
+const createMessageForRecurringEvent = (
+  recurringEventInfo: ModifyRecurringEventRequest | RegisterRecurringEventRequest | DeleteRecurringEventRequest,
+): string | undefined => {
   const messageTitle = {
     modifyRecurringEvent: "以下の繰り返し予定が変更されました",
     registerRecurringEvent: "以下の繰り返し予定が追加されました",

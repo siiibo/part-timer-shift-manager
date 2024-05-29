@@ -355,6 +355,7 @@ export const callRecurringEvent = () => {
   }
 
   const recurringEventMessageToNotify = createMessageForRecurringEvent(
+    after,
     partTimerProfile,
     registrationInfos,
     modificationInfos,
@@ -465,6 +466,7 @@ const createTitleFromEventInfo = (
 };
 
 const createMessageForRecurringEvent = (
+  after: Date,
   { job, lastName }: PartTimerProfile,
   registrationInfos: { title: string; dayOfWeek: DayOfWeek; startTime: Date; endTime: Date }[],
   modificationInfos: { title: string; dayOfWeek: DayOfWeek; startTime: Date; endTime: Date }[],
@@ -482,6 +484,7 @@ const createMessageForRecurringEvent = (
   const deletionMessage = deletionInfos.join("\n");
 
   const message = [
+    `${format(after, "yyyy/MM/dd")}以降の繰り返し予定を変更しました`,
     registrationMessages.length > 0
       ? `${job}${lastName}さんの以下の繰り返し予定が追加されました\n${registrationMessages.join("\n")}`
       : "",

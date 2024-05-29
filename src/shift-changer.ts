@@ -301,14 +301,12 @@ export const callRecurringEvent = () => {
   if (!lock.tryLock(0)) {
     throw new Error("すでに処理を実行中です。そのままお待ちください");
   }
-  const userEmail = Session.getActiveUser().getEmail();
   const spreadsheetUrl = SpreadsheetApp.getActiveSpreadsheet().getUrl();
-  const { SLACK_ACCESS_TOKEN } = getConfig();
-  const client = getSlackClient(SLACK_ACCESS_TOKEN);
-  const partTimerProfile = getPartTimerProfile(userEmail);
   const sheet = getSheet("recurringEvent", spreadsheetUrl);
   const { after, comment, registrationRows, modificationRows, deletionRows } =
     getRegisterOrModifyOrDeleRecurringEventRows(sheet);
+  const userEmail = Session.getActiveUser().getEmail();
+  const partTimerProfile = getPartTimerProfile(userEmail);
 
   const registrationInfos = registrationRows.map(
     ({ startTime, endTime, restStartTime, restEndTime, dayOfWeek, workingStyle }) => {
@@ -352,7 +350,7 @@ export const callRecurringEvent = () => {
     return deletionRow.dayOfWeek;
   });
 
-  const { API_URL, SLACK_CHANNEL_TO_POST } = getConfig();
+  const { API_URL } = getConfig();
   if (registrationInfos.length > 0) {
     const payload = {
       apiId: "shift-changer",
@@ -417,8 +415,10 @@ export const callRecurringEvent = () => {
     .filter(Boolean)
     .join("\n---\n");
 
+  const { SLACK_ACCESS_TOKEN, SLACK_CHANNEL_TO_POST } = getConfig();
+  const client = getSlackClient(SLACK_ACCESS_TOKEN);
   postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, RecurringEventMessageToNotify, partTimerProfile);
-  // NOTE: 本番環境にマージする際にはコメントアウトを外す
+  // TODO: 本番環境にマージする際にはコメントアウトを外す
   // sheet.clear();
   // SpreadsheetApp.flush();
   // setValuesRecurringEventSheet(sheet);

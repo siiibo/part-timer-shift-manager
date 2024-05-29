@@ -1,23 +1,11 @@
 import { z } from "zod";
 
+import { DayOfWeek } from "./common.schema";
+
 const DateOrEmptyString = z.preprocess((val) => (val === "" ? undefined : val), z.date().optional());
 const dateAfterNow = z.date().min(new Date(), { message: "今日以降の日付を指定してください" });
-const DayOfWeekOrEmptyString = z.preprocess(
-  (val) => (val === "" ? undefined : val),
-  z
-    .literal("月曜日")
-    .or(z.literal("火曜日"))
-    .or(z.literal("水曜日"))
-    .or(z.literal("木曜日"))
-    .or(z.literal("金曜日"))
-    .optional(),
-);
-const DayOfWeek = z
-  .literal("月曜日")
-  .or(z.literal("火曜日"))
-  .or(z.literal("水曜日"))
-  .or(z.literal("木曜日"))
-  .or(z.literal("金曜日"));
+
+const DayOfWeekOrEmptyString = z.preprocess((val) => (val === "" ? undefined : val), DayOfWeek.optional());
 const WorkingStyleOrEmptyString = z.preprocess(
   (val) => (val === "" ? undefined : val),
   z.literal("リモート").or(z.literal("出勤")).optional(),

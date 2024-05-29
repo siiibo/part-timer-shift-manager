@@ -2,15 +2,8 @@ import { addWeeks, endOfDay, format, nextDay, previousDay, set, startOfDay, subH
 import { z } from "zod";
 import { zu } from "zod_utilz";
 
+import { DayOfWeek } from "./common.schema";
 import { getConfig } from "./config";
-
-const DayOfWeek = z
-  .literal("月曜日")
-  .or(z.literal("火曜日"))
-  .or(z.literal("水曜日"))
-  .or(z.literal("木曜日"))
-  .or(z.literal("金曜日"));
-type DayOfWeek = z.infer<typeof DayOfWeek>;
 
 export const Event = z.object({
   title: z.string(),

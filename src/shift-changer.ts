@@ -93,21 +93,16 @@ export const callRegistration = () => {
   const operationType: OperationType = "registerEvent";
   const comment = sheet.getRange("A2").getValue();
   const registrationRows = getRegistrationRows(sheet);
-  const registrationInfos = registrationRows.map((registrationRow) => {
+  const registrationInfos = registrationRows.map(({ startTime, endTime, restStartTime, restEndTime, workingStyle }) => {
     const title = createTitleFromEventInfo(
       {
-        ...(registrationRow.restStartTime && { restStartTime: registrationRow.restStartTime }),
-        ...(registrationRow.restEndTime && { restEndTime: registrationRow.restEndTime }),
-        workingStyle: registrationRow.workingStyle,
+        ...(restStartTime && { restStartTime: restStartTime }),
+        ...(restEndTime && { restEndTime: restEndTime }),
+        workingStyle,
       },
       partTimerProfile,
     );
-    return {
-      title: title,
-      date: registrationRow.startTime,
-      startTime: registrationRow.startTime,
-      endTime: registrationRow.endTime,
-    };
+    return { title, date: startTime, startTime, endTime };
   });
   const payload = {
     apiId: "shift-changer",
@@ -201,30 +196,27 @@ export const callModificationAndDeletion = () => {
   const comment = sheet.getRange("A2").getValue();
   const operationType: OperationType = "modifyAndDeleteEvent";
   const { modificationRows, deletionRows } = getModificationOrDeletion(sheet);
-  const modificationInfos = modificationRows.map((modificationRow) => {
-    const newTitle = createTitleFromEventInfo(
-      {
-        ...(modificationRow.newRestStartTime && { restStartTime: modificationRow.newRestStartTime }),
-        ...(modificationRow.newRestEndTime && { restEndTime: modificationRow.newRestEndTime }),
-        workingStyle: modificationRow.newWorkingStyle,
-      },
-      partTimerProfile,
-    );
-    return {
-      previousEvent: {
-        title: modificationRow.title,
-        date: modificationRow.startTime,
-        startTime: modificationRow.startTime,
-        endTime: modificationRow.endTime,
-      },
-      newEvent: {
-        title: newTitle,
-        date: modificationRow.newStartTime,
-        startTime: modificationRow.newStartTime,
-        endTime: modificationRow.newEndTime,
-      },
-    };
-  });
+  const modificationInfos = modificationRows.map(
+    ({ title, startTime, endTime, newStartTime, newEndTime, newRestStartTime, newRestEndTime, newWorkingStyle }) => {
+      const newTitle = createTitleFromEventInfo(
+        {
+          ...(newRestStartTime && { restStartTime: newRestStartTime }),
+          ...(newRestEndTime && { restEndTime: newRestEndTime }),
+          workingStyle: newWorkingStyle,
+        },
+        partTimerProfile,
+      );
+      return {
+        previousEvent: { title, date: startTime, startTime, endTime },
+        newEvent: {
+          title: newTitle,
+          date: newStartTime,
+          startTime: newStartTime,
+          endTime: newEndTime,
+        },
+      };
+    },
+  );
   const payload = {
     apiId: "shift-changer",
     operationType: operationType,
@@ -304,30 +296,22 @@ export const callRecurringEvent = () => {
         },
         partTimerProfile,
       );
-      return {
-        title,
-        dayOfWeek,
-        startTime,
-        endTime,
-      };
+      return { title, dayOfWeek, startTime, endTime };
     },
   );
-  const modificationInfos = modificationRows.map((modificationRow) => {
-    const title = createTitleFromEventInfo(
-      {
-        ...(modificationRow.restStartTime && { restStartTime: modificationRow.restStartTime }),
-        ...(modificationRow.restEndTime && { restEndTime: modificationRow.restEndTime }),
-        workingStyle: modificationRow.workingStyle,
-      },
-      partTimerProfile,
-    );
-    return {
-      title: title,
-      dayOfWeek: modificationRow.dayOfWeek,
-      startTime: modificationRow.startTime,
-      endTime: modificationRow.endTime,
-    };
-  });
+  const modificationInfos = modificationRows.map(
+    ({ startTime, endTime, restStartTime, restEndTime, dayOfWeek, workingStyle }) => {
+      const title = createTitleFromEventInfo(
+        {
+          ...(restStartTime && { restStartTime }),
+          ...(restEndTime && { restEndTime }),
+          workingStyle,
+        },
+        partTimerProfile,
+      );
+      return { title, dayOfWeek, startTime, endTime };
+    },
+  );
 
   if (modificationInfos.length == 0 && deletionRows.length == 0 && registrationInfos.length == 0) {
     throw new Error("追加・変更・削除する予定がありません。");

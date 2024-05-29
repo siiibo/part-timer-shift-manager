@@ -286,9 +286,8 @@ export const callRecurringEvent = () => {
   const client = getSlackClient(SLACK_ACCESS_TOKEN);
   const partTimerProfile = getPartTimerProfile(userEmail);
   const sheet = getSheet("recurringEvent", spreadsheetUrl);
-  const comment = sheet.getRange("A2").getValue();
-  const { registrationRows, modificationRows, deletionRows } = getRegisterOrModifyOrDeleRecurringEventRows(sheet);
-  const after = new Date(sheet.getRange("A5").getValue());
+  const { after, comment, registrationRows, modificationRows, deletionRows } =
+    getRegisterOrModifyOrDeleRecurringEventRows(sheet);
 
   const registrationInfos = registrationRows.map((registrationRow) => {
     const title = createTitleFromEventInfo(

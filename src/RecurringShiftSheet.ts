@@ -131,12 +131,19 @@ export const setValuesRecurringEventSheet = (sheet: GoogleAppsScript.Spreadsheet
 export const getRegisterOrModifyOrDeleRecurringEventRows = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
 ): {
+  after: Date;
+  comment: string;
   registrationRows: RegisterRecurringEventRow[];
   modificationRows: ModifyRecurringEventRow[];
   deletionRows: DeleteRecurringEventRow[];
 } => {
   const sheetRows = getRecurringEventSheetRows(sheet);
+  const after = new Date(sheet.getRange("A5").getValue());
+  const comment = sheet.getRange("A2").getValue();
+
   return {
+    after: after,
+    comment: comment,
     registrationRows: sheetRows.filter(isRegistrationRow),
     modificationRows: sheetRows.filter(isModificationRow),
     deletionRows: sheetRows.filter(isDeletionRow),

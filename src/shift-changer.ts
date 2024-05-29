@@ -359,20 +359,18 @@ export const callRecurringEvent = () => {
   }
 
   const { job, lastName } = partTimerProfile;
-  const messageTitle = `${job}${lastName}さんの以下の繰り返し予定が変更されました`;
   const RecurringEventMessageToNotify = [
-    `${messageTitle}`,
-    createMessageForRecurringEvent({
+    createMessageForRecurringEvent(job, lastName, {
       operationType: "registerRecurringEvent",
       userEmail,
       registrationRecurringEvents: { after, events: registrationInfos },
     }),
-    createMessageForRecurringEvent({
+    createMessageForRecurringEvent(job, lastName, {
       operationType: "modifyRecurringEvent",
       userEmail,
       modificationRecurringEvents: { after, events: modificationInfos },
     }),
-    createMessageForRecurringEvent({
+    createMessageForRecurringEvent(job, lastName, {
       operationType: "deleteRecurringEvent",
       userEmail,
       deletionRecurringEvents: { after, dayOfWeeks: deleteDayOfWeeks },
@@ -485,6 +483,8 @@ const createTitleFromEventInfo = (
 };
 
 const createMessageForRecurringEvent = (
+  job: string,
+  name: string,
   recurringEventInfo: ModifyRecurringEventRequest | RegisterRecurringEventRequest | DeleteRecurringEventRequest,
 ): string | undefined => {
   const messageTitle = {
@@ -498,17 +498,17 @@ const createMessageForRecurringEvent = (
     const messages = events.map(({ title, dayOfWeek, startTime, endTime }) => {
       return `${dayOfWeek} : ${title} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
     });
-    return `${messageTitle[recurringEventInfo.operationType]}\n${messages.join("\n")}`;
+    return `${job}${name}さんの${messageTitle[recurringEventInfo.operationType]}\n${messages.join("\n")}`;
   } else if (recurringEventInfo.operationType === "modifyRecurringEvent") {
     const { events } = recurringEventInfo.modificationRecurringEvents;
     if (events.length === 0) return;
     const messages = events.map(({ title, dayOfWeek, startTime, endTime }) => {
       return `${dayOfWeek} : ${title} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
     });
-    return `${messageTitle[recurringEventInfo.operationType]}\n${messages.join("\n")}`;
+    return `${job}${name}さんの${messageTitle[recurringEventInfo.operationType]}\n${messages.join("\n")}`;
   } else if (recurringEventInfo.operationType === "deleteRecurringEvent") {
     const { dayOfWeeks } = recurringEventInfo.deletionRecurringEvents;
     if (dayOfWeeks.length === 0) return;
-    return `${messageTitle[recurringEventInfo.operationType]}\n${dayOfWeeks.join("\n")}`;
+    return `${job}${name}さんの${messageTitle[recurringEventInfo.operationType]}\n${dayOfWeeks.join("\n")}`;
   }
 };

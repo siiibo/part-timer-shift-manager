@@ -497,22 +497,23 @@ const createMessageForRecurringEvent = (
     modifyRecurringEvent: "以下の繰り返し予定が変更されました",
     deleteRecurringEvent: "以下の繰り返し予定が削除されました",
   };
-  if (recurringEventInfo.registration.registrationRecurringEvents.events.length !== 0) {
-    const { events } = recurringEventInfo.registration.registrationRecurringEvents;
-    const messages = events.map(({ title, dayOfWeek, startTime, endTime }) => {
+  const registerRecurringEvents = recurringEventInfo.registration.registrationRecurringEvents.events;
+  const modificationRecurringEvents = recurringEventInfo.modification.modificationRecurringEvents.events;
+  const deletionRecurringEvents = recurringEventInfo.deletion.deletionRecurringEvents.dayOfWeeks;
+
+  if (registerRecurringEvents.length > 0) {
+    const messages = registerRecurringEvents.map(({ title, dayOfWeek, startTime, endTime }) => {
       return `${dayOfWeek} : ${title} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
     });
     return `${job}${lastName}さんの${messageTitle.registerRecurringEvent}\n${messages.join("\n")}`;
   }
-  if (recurringEventInfo.modification.modificationRecurringEvents.events.length !== 0) {
-    const { events } = recurringEventInfo.modification.modificationRecurringEvents;
-    const messages = events.map(({ title, dayOfWeek, startTime, endTime }) => {
+  if (modificationRecurringEvents.length > 0) {
+    const messages = modificationRecurringEvents.map(({ title, dayOfWeek, startTime, endTime }) => {
       return `${dayOfWeek} : ${title} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
     });
     return `${job}${lastName}さんの${messageTitle.modifyRecurringEvent}\n${messages.join("\n")}`;
   }
-  if (recurringEventInfo.deletion.deletionRecurringEvents.dayOfWeeks.length !== 0) {
-    const { dayOfWeeks } = recurringEventInfo.deletion.deletionRecurringEvents;
-    return `${job}${lastName}さんの${messageTitle.deleteRecurringEvent}\n${dayOfWeeks.join("\n")}`;
+  if (deletionRecurringEvents.length > 0) {
+    return `${job}${lastName}さんの${messageTitle.deleteRecurringEvent}\n${deletionRecurringEvents.join("\n")}`;
   }
 };

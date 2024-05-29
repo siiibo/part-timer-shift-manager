@@ -1,6 +1,5 @@
 import { GasWebClient as SlackClient } from "@hi-se/web-api";
 import { format } from "date-fns";
-import { z } from "zod";
 
 import { getConfig } from "./config";
 import { PartTimerProfile } from "./JobSheet";
@@ -12,29 +11,16 @@ import {
 } from "./ModificationAndDeletionSheet";
 import { getRegisterOrModifyOrDeleRecurringEventRows, insertRecurringEventSheet } from "./RecurringShiftSheet";
 import { getRegistrationRows, insertRegistrationSheet, setValuesRegistrationSheet } from "./RegistrationSheet";
-import { Event, OperationType, shiftChanger } from "./shift-changer-api";
+import {
+  DeleteRecurringEventRequest,
+  Event,
+  ModifyRecurringEventRequest,
+  OperationType,
+  RegisterRecurringEventRequest,
+  shiftChanger,
+} from "./shift-changer-api";
 
 type SheetType = "registration" | "modificationAndDeletion" | "recurringEvent";
-
-const RegisterOrModifyRecurringEvent = z.object({
-  type: z.literal("registration").or(z.literal("modification")),
-  after: z.date(),
-  events: z
-    .object({
-      title: z.string(),
-      dayOfWeek: z.string(),
-      startTime: z.date(),
-      endTime: z.date(),
-    })
-    .array(),
-});
-const DeleteRecurringEvent = z.object({
-  type: z.literal("deletion"),
-  dayOfWeeks: z.string().array(),
-  after: z.date(),
-});
-const RecurringEventMessageInfoSchema = z.union([RegisterOrModifyRecurringEvent, DeleteRecurringEvent]);
-type RecurringEventMessageInfoSchema = z.infer<typeof RecurringEventMessageInfoSchema>;
 
 export const doGet = () => {
   return ContentService.createTextOutput("ok");
@@ -405,9 +391,21 @@ export const callRecurringEvent = () => {
   const messageTitle = `${job}${lastName}さんの以下の繰り返し予定が変更されました`;
   const RecurringEventMessageToNotify = [
     `${messageTitle}`,
-    createMessageForRecurringEvent({ type: "registration", after, events: registrationInfos }),
-    createMessageForRecurringEvent({ type: "modification", after, events: modificationInfos }),
-    createMessageForRecurringEvent({ type: "deletion", after, dayOfWeeks: deleteDayOfWeeks }),
+    createMessageForRecurringEvent({
+      operationType: "registerRecurringEvent",
+      userEmail,
+      registrationRecurringEvents: { after, events: registrationInfos },
+    }),
+    createMessageForRecurringEvent({
+      operationType: "modifyRecurringEvent",
+      userEmail,
+      modificationRecurringEvents: { after, events: modificationInfos },
+    }),
+    createMessageForRecurringEvent({
+      operationType: "deleteRecurringEvent",
+      userEmail,
+      deletionRecurringEvents: { after, dayOfWeeks: deleteDayOfWeeks },
+    }),
     comment ? `コメント: ${comment}` : undefined,
   ]
     .filter(Boolean)
@@ -514,26 +512,31 @@ const createTitleFromEventInfo = (
     return title;
   }
 };
+type RecurringEventType = ModifyRecurringEventRequest | RegisterRecurringEventRequest | DeleteRecurringEventRequest;
 
-const createMessageForRecurringEvent = (recurringEventInfo: RecurringEventMessageInfoSchema): string | undefined => {
+const createMessageForRecurringEvent = (recurringEventInfo: RecurringEventType): string | undefined => {
   const messageTitle = {
-    modification: "以下の繰り返し予定が変更されました",
-    registration: "以下の繰り返し予定が追加されました",
-    deletion: "以下の繰り返し予定が削除されました",
+    modifyRecurringEvent: "以下の繰り返し予定が変更されました",
+    registerRecurringEvent: "以下の繰り返し予定が追加されました",
+    deleteRecurringEvent: "以下の繰り返し予定が削除されました",
   };
-
-  if (recurringEventInfo.type === "registration" || recurringEventInfo.type === "modification") {
-    const { events } = recurringEventInfo;
+  if (recurringEventInfo.operationType === "registerRecurringEvent") {
+    const { events } = recurringEventInfo.registrationRecurringEvents;
     if (events.length === 0) return;
     const messages = events.map(({ title, dayOfWeek, startTime, endTime }) => {
       return `${dayOfWeek} : ${title} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
     });
-
-    return `${messageTitle[recurringEventInfo.type]}\n${messages.join("\n")}`;
-  } else if (recurringEventInfo.type === "deletion") {
-    const { dayOfWeeks } = recurringEventInfo;
+    return `${messageTitle[recurringEventInfo.operationType]}\n${messages.join("\n")}`;
+  } else if (recurringEventInfo.operationType === "modifyRecurringEvent") {
+    const { events } = recurringEventInfo.modificationRecurringEvents;
+    if (events.length === 0) return;
+    const messages = events.map(({ title, dayOfWeek, startTime, endTime }) => {
+      return `${dayOfWeek} : ${title} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
+    });
+    return `${messageTitle[recurringEventInfo.operationType]}\n${messages.join("\n")}`;
+  } else if (recurringEventInfo.operationType === "deleteRecurringEvent") {
+    const { dayOfWeeks } = recurringEventInfo.deletionRecurringEvents;
     if (dayOfWeeks.length === 0) return;
-
-    return `${messageTitle[recurringEventInfo.type]}\n${dayOfWeeks.join("\n")}`;
+    return `${messageTitle[recurringEventInfo.operationType]}\n${dayOfWeeks.join("\n")}`;
   }
 };

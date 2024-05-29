@@ -48,7 +48,7 @@ const ShowEventRequest = z.object({
 });
 type ShowEventRequest = z.infer<typeof ShowEventRequest>;
 
-const RegisterRecurringEventRequest = z.object({
+export const RegisterRecurringEventRequest = z.object({
   operationType: z.literal("registerRecurringEvent"),
   userEmail: z.string(),
   registrationRecurringEvents: zu.stringToJSON().pipe(
@@ -65,9 +65,9 @@ const RegisterRecurringEventRequest = z.object({
     }),
   ),
 });
-type RegisterRecurringEventRequest = z.infer<typeof RegisterRecurringEventRequest>;
+export type RegisterRecurringEventRequest = z.infer<typeof RegisterRecurringEventRequest>;
 
-const ModifyRecurringEventRequest = z.object({
+export const ModifyRecurringEventRequest = z.object({
   operationType: z.literal("modifyRecurringEvent"),
   userEmail: z.string(),
   modificationRecurringEvents: zu.stringToJSON().pipe(
@@ -84,9 +84,9 @@ const ModifyRecurringEventRequest = z.object({
     }),
   ),
 });
-type ModifyRecurringEventRequest = z.infer<typeof ModifyRecurringEventRequest>;
+export type ModifyRecurringEventRequest = z.infer<typeof ModifyRecurringEventRequest>;
 
-const DeleteRecurringEventRequest = z.object({
+export const DeleteRecurringEventRequest = z.object({
   operationType: z.literal("deleteRecurringEvent"),
   userEmail: z.string(),
   deletionRecurringEvents: zu.stringToJSON().pipe(
@@ -96,7 +96,7 @@ const DeleteRecurringEventRequest = z.object({
     }),
   ),
 });
-type DeleteRecurringEventRequest = z.infer<typeof DeleteRecurringEventRequest>;
+export type DeleteRecurringEventRequest = z.infer<typeof DeleteRecurringEventRequest>;
 
 type DeleteRecurringEventResponse = {
   responseCode: number;

@@ -366,7 +366,7 @@ export const callRecurringEvent = () => {
     registrationInfos,
     modificationInfos,
     deleteInfos,
-    ...(comment ? [comment] : []),
+    comment,
   );
 
   const { SLACK_ACCESS_TOKEN, SLACK_CHANNEL_TO_POST } = getConfig();

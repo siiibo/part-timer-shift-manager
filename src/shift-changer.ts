@@ -12,7 +12,7 @@ import {
 } from "./ModificationAndDeletionSheet";
 import { getRecurringEventSheetValues, insertRecurringEventSheet } from "./RecurringEventSheet";
 import { getRegistrationRows, insertRegistrationSheet, setValuesRegistrationSheet } from "./RegistrationSheet";
-import { Event, OperationType } from "./shift-changer-api";
+import { Event, OperationType, RecurringEventResponse } from "./shift-changer-api";
 
 type SheetType = "registration" | "modificationAndDeletion" | "recurringEvent";
 
@@ -337,7 +337,7 @@ export const callRecurringEvent = () => {
       muteHttpExceptions: true,
     };
     const response = UrlFetchApp.fetch(API_URL, options);
-    const responseContent = JSON.parse(response.getContentText());
+    const responseContent = RecurringEventResponse.parse(response.getContentText());
     if (responseContent.responseCode !== 200) {
       throw new Error(responseContent.comment);
     }
@@ -354,7 +354,7 @@ export const callRecurringEvent = () => {
       muteHttpExceptions: true,
     };
     const response = UrlFetchApp.fetch(API_URL, options);
-    const responseContent = JSON.parse(response.getContentText());
+    const responseContent = RecurringEventResponse.parse(response.getContentText());
     if (responseContent.responseCode !== 200) {
       throw new Error(responseContent.comment);
     }

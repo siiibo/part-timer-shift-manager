@@ -91,10 +91,12 @@ export const DeleteRecurringEventRequest = z.object({
 });
 export type DeleteRecurringEventRequest = z.infer<typeof DeleteRecurringEventRequest>;
 
-type DeleteRecurringEventResponse = {
-  responseCode: number;
-  comment: string;
-};
+//NOTE: クライアントがresponseCodeを取得するには、responseCodeをContentに埋め込む必要があるため
+export const RecurringEventResponse = z.object({
+  responseCode: z.number(),
+  comment: z.string(),
+});
+export type RecurringEventResponse = z.infer<typeof RecurringEventResponse>;
 
 const ShiftChangeRequestSchema = z.union([
   RegisterEventRequest,
@@ -240,10 +242,9 @@ const registerRecurringEvents = (
 };
 
 const modifyRecurringEvents = (
-  //NOTE: クライアントがresponseCodeを取得するには、responseCodeをContentに埋め込む必要があるため
   { modificationRecurringEvents: { after, events } }: ModifyRecurringEventRequest,
   userEmail: string,
-) => {
+): RecurringEventResponse => {
   const calendar = getCalendar();
   const calendarId = getConfig().CALENDAR_ID;
   const advancedCalendar = getAdvancedCalendar();
@@ -310,10 +311,9 @@ const modifyRecurringEvents = (
 };
 
 const deleteRecurringEvents = (
-  //NOTE: クライアントがresponseCodeを取得するには、responseCodeをContentに埋め込む必要があるため
   { deletionRecurringEvents: { after, dayOfWeeks } }: DeleteRecurringEventRequest,
   userEmail: string,
-): DeleteRecurringEventResponse => {
+): RecurringEventResponse => {
   const calendarId = getConfig().CALENDAR_ID;
   const advancedCalendar = getAdvancedCalendar();
 

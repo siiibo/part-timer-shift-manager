@@ -366,7 +366,7 @@ export const callRecurringEvent = () => {
     registrationInfos,
     modificationInfos,
     deleteInfos,
-    comment,
+    ...(comment ? [comment] : []),
   );
 
   const { SLACK_ACCESS_TOKEN, SLACK_CHANNEL_TO_POST } = getConfig();
@@ -384,7 +384,7 @@ const createMessageForRecurringEvent = (
   registrationInfos: { title: string; dayOfWeek: DayOfWeek; startTime: Date; endTime: Date }[],
   modificationInfos: { title: string; dayOfWeek: DayOfWeek; startTime: Date; endTime: Date }[],
   deletionInfos: { dayOfWeek: DayOfWeek }[],
-  comment: string,
+  comment?: string,
 ): string => {
   const registrationMessages = registrationInfos.map(
     ({ title, dayOfWeek, startTime, endTime }) =>

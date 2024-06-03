@@ -316,7 +316,6 @@ const deleteRecurringEvents = (
 ): DeleteRecurringEventResponse => {
   const calendarId = getConfig().CALENDAR_ID;
   const advancedCalendar = getAdvancedCalendar();
-  console.log(after, dayOfWeeks); //TODO: この行は消去する
 
   const eventItems = dayOfWeeks
     .map((dayOfWeek) => {
@@ -336,12 +335,11 @@ const deleteRecurringEvents = (
     })
     .filter(isNotUndefined);
   if (eventItems.length === 0) return { responseCode: 400, comment: "消去するイベントの取得に失敗しました" };
-  console.log(eventItems); //TODO: この行は消去する
+
   const detailedEventItems = eventItems.map(({ recurringEventId, recurrenceEndDate }) => {
     const eventDetail = advancedCalendar.get(calendarId, recurringEventId);
     return { eventDetail, recurrenceEndDate, recurringEventId };
   });
-  console.log(detailedEventItems); //TODO: この行は消去する
 
   detailedEventItems.forEach(({ eventDetail, recurrenceEndDate, recurringEventId }) => {
     if (!eventDetail.start?.dateTime || !eventDetail.end?.dateTime) return;

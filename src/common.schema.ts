@@ -19,8 +19,3 @@ export const WorkingStyleOrEmptyString = z.preprocess(
   (val) => (val === "" ? undefined : val),
   z.literal("リモート").or(z.literal("出勤")).optional(),
 );
-
-export const OperationString = z.preprocess(
-  (val) => (val === "" ? undefined : val),
-  z.literal("時間変更").or(z.literal("消去")).or(z.literal("追加")).optional(),
-);

@@ -5,9 +5,13 @@ import {
   DateOrEmptyString,
   DayOfWeek,
   DayOfWeekOrEmptyString,
-  OperationString,
   WorkingStyleOrEmptyString,
 } from "./common.schema";
+
+const OperationString = z.preprocess(
+  (val) => (val === "" ? undefined : val),
+  z.literal("時間変更").or(z.literal("消去")).or(z.literal("追加")).optional(),
+);
 
 const RecurringEventSheetRow = z.object({
   after: DateAfterNow,

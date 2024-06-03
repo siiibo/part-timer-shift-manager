@@ -143,11 +143,11 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
       registerRecurringEvents(parameter, userEmail);
       break;
     }
-    case "deleteRecurringEvent": {
-      return JSON.stringify(deleteRecurringEvents(parameter, userEmail));
-    }
     case "modifyRecurringEvent": {
       return JSON.stringify(modifyRecurringEvents(parameter, userEmail));
+    }
+    case "deleteRecurringEvent": {
+      return JSON.stringify(deleteRecurringEvents(parameter, userEmail));
     }
   }
   return;

@@ -372,6 +372,40 @@ export const callRecurringEvent = () => {
   // setValuesRecurringEventSheet(sheet);
 };
 
+const createMessageForRecurringEvent = (
+  after: Date,
+  { job, lastName }: PartTimerProfile,
+  registrationInfos: { title: string; dayOfWeek: DayOfWeek; startTime: Date; endTime: Date }[],
+  modificationInfos: { title: string; dayOfWeek: DayOfWeek; startTime: Date; endTime: Date }[],
+  deletionInfos: DayOfWeek[],
+  comment: string | undefined,
+): string => {
+  const registrationMessages = registrationInfos.map(
+    ({ title, dayOfWeek, startTime, endTime }) =>
+      `${dayOfWeek} : ${title} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`,
+  );
+  const modificationMessages = modificationInfos.map(
+    ({ title, dayOfWeek, startTime, endTime }) =>
+      `${dayOfWeek} : ${title} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`,
+  );
+  const deletionMessage = deletionInfos.join("\n");
+
+  const message = [
+    `${format(after, "yyyy/MM/dd")}以降の繰り返し予定を変更しました`,
+    registrationMessages.length > 0
+      ? `${job}${lastName}さんの以下の繰り返し予定が追加されました\n${registrationMessages.join("\n")}`
+      : "",
+    modificationMessages.length > 0
+      ? `${job}${lastName}さんの以下の繰り返し予定が変更されました\n${modificationMessages.join("\n")}`
+      : "",
+    deletionInfos.length > 0 ? `${job}${lastName}さんの以下の繰り返し予定が削除されました\n${deletionMessage}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n---\n");
+
+  return comment ? `${message}\n---\nコメント: ${comment}` : message;
+};
+
 const getSlackClient = (slackToken: string): SlackClient => {
   return new SlackClient(slackToken);
 };
@@ -385,6 +419,51 @@ const getSheet = (sheetType: SheetType, spreadsheetUrl: string): GoogleAppsScrip
   if (!sheet) throw new Error("SHEET is not defined");
 
   return sheet;
+};
+
+const createTitleFromEventInfo = (
+  eventInfo: {
+    restStartTime?: Date;
+    restEndTime?: Date;
+    workingStyle: string;
+  },
+  partTimerProfile: PartTimerProfile,
+): string => {
+  const { job, lastName } = partTimerProfile;
+
+  const restStartTime = eventInfo.restStartTime ? format(eventInfo.restStartTime, "HH:mm") : undefined;
+  const restEndTime = eventInfo.restEndTime ? format(eventInfo.restEndTime, "HH:mm") : undefined;
+  const workingStyle = eventInfo.workingStyle;
+
+  if (restStartTime === undefined || restEndTime === undefined) {
+    const title = `【${workingStyle}】${job}${lastName}さん`;
+    return title;
+  } else {
+    const title = `【${workingStyle}】${job}${lastName}さん (休憩: ${restStartTime}~${restEndTime})`;
+    return title;
+  }
+};
+
+const createMessageFromEventInfo = (eventInfo: Event) => {
+  const date = format(eventInfo.date, "MM/dd");
+  const { workingStyle, restStartTime, restEndTime } = getEventInfoFromTitle(eventInfo.title);
+  const startTime = format(eventInfo.startTime, "HH:mm");
+  const endTime = format(eventInfo.endTime, "HH:mm");
+  if (restStartTime === undefined || restEndTime === undefined)
+    return `【${workingStyle}】 ${date} ${startTime}~${endTime}`;
+  else return `【${workingStyle}】 ${date} ${startTime}~${endTime} (休憩: ${restStartTime}~${restEndTime})`;
+};
+const getEventInfoFromTitle = (
+  title: string,
+): { workingStyle?: string; restStartTime?: string; restEndTime?: string } => {
+  const workingStyleRegex = /【(.*?)】/;
+  const matchResult = title.match(workingStyleRegex)?.[1];
+  const workingStyle = matchResult ?? "未設定";
+
+  const restTimeRegex = /\d{2}:\d{2}~\d{2}:\d{2}/;
+  const restTimeResult = title.match(restTimeRegex)?.[0];
+  const [restStartTime, restEndTime] = restTimeResult ? restTimeResult.split("~") : [];
+  return { workingStyle, restStartTime, restEndTime };
 };
 
 const slackIdToMention = (slackId: string) => `<@${slackId}>`;
@@ -418,83 +497,4 @@ const getManagerSlackIds = (managerEmails: string[], client: SlackClient): strin
     .filter((id): id is string => id !== undefined);
 
   return managerSlackIds;
-};
-const createMessageFromEventInfo = (eventInfo: Event) => {
-  const date = format(eventInfo.date, "MM/dd");
-  const { workingStyle, restStartTime, restEndTime } = getEventInfoFromTitle(eventInfo.title);
-  const startTime = format(eventInfo.startTime, "HH:mm");
-  const endTime = format(eventInfo.endTime, "HH:mm");
-  if (restStartTime === undefined || restEndTime === undefined)
-    return `【${workingStyle}】 ${date} ${startTime}~${endTime}`;
-  else return `【${workingStyle}】 ${date} ${startTime}~${endTime} (休憩: ${restStartTime}~${restEndTime})`;
-};
-
-const getEventInfoFromTitle = (
-  title: string,
-): { workingStyle?: string; restStartTime?: string; restEndTime?: string } => {
-  const workingStyleRegex = /【(.*?)】/;
-  const matchResult = title.match(workingStyleRegex)?.[1];
-  const workingStyle = matchResult ?? "未設定";
-
-  const restTimeRegex = /\d{2}:\d{2}~\d{2}:\d{2}/;
-  const restTimeResult = title.match(restTimeRegex)?.[0];
-  const [restStartTime, restEndTime] = restTimeResult ? restTimeResult.split("~") : [];
-  return { workingStyle, restStartTime, restEndTime };
-};
-
-const createTitleFromEventInfo = (
-  eventInfo: {
-    restStartTime?: Date;
-    restEndTime?: Date;
-    workingStyle: string;
-  },
-  partTimerProfile: PartTimerProfile,
-): string => {
-  const { job, lastName } = partTimerProfile;
-
-  const restStartTime = eventInfo.restStartTime ? format(eventInfo.restStartTime, "HH:mm") : undefined;
-  const restEndTime = eventInfo.restEndTime ? format(eventInfo.restEndTime, "HH:mm") : undefined;
-  const workingStyle = eventInfo.workingStyle;
-
-  if (restStartTime === undefined || restEndTime === undefined) {
-    const title = `【${workingStyle}】${job}${lastName}さん`;
-    return title;
-  } else {
-    const title = `【${workingStyle}】${job}${lastName}さん (休憩: ${restStartTime}~${restEndTime})`;
-    return title;
-  }
-};
-
-const createMessageForRecurringEvent = (
-  after: Date,
-  { job, lastName }: PartTimerProfile,
-  registrationInfos: { title: string; dayOfWeek: DayOfWeek; startTime: Date; endTime: Date }[],
-  modificationInfos: { title: string; dayOfWeek: DayOfWeek; startTime: Date; endTime: Date }[],
-  deletionInfos: DayOfWeek[],
-  comment: string | undefined,
-): string => {
-  const registrationMessages = registrationInfos.map(
-    ({ title, dayOfWeek, startTime, endTime }) =>
-      `${dayOfWeek} : ${title} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`,
-  );
-  const modificationMessages = modificationInfos.map(
-    ({ title, dayOfWeek, startTime, endTime }) =>
-      `${dayOfWeek} : ${title} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`,
-  );
-  const deletionMessage = deletionInfos.join("\n");
-
-  const message = [
-    `${format(after, "yyyy/MM/dd")}以降の繰り返し予定を変更しました`,
-    registrationMessages.length > 0
-      ? `${job}${lastName}さんの以下の繰り返し予定が追加されました\n${registrationMessages.join("\n")}`
-      : "",
-    modificationMessages.length > 0
-      ? `${job}${lastName}さんの以下の繰り返し予定が変更されました\n${modificationMessages.join("\n")}`
-      : "",
-    deletionInfos.length > 0 ? `${job}${lastName}さんの以下の繰り返し予定が削除されました\n${deletionMessage}` : "",
-  ]
-    .filter(Boolean)
-    .join("\n---\n");
-
-  return comment ? `${message}\n---\nコメント: ${comment}` : message;
 };

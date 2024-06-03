@@ -320,8 +320,9 @@ export const callRecurringEvent = () => {
       muteHttpExceptions: true,
     };
     const response = UrlFetchApp.fetch(API_URL, options);
-    if (response.getResponseCode() !== 200) {
-      throw new Error(response.getContentText());
+    const responseContent = JSON.parse(response.getContentText());
+    if (responseContent.responseCode !== 200) {
+      throw new Error(responseContent.comment);
     }
   }
   if (modificationInfos.length > 0) {
@@ -336,8 +337,9 @@ export const callRecurringEvent = () => {
       muteHttpExceptions: true,
     };
     const response = UrlFetchApp.fetch(API_URL, options);
-    if (response.getResponseCode() !== 200) {
-      throw new Error(response.getContentText());
+    const responseContent = JSON.parse(response.getContentText());
+    if (responseContent.responseCode !== 200) {
+      throw new Error(responseContent.comment);
     }
   }
   if (deleteDayOfWeeks.length > 0) {
@@ -352,8 +354,9 @@ export const callRecurringEvent = () => {
       muteHttpExceptions: true,
     };
     const response = UrlFetchApp.fetch(API_URL, options);
-    if (response.getResponseCode() !== 200) {
-      throw new Error(response.getContentText());
+    const responseContent = JSON.parse(response.getContentText());
+    if (responseContent.responseCode !== 200) {
+      throw new Error(responseContent.comment);
     }
   }
 
@@ -412,6 +415,7 @@ const createMessageForRecurringEvent = (
 const getSlackClient = (slackToken: string): SlackClient => {
   return new SlackClient(slackToken);
 };
+
 const getSheet = (sheetType: SheetType, spreadsheetUrl: string): GoogleAppsScript.Spreadsheet.Sheet => {
   const sheet = SpreadsheetApp.openByUrl(spreadsheetUrl)
     .getSheets()

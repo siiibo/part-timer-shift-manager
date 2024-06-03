@@ -123,8 +123,8 @@ export const getRecurringEventSheetValues = (
   deletionRows: DeleteRecurringEventRow[];
 } => {
   const sheetRows = getRecurringEventSheetRows(sheet);
-  const after = new Date(sheet.getRange("A5").getValue());
-  const comment = sheet.getRange("A2").getValue();
+  const after = sheet.getRange("A5").getValue();
+  const comment = sheet.getRange("A2").getValue(); //NOTE: 何も入力されていない場合は空文字列が取得される
 
   return {
     after: after,

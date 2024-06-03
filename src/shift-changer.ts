@@ -388,7 +388,7 @@ const createMessageForRecurringEvent = (
     ({ title, dayOfWeek, startTime, endTime }) =>
       `${dayOfWeek} : ${title} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`,
   );
-  const deletionMessage = deletionInfos.join("\n");
+  const deletionMessages = deletionInfos.join("\n");
 
   const message = [
     `${format(after, "yyyy/MM/dd")}以降の繰り返し予定を変更しました`,
@@ -398,7 +398,7 @@ const createMessageForRecurringEvent = (
     modificationMessages.length > 0
       ? `${job}${lastName}さんの以下の繰り返し予定が変更されました\n${modificationMessages.join("\n")}`
       : "",
-    deletionInfos.length > 0 ? `${job}${lastName}さんの以下の繰り返し予定が削除されました\n${deletionMessage}` : "",
+    deletionInfos.length > 0 ? `${job}${lastName}さんの以下の繰り返し予定が削除されました\n${deletionMessages}` : "",
   ]
     .filter(Boolean)
     .join("\n---\n");

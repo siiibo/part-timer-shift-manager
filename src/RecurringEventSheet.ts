@@ -10,7 +10,7 @@ import {
 
 const OperationString = z.preprocess(
   (val) => (val === "" ? undefined : val),
-  z.literal("時間変更").or(z.literal("消去")).or(z.literal("追加")).optional(),
+  z.literal("追加").or(z.literal("時間変更")).or(z.literal("消去")).optional(),
 );
 
 const RecurringEventSheetRow = z.object({
@@ -94,9 +94,9 @@ export const setValuesRecurringEventSheet = (sheet: GoogleAppsScript.Spreadsheet
   sheet.getRange(8, 1, 1, header2.length).setValues([header2]).setFontWeight("bold");
   const operationCells = sheet.getRange("A9:A13");
   const operationRule = SpreadsheetApp.newDataValidation()
-    .requireValueInList(["時間変更", "消去", "追加"], true)
+    .requireValueInList(["追加", "時間変更", "消去"], true)
     .setAllowInvalid(false)
-    .setHelpText("時間変更, 削除, 登録 を選択してください。")
+    .setHelpText("登録, 時間変更, 削除 を選択してください。")
     .build();
   operationCells.setDataValidation(operationRule);
   sheet.getRange("B9:B13").setValues([["月曜日"], ["火曜日"], ["水曜日"], ["木曜日"], ["金曜日"]]);

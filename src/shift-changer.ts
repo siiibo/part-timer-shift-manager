@@ -381,7 +381,7 @@ const createMessageForRecurringEvent = (
   registrationInfos: { title: string; dayOfWeek: DayOfWeek; startTime: Date; endTime: Date }[],
   modificationInfos: { title: string; dayOfWeek: DayOfWeek; startTime: Date; endTime: Date }[],
   deletionInfos: { dayOfWeek: DayOfWeek }[],
-  comment: string | undefined,
+  comment: string,
 ): string => {
   const registrationMessages = registrationInfos.map(
     ({ title, dayOfWeek, startTime, endTime }) =>

@@ -299,10 +299,10 @@ export const callRecurringEvent = () => {
     },
   );
 
-  const deletionInfos = deletionRows.map((deletionRow) => {
+  const deleteDayOfWeeks = deletionRows.map((deletionRow) => {
     return deletionRow.dayOfWeek;
   });
-  const deleteDayOfWeeks = deletionInfos.map((deletionRow) => {
+  const deleteInfos = deleteDayOfWeeks.map((deletionRow) => {
     return { dayOfWeek: deletionRow };
   });
 
@@ -340,11 +340,11 @@ export const callRecurringEvent = () => {
       throw new Error(response.getContentText());
     }
   }
-  if (deletionInfos.length > 0) {
+  if (deleteDayOfWeeks.length > 0) {
     const payload = {
       ...payloadBase,
       operationType: "deleteRecurringEvent",
-      deletionRecurringEvents: JSON.stringify({ after, dayOfWeeks: deletionInfos }),
+      deletionRecurringEvents: JSON.stringify({ after, dayOfWeeks: deleteDayOfWeeks }),
     };
     const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
       method: "post",
@@ -362,7 +362,7 @@ export const callRecurringEvent = () => {
     partTimerProfile,
     registrationInfos,
     modificationInfos,
-    deleteDayOfWeeks,
+    deleteInfos,
     comment,
   );
 

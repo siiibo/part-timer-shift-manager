@@ -240,6 +240,7 @@ const registerRecurringEvents = (
 };
 
 const modifyRecurringEvents = (
+  //NOTE: クライアントがresponseCodeを取得するには、responseCodeをContentに埋め込む必要があるため
   { modificationRecurringEvents: { after, events } }: ModifyRecurringEventRequest,
   userEmail: string,
 ) => {
@@ -309,6 +310,7 @@ const modifyRecurringEvents = (
 };
 
 const deleteRecurringEvents = (
+  //NOTE: クライアントがresponseCodeを取得するには、responseCodeをContentに埋め込む必要があるため
   { deletionRecurringEvents: { after, dayOfWeeks } }: DeleteRecurringEventRequest,
   userEmail: string,
 ): DeleteRecurringEventResponse => {

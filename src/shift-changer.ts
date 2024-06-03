@@ -302,6 +302,9 @@ export const callRecurringEvent = () => {
   const deletionInfos = deletionRows.map((deletionRow) => {
     return deletionRow.dayOfWeek;
   });
+  const deleteDayOfWeeks = deletionInfos.map((deletionRow) => {
+    return { dayOfWeek: deletionRow };
+  });
 
   const payloadBase = { apiId: "shift-changer", userEmail };
   const { API_URL } = getConfig();
@@ -359,7 +362,7 @@ export const callRecurringEvent = () => {
     partTimerProfile,
     registrationInfos,
     modificationInfos,
-    deletionInfos,
+    deleteDayOfWeeks,
     comment,
   );
 
@@ -377,7 +380,7 @@ const createMessageForRecurringEvent = (
   { job, lastName }: PartTimerProfile,
   registrationInfos: { title: string; dayOfWeek: DayOfWeek; startTime: Date; endTime: Date }[],
   modificationInfos: { title: string; dayOfWeek: DayOfWeek; startTime: Date; endTime: Date }[],
-  deletionInfos: DayOfWeek[],
+  deletionInfos: { dayOfWeek: DayOfWeek }[],
   comment: string | undefined,
 ): string => {
   const registrationMessages = registrationInfos.map(
@@ -388,7 +391,7 @@ const createMessageForRecurringEvent = (
     ({ title, dayOfWeek, startTime, endTime }) =>
       `${dayOfWeek} : ${title} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`,
   );
-  const deletionMessages = deletionInfos.join("\n");
+  const deletionMessages = deletionInfos.map(({ dayOfWeek }) => `${dayOfWeek}`).join(", ");
 
   const message = [
     `${format(after, "yyyy/MM/dd")}以降の繰り返し予定を変更しました`,

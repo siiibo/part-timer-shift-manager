@@ -398,7 +398,7 @@ const createMessageForRecurringEvent = (
     modificationMessages.length > 0
       ? `${job}${lastName}さんの以下の繰り返し予定が変更されました\n${modificationMessages.join("\n")}`
       : "",
-    deletionInfos.length > 0 ? `${job}${lastName}さんの以下の繰り返し予定が削除されました\n${deletionMessages}` : "",
+    deletionMessages.length > 0 ? `${job}${lastName}さんの以下の繰り返し予定が削除されました\n${deletionMessages}` : "",
   ]
     .filter(Boolean)
     .join("\n---\n");

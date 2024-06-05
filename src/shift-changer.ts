@@ -338,8 +338,8 @@ export const callRecurringEvent = () => {
     };
     const response = UrlFetchApp.fetch(API_URL, options);
     const responseContent = RecurringEventResponse.parse(response.getContentText());
-    if (responseContent.responseCode !== 200) {
-      throw new Error(responseContent.comment);
+    if (responseContent.error) {
+      throw new Error(responseContent.error);
     }
   }
   if (deleteDayOfWeeks.length > 0) {
@@ -355,8 +355,8 @@ export const callRecurringEvent = () => {
     };
     const response = UrlFetchApp.fetch(API_URL, options);
     const responseContent = RecurringEventResponse.parse(response.getContentText());
-    if (responseContent.responseCode !== 200) {
-      throw new Error(responseContent.comment);
+    if (responseContent.error) {
+      throw new Error(responseContent.error);
     }
   }
 

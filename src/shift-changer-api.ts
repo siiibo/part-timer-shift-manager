@@ -93,8 +93,7 @@ type DeleteRecurringEventRequest = z.infer<typeof DeleteRecurringEventRequest>;
 
 //NOTE: クライアントがresponseCodeを取得するには、responseCodeをContentに埋め込む必要があるため
 export const RecurringEventResponse = z.object({
-  responseCode: z.number(),
-  comment: z.string(),
+  error: z.string().optional(),
 });
 export type RecurringEventResponse = z.infer<typeof RecurringEventResponse>;
 
@@ -268,7 +267,7 @@ const modifyRecurringEvents = (
       return recurringEventId ? { recurringEventId, recurrenceEndDate } : undefined;
     })
     .filter(isNotUndefined);
-  if (eventItems.length === 0) return { responseCode: 400, comment: "消去するイベントの取得に失敗しました" };
+  if (eventItems.length === 0) return { error: "消去するイベントの取得に失敗しました" };
 
   const detailedEventItems = eventItems.map(({ recurringEventId, recurrenceEndDate }) => {
     const eventDetail = advancedCalendar.get(calendarId, recurringEventId);
@@ -307,7 +306,7 @@ const modifyRecurringEvents = (
       guests: userEmail,
     });
   });
-  return { responseCode: 200, comment: "イベントの変更が成功しました" };
+  return {};
 };
 
 const deleteRecurringEvents = (
@@ -334,7 +333,7 @@ const deleteRecurringEvents = (
       return recurringEventId ? { recurringEventId, recurrenceEndDate } : undefined;
     })
     .filter(isNotUndefined);
-  if (eventItems.length === 0) return { responseCode: 400, comment: "消去するイベントの取得に失敗しました" };
+  if (eventItems.length === 0) return { error: "消去するイベントの取得に失敗しました" };
 
   const detailedEventItems = eventItems.map(({ recurringEventId, recurrenceEndDate }) => {
     const eventDetail = advancedCalendar.get(calendarId, recurringEventId);
@@ -360,8 +359,7 @@ const deleteRecurringEvents = (
     };
     advancedCalendar.update(data, calendarId, recurringEventId);
   });
-
-  return { responseCode: 200, comment: "イベントの消去が成功しました" };
+  return {};
 };
 
 const getCalendar = () => {

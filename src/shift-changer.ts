@@ -10,7 +10,11 @@ import {
   insertModificationAndDeletionSheet,
   setValuesModificationAndDeletionSheet,
 } from "./ModificationAndDeletionSheet";
-import { getRecurringEventSheetValues, insertRecurringEventSheet } from "./RecurringEventSheet";
+import {
+  getRecurringEventSheetValues,
+  insertRecurringEventSheet,
+  setValuesRecurringEventSheet,
+} from "./RecurringEventSheet";
 import { getRegistrationRows, insertRegistrationSheet, setValuesRegistrationSheet } from "./RegistrationSheet";
 import { Event, OperationType, RecurringEventResponse } from "./shift-changer-api";
 
@@ -370,10 +374,9 @@ export const callRecurringEvent = () => {
   const { SLACK_ACCESS_TOKEN, SLACK_CHANNEL_TO_POST } = getConfig();
   const client = getSlackClient(SLACK_ACCESS_TOKEN);
   postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, recurringEventMessageToNotify, partTimerProfile);
-  // TODO: 本番環境にマージする際にはコメントアウトを外す
-  // sheet.clear();
-  // SpreadsheetApp.flush();
-  // setValuesRecurringEventSheet(sheet);
+  sheet.clear();
+  SpreadsheetApp.flush();
+  setValuesRecurringEventSheet(sheet);
 };
 
 const createMessageForRecurringEvent = (

@@ -319,11 +319,7 @@ export const callRecurringEvent = () => {
       payload: payload,
       muteHttpExceptions: true,
     };
-    const response = UrlFetchApp.fetch(API_URL, options);
-    const responseContent = JSON.parse(response.getContentText());
-    if (responseContent.responseCode !== 200) {
-      throw new Error(responseContent.comment);
-    }
+    UrlFetchApp.fetch(API_URL, options);
   }
   if (modificationInfos.length > 0) {
     const payload = {
@@ -337,7 +333,7 @@ export const callRecurringEvent = () => {
       muteHttpExceptions: true,
     };
     const response = UrlFetchApp.fetch(API_URL, options);
-    const responseContent = RecurringEventResponse.parse(response.getContentText());
+    const responseContent = RecurringEventResponse.parse(JSON.parse(response.getContentText()));
     if (responseContent.error) {
       throw new Error(responseContent.error);
     }
@@ -354,7 +350,7 @@ export const callRecurringEvent = () => {
       muteHttpExceptions: true,
     };
     const response = UrlFetchApp.fetch(API_URL, options);
-    const responseContent = RecurringEventResponse.parse(response.getContentText());
+    const responseContent = RecurringEventResponse.parse(JSON.parse(response.getContentText()));
     if (responseContent.error) {
       throw new Error(responseContent.error);
     }

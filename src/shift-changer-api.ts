@@ -18,6 +18,7 @@ const RegisterEventRequest = z.object({
   userEmail: z.string(),
   registrationEvents: zu.stringToJSON().pipe(Event.array()),
 });
+type RegisterEventRequest = z.infer<typeof RegisterEventRequest>;
 
 const ModifyAndDeleteEventRequest = z.object({
   operationType: z.literal("modifyAndDeleteEvent"),

@@ -1,6 +1,7 @@
 import { GasWebClient as SlackClient } from "@hi-se/web-api";
 import { format } from "date-fns";
 
+import { DayOfWeek } from "./common.schema";
 import { getConfig } from "./config";
 import { PartTimerProfile } from "./JobSheet";
 import { getPartTimerProfile } from "./JobSheet";
@@ -9,21 +10,15 @@ import {
   insertModificationAndDeletionSheet,
   setValuesModificationAndDeletionSheet,
 } from "./ModificationAndDeletionSheet";
+import {
+  getRecurringEventSheetValues,
+  insertRecurringEventSheet,
+  setValuesRecurringEventSheet,
+} from "./RecurringEventSheet";
 import { getRegistrationRows, insertRegistrationSheet, setValuesRegistrationSheet } from "./RegistrationSheet";
-import { Event, shiftChanger } from "./shift-changer-api";
+import { Event, OperationType, RecurringEventResponse } from "./shift-changer-api";
 
-type SheetType = "registration" | "modificationAndDeletion";
-type OperationType = "registerEvent" | "modifyAndDeleteEvent" | "showEvents";
-export const doGet = () => {
-  return ContentService.createTextOutput("ok");
-};
-export const doPost = (e: GoogleAppsScript.Events.DoPost): GoogleAppsScript.Content.TextOutput => {
-  if (e.parameter.apiId === "shift-changer") {
-    const response = shiftChanger(e) ?? "";
-    return ContentService.createTextOutput(response).setMimeType(ContentService.MimeType.JSON);
-  }
-  return ContentService.createTextOutput("undefined");
-};
+type SheetType = "registration" | "modificationAndDeletion" | "recurringEvent";
 
 export const initShiftChanger = () => {
   const { DEV_SPREADSHEET_URL } = getConfig();
@@ -47,18 +42,25 @@ const createMenu = (ui: GoogleAppsScript.Base.Ui, menu: GoogleAppsScript.Base.Me
   return menu
     .addSubMenu(
       ui
-        .createMenu("登録")
+        .createMenu("シフト登録")
         .addItem("シートの追加", insertRegistrationSheet.name)
         .addSeparator()
         .addItem("提出", callRegistration.name),
     )
     .addSubMenu(
       ui
-        .createMenu("変更・削除")
+        .createMenu("シフト変更・削除")
         .addItem("シートの追加", insertModificationAndDeletionSheet.name)
         .addSeparator()
         .addItem("予定を表示", callShowEvents.name)
         .addItem("提出", callModificationAndDeletion.name),
+    )
+    .addSubMenu(
+      ui
+        .createMenu("固定シフト登録・変更・消去")
+        .addItem("シートの追加", insertRecurringEventSheet.name)
+        .addSeparator()
+        .addItem("提出", callRecurringEvent.name),
     )
     .addToUi();
 };
@@ -74,26 +76,20 @@ export const callRegistration = () => {
   const client = getSlackClient(SLACK_ACCESS_TOKEN);
   const partTimerProfile = getPartTimerProfile(userEmail);
 
-  const sheetType: SheetType = "registration";
-  const sheet = getSheet(sheetType, spreadsheetUrl);
+  const sheet = getSheet("registration", spreadsheetUrl);
   const operationType: OperationType = "registerEvent";
   const comment = sheet.getRange("A2").getValue();
   const registrationRows = getRegistrationRows(sheet);
-  const registrationInfos = registrationRows.map((registrationRow) => {
+  const registrationInfos = registrationRows.map(({ startTime, endTime, restStartTime, restEndTime, workingStyle }) => {
     const title = createTitleFromEventInfo(
       {
-        ...(registrationRow.restStartTime && { restStartTime: registrationRow.restStartTime }),
-        ...(registrationRow.restEndTime && { restEndTime: registrationRow.restEndTime }),
-        workingStyle: registrationRow.workingStyle,
+        ...(restStartTime && { restStartTime: restStartTime }),
+        ...(restEndTime && { restEndTime: restEndTime }),
+        workingStyle,
       },
       partTimerProfile,
     );
-    return {
-      title: title,
-      date: registrationRow.startTime,
-      startTime: registrationRow.startTime,
-      endTime: registrationRow.endTime,
-    };
+    return { title, date: startTime, startTime, endTime };
   });
   const payload = {
     apiId: "shift-changer",
@@ -134,8 +130,7 @@ const createRegistrationMessage = (
 export const callShowEvents = () => {
   const userEmail = Session.getActiveUser().getEmail();
   const spreadsheetUrl = SpreadsheetApp.getActiveSpreadsheet().getUrl();
-  const sheetType: SheetType = "modificationAndDeletion";
-  const sheet = getSheet(sheetType, spreadsheetUrl);
+  const sheet = getSheet("modificationAndDeletion", spreadsheetUrl);
   const operationType: OperationType = "showEvents";
   const startDate: Date = sheet.getRange("A5").getValue();
   if (!startDate) throw new Error("日付を指定してください。");
@@ -184,35 +179,31 @@ export const callModificationAndDeletion = () => {
   const { SLACK_ACCESS_TOKEN } = getConfig();
   const client = getSlackClient(SLACK_ACCESS_TOKEN);
   const partTimerProfile = getPartTimerProfile(userEmail);
-  const sheetType: SheetType = "modificationAndDeletion";
-  const sheet = getSheet(sheetType, spreadsheetUrl);
+  const sheet = getSheet("modificationAndDeletion", spreadsheetUrl);
   const comment = sheet.getRange("A2").getValue();
   const operationType: OperationType = "modifyAndDeleteEvent";
   const { modificationRows, deletionRows } = getModificationOrDeletion(sheet);
-  const modificationInfos = modificationRows.map((modificationRow) => {
-    const newTitle = createTitleFromEventInfo(
-      {
-        ...(modificationRow.newRestStartTime && { restStartTime: modificationRow.newRestStartTime }),
-        ...(modificationRow.newRestEndTime && { restEndTime: modificationRow.newRestEndTime }),
-        workingStyle: modificationRow.newWorkingStyle,
-      },
-      partTimerProfile,
-    );
-    return {
-      previousEvent: {
-        title: modificationRow.title,
-        date: modificationRow.startTime,
-        startTime: modificationRow.startTime,
-        endTime: modificationRow.endTime,
-      },
-      newEvent: {
-        title: newTitle,
-        date: modificationRow.newStartTime,
-        startTime: modificationRow.newStartTime,
-        endTime: modificationRow.newEndTime,
-      },
-    };
-  });
+  const modificationInfos = modificationRows.map(
+    ({ title, startTime, endTime, newStartTime, newEndTime, newRestStartTime, newRestEndTime, newWorkingStyle }) => {
+      const newTitle = createTitleFromEventInfo(
+        {
+          ...(newRestStartTime && { restStartTime: newRestStartTime }),
+          ...(newRestEndTime && { restEndTime: newRestEndTime }),
+          workingStyle: newWorkingStyle,
+        },
+        partTimerProfile,
+      );
+      return {
+        previousEvent: { title, date: startTime, startTime, endTime },
+        newEvent: {
+          title: newTitle,
+          date: newStartTime,
+          startTime: newStartTime,
+          endTime: newEndTime,
+        },
+      };
+    },
+  );
   const payload = {
     apiId: "shift-changer",
     operationType: operationType,
@@ -270,9 +261,162 @@ const createDeletionMessage = (deletionInfos: Event[], partTimerProfile: PartTim
   return `${messageTitle}\n${messages.join("\n")}`;
 };
 
+export const callRecurringEvent = () => {
+  const lock = LockService.getUserLock();
+  if (!lock.tryLock(0)) {
+    throw new Error("すでに処理を実行中です。そのままお待ちください");
+  }
+  const spreadsheetUrl = SpreadsheetApp.getActiveSpreadsheet().getUrl();
+  const sheet = getSheet("recurringEvent", spreadsheetUrl);
+  const { after, comment, registrationRows, modificationRows, deletionRows } = getRecurringEventSheetValues(sheet);
+  const userEmail = Session.getActiveUser().getEmail();
+  const partTimerProfile = getPartTimerProfile(userEmail);
+
+  if (registrationRows.length == 0 && modificationRows.length == 0 && deletionRows.length == 0) {
+    throw new Error("追加・変更・削除する予定がありません。");
+  }
+
+  const registrationInfos = registrationRows.map(
+    ({ startTime, endTime, restStartTime, restEndTime, dayOfWeek, workingStyle }) => {
+      const title = createTitleFromEventInfo(
+        {
+          ...(restStartTime && { restStartTime }),
+          ...(restEndTime && { restEndTime }),
+          workingStyle,
+        },
+        partTimerProfile,
+      );
+      return { title, dayOfWeek, startTime, endTime };
+    },
+  );
+  const modificationInfos = modificationRows.map(
+    ({ startTime, endTime, restStartTime, restEndTime, dayOfWeek, workingStyle }) => {
+      const title = createTitleFromEventInfo(
+        {
+          ...(restStartTime && { restStartTime }),
+          ...(restEndTime && { restEndTime }),
+          workingStyle,
+        },
+        partTimerProfile,
+      );
+      return { title, dayOfWeek, startTime, endTime };
+    },
+  );
+
+  const deleteDayOfWeeks = deletionRows.map((deletionRow) => {
+    return deletionRow.dayOfWeek;
+  });
+  const deleteInfos = deleteDayOfWeeks.map((deletionRow) => {
+    return { dayOfWeek: deletionRow };
+  });
+
+  const payloadBase = { apiId: "shift-changer", userEmail };
+  const { API_URL } = getConfig();
+  if (registrationInfos.length > 0) {
+    const payload = {
+      ...payloadBase,
+      operationType: "registerRecurringEvent",
+      registrationRecurringEvents: JSON.stringify({ after, events: registrationInfos }),
+    };
+    const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
+      method: "post",
+      payload: payload,
+      muteHttpExceptions: true,
+    };
+    UrlFetchApp.fetch(API_URL, options);
+  }
+  if (modificationInfos.length > 0) {
+    const payload = {
+      ...payloadBase,
+      operationType: "modifyRecurringEvent",
+      modificationRecurringEvents: JSON.stringify({ after, events: modificationInfos }),
+    };
+    const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
+      method: "post",
+      payload: payload,
+      muteHttpExceptions: true,
+    };
+    const response = UrlFetchApp.fetch(API_URL, options);
+    const responseContent = RecurringEventResponse.parse(JSON.parse(response.getContentText()));
+    if (responseContent.error) {
+      //NOTE: APIのレスポンスがある場合はエラーを出力する
+      throw new Error(responseContent.error);
+    }
+  }
+  if (deleteDayOfWeeks.length > 0) {
+    const payload = {
+      ...payloadBase,
+      operationType: "deleteRecurringEvent",
+      deletionRecurringEvents: JSON.stringify({ after, dayOfWeeks: deleteDayOfWeeks }),
+    };
+    const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
+      method: "post",
+      payload: payload,
+      muteHttpExceptions: true,
+    };
+    const response = UrlFetchApp.fetch(API_URL, options);
+    const responseContent = RecurringEventResponse.parse(JSON.parse(response.getContentText()));
+    if (responseContent.error) {
+      //NOTE: APIのレスポンスがある場合はエラーを出力する
+      throw new Error(responseContent.error);
+    }
+  }
+
+  const recurringEventMessageToNotify = createMessageForRecurringEvent(
+    after,
+    partTimerProfile,
+    registrationInfos,
+    modificationInfos,
+    deleteInfos,
+    comment,
+  );
+
+  const { SLACK_ACCESS_TOKEN, SLACK_CHANNEL_TO_POST } = getConfig();
+  const client = getSlackClient(SLACK_ACCESS_TOKEN);
+  postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, recurringEventMessageToNotify, partTimerProfile);
+  sheet.clear();
+  SpreadsheetApp.flush();
+  setValuesRecurringEventSheet(sheet);
+};
+
+const createMessageForRecurringEvent = (
+  after: Date,
+  { job, lastName }: PartTimerProfile,
+  registrationInfos: { title: string; dayOfWeek: DayOfWeek; startTime: Date; endTime: Date }[],
+  modificationInfos: { title: string; dayOfWeek: DayOfWeek; startTime: Date; endTime: Date }[],
+  deletionInfos: { dayOfWeek: DayOfWeek }[],
+  comment: string | undefined,
+): string => {
+  const registrationMessages = registrationInfos.map(
+    ({ title, dayOfWeek, startTime, endTime }) =>
+      `${dayOfWeek} : ${title} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`,
+  );
+  const modificationMessages = modificationInfos.map(
+    ({ title, dayOfWeek, startTime, endTime }) =>
+      `${dayOfWeek} : ${title} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`,
+  );
+  const deletionMessages = deletionInfos.map(({ dayOfWeek }) => `${dayOfWeek}`).join(", ");
+
+  const message = [
+    `${format(after, "yyyy/MM/dd")}以降の繰り返し予定を変更しました`,
+    registrationMessages.length > 0
+      ? `${job}${lastName}さんの以下の繰り返し予定が追加されました\n${registrationMessages.join("\n")}`
+      : "",
+    modificationMessages.length > 0
+      ? `${job}${lastName}さんの以下の繰り返し予定が変更されました\n${modificationMessages.join("\n")}`
+      : "",
+    deletionMessages.length > 0 ? `${job}${lastName}さんの以下の繰り返し予定が削除されました\n${deletionMessages}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n---\n");
+
+  return comment ? `${message}\n---\nコメント: ${comment}` : message;
+};
+
 const getSlackClient = (slackToken: string): SlackClient => {
   return new SlackClient(slackToken);
 };
+
 const getSheet = (sheetType: SheetType, spreadsheetUrl: string): GoogleAppsScript.Spreadsheet.Sheet => {
   const sheet = SpreadsheetApp.openByUrl(spreadsheetUrl)
     .getSheets()
@@ -284,6 +428,52 @@ const getSheet = (sheetType: SheetType, spreadsheetUrl: string): GoogleAppsScrip
 
   return sheet;
 };
+
+const createTitleFromEventInfo = (
+  eventInfo: {
+    restStartTime?: Date;
+    restEndTime?: Date;
+    workingStyle: string;
+  },
+  partTimerProfile: PartTimerProfile,
+): string => {
+  const { job, lastName } = partTimerProfile;
+
+  const restStartTime = eventInfo.restStartTime ? format(eventInfo.restStartTime, "HH:mm") : undefined;
+  const restEndTime = eventInfo.restEndTime ? format(eventInfo.restEndTime, "HH:mm") : undefined;
+  const workingStyle = eventInfo.workingStyle;
+
+  if (restStartTime === undefined || restEndTime === undefined) {
+    const title = `【${workingStyle}】${job}${lastName}さん`;
+    return title;
+  } else {
+    const title = `【${workingStyle}】${job}${lastName}さん (休憩: ${restStartTime}~${restEndTime})`;
+    return title;
+  }
+};
+
+const createMessageFromEventInfo = (eventInfo: Event) => {
+  const date = format(eventInfo.date, "MM/dd");
+  const { workingStyle, restStartTime, restEndTime } = getEventInfoFromTitle(eventInfo.title);
+  const startTime = format(eventInfo.startTime, "HH:mm");
+  const endTime = format(eventInfo.endTime, "HH:mm");
+  if (restStartTime === undefined || restEndTime === undefined)
+    return `【${workingStyle}】 ${date} ${startTime}~${endTime}`;
+  else return `【${workingStyle}】 ${date} ${startTime}~${endTime} (休憩: ${restStartTime}~${restEndTime})`;
+};
+const getEventInfoFromTitle = (
+  title: string,
+): { workingStyle?: string; restStartTime?: string; restEndTime?: string } => {
+  const workingStyleRegex = /【(.*?)】/;
+  const matchResult = title.match(workingStyleRegex)?.[1];
+  const workingStyle = matchResult ?? "未設定";
+
+  const restTimeRegex = /\d{2}:\d{2}~\d{2}:\d{2}/;
+  const restTimeResult = title.match(restTimeRegex)?.[0];
+  const [restStartTime, restEndTime] = restTimeResult ? restTimeResult.split("~") : [];
+  return { workingStyle, restStartTime, restEndTime };
+};
+
 const slackIdToMention = (slackId: string) => `<@${slackId}>`;
 const postMessageToSlackChannel = (
   client: SlackClient,
@@ -315,47 +505,4 @@ const getManagerSlackIds = (managerEmails: string[], client: SlackClient): strin
     .filter((id): id is string => id !== undefined);
 
   return managerSlackIds;
-};
-const createMessageFromEventInfo = (eventInfo: Event) => {
-  const date = format(eventInfo.date, "MM/dd");
-  const { workingStyle, restStartTime, restEndTime } = getEventInfoFromTitle(eventInfo.title);
-  const startTime = format(eventInfo.startTime, "HH:mm");
-  const endTime = format(eventInfo.endTime, "HH:mm");
-  if (restStartTime === undefined || restEndTime === undefined)
-    return `【${workingStyle}】 ${date} ${startTime}~${endTime}`;
-  else return `【${workingStyle}】 ${date} ${startTime}~${endTime} (休憩: ${restStartTime}~${restEndTime})`;
-};
-const getEventInfoFromTitle = (
-  title: string,
-): { workingStyle?: string; restStartTime?: string; restEndTime?: string } => {
-  const workingStyleRegex = /【(.*?)】/;
-  const matchResult = title.match(workingStyleRegex)?.[1];
-  const workingStyle = matchResult ?? "未設定";
-
-  const restTimeRegex = /\d{2}:\d{2}~\d{2}:\d{2}/;
-  const restTimeResult = title.match(restTimeRegex)?.[0];
-  const [restStartTime, restEndTime] = restTimeResult ? restTimeResult.split("~") : [];
-  return { workingStyle, restStartTime, restEndTime };
-};
-const createTitleFromEventInfo = (
-  eventInfo: {
-    restStartTime?: Date;
-    restEndTime?: Date;
-    workingStyle: string;
-  },
-  partTimerProfile: PartTimerProfile,
-): string => {
-  const { job, lastName } = partTimerProfile;
-
-  const restStartTime = eventInfo.restStartTime ? format(eventInfo.restStartTime, "HH:mm") : undefined;
-  const restEndTime = eventInfo.restEndTime ? format(eventInfo.restEndTime, "HH:mm") : undefined;
-  const workingStyle = eventInfo.workingStyle;
-
-  if (restStartTime === undefined || restEndTime === undefined) {
-    const title = `【${workingStyle}】${job}${lastName}さん`;
-    return title;
-  } else {
-    const title = `【${workingStyle}】${job}${lastName}さん (休憩: ${restStartTime}~${restEndTime})`;
-    return title;
-  }
 };

@@ -2,15 +2,8 @@ import { addWeeks, endOfDay, format, nextDay, previousDay, set, startOfDay, subH
 import { z } from "zod";
 import { zu } from "zod_utilz";
 
+import { DayOfWeek } from "./common.schema";
 import { getConfig } from "./config";
-
-const DayOfWeek = z
-  .literal("月曜日")
-  .or(z.literal("火曜日"))
-  .or(z.literal("水曜日"))
-  .or(z.literal("木曜日"))
-  .or(z.literal("金曜日"));
-type DayOfWeek = z.infer<typeof DayOfWeek>;
 
 export const Event = z.object({
   title: z.string(),
@@ -25,6 +18,7 @@ const RegisterEventRequest = z.object({
   userEmail: z.string(),
   registrationEvents: zu.stringToJSON().pipe(Event.array()),
 });
+type RegisterEventRequest = z.infer<typeof RegisterEventRequest>;
 
 const ModifyAndDeleteEventRequest = z.object({
   operationType: z.literal("modifyAndDeleteEvent"),
@@ -98,10 +92,11 @@ const DeleteRecurringEventRequest = z.object({
 });
 type DeleteRecurringEventRequest = z.infer<typeof DeleteRecurringEventRequest>;
 
-type DeleteRecurringEventResponse = {
-  responseCode: number;
-  comment: string;
-};
+//NOTE: GASの仕様でレスポンスコードを返すことができないため、エラーメッセージを返す
+export const RecurringEventResponse = z.object({
+  error: z.string().optional(),
+});
+export type RecurringEventResponse = z.infer<typeof RecurringEventResponse>;
 
 const ShiftChangeRequestSchema = z.union([
   RegisterEventRequest,
@@ -111,6 +106,20 @@ const ShiftChangeRequestSchema = z.union([
   ModifyRecurringEventRequest,
   DeleteRecurringEventRequest,
 ]);
+type ShiftChangeRequestSchema = z.infer<typeof ShiftChangeRequestSchema>;
+
+export type OperationType = ShiftChangeRequestSchema["operationType"];
+
+export const doGet = () => {
+  return ContentService.createTextOutput("ok");
+};
+export const doPost = (e: GoogleAppsScript.Events.DoPost): GoogleAppsScript.Content.TextOutput => {
+  if (e.parameter.apiId === "shift-changer") {
+    const response = shiftChanger(e) ?? "";
+    return ContentService.createTextOutput(response).setMimeType(ContentService.MimeType.JSON);
+  }
+  return ContentService.createTextOutput("undefined");
+};
 
 export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
   const parameter = ShiftChangeRequestSchema.parse(e.parameter);
@@ -136,11 +145,11 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
       registerRecurringEvents(parameter, userEmail);
       break;
     }
-    case "deleteRecurringEvent": {
-      return JSON.stringify(deleteRecurringEvents(parameter, userEmail));
-    }
     case "modifyRecurringEvent": {
       return JSON.stringify(modifyRecurringEvents(parameter, userEmail));
+    }
+    case "deleteRecurringEvent": {
+      return JSON.stringify(deleteRecurringEvents(parameter, userEmail));
     }
   }
   return;
@@ -153,7 +162,7 @@ const registerEvents = (userEmail: string, registerInfos: Event[]) => {
 };
 
 const registerEvent = (eventInfo: Event, userEmail: string) => {
-  const calendar = getCalendar();
+  const calendar = getCalendar(); //TODO: registerEventの引数にcalendarを追加する
   const [startDate, endDate] = [eventInfo.startTime, eventInfo.endTime];
   calendar.createEvent(eventInfo.title, startDate, endDate, { guests: userEmail });
 };
@@ -235,8 +244,7 @@ const registerRecurringEvents = (
 const modifyRecurringEvents = (
   { modificationRecurringEvents: { after, events } }: ModifyRecurringEventRequest,
   userEmail: string,
-) => {
-  const calendar = getCalendar();
+): RecurringEventResponse => {
   const calendarId = getConfig().CALENDAR_ID;
   const advancedCalendar = getAdvancedCalendar();
 
@@ -259,7 +267,7 @@ const modifyRecurringEvents = (
       return recurringEventId ? { recurringEventId, recurrenceEndDate } : undefined;
     })
     .filter(isNotUndefined);
-  if (eventItems.length === 0) return { responseCode: 400, comment: "消去するイベントの取得に失敗しました" };
+  if (eventItems.length === 0) return { error: "消去するイベントの取得に失敗しました" };
 
   const detailedEventItems = eventItems.map(({ recurringEventId, recurrenceEndDate }) => {
     const eventDetail = advancedCalendar.get(calendarId, recurringEventId);
@@ -293,18 +301,19 @@ const modifyRecurringEvents = (
     const eventEndTime = mergeTimeToDate(recurrenceStartDate, endTime);
     const englishDayOfWeek = convertDayOfWeekJapaneseToEnglish(dayOfWeek);
 
+    const calendar = getCalendar();
     const recurrence = CalendarApp.newRecurrence().addWeeklyRule().onlyOnWeekday(englishDayOfWeek);
     calendar.createEventSeries(title, eventStartTime, eventEndTime, recurrence, {
       guests: userEmail,
     });
   });
-  return { responseCode: 200, comment: "イベントの変更が成功しました" };
+  return {}; //TODO: Result型導入時に削除
 };
 
 const deleteRecurringEvents = (
   { deletionRecurringEvents: { after, dayOfWeeks } }: DeleteRecurringEventRequest,
   userEmail: string,
-): DeleteRecurringEventResponse => {
+): RecurringEventResponse => {
   const calendarId = getConfig().CALENDAR_ID;
   const advancedCalendar = getAdvancedCalendar();
 
@@ -325,7 +334,7 @@ const deleteRecurringEvents = (
       return recurringEventId ? { recurringEventId, recurrenceEndDate } : undefined;
     })
     .filter(isNotUndefined);
-  if (eventItems.length === 0) return { responseCode: 400, comment: "消去するイベントの取得に失敗しました" };
+  if (eventItems.length === 0) return { error: "消去するイベントの取得に失敗しました" };
 
   const detailedEventItems = eventItems.map(({ recurringEventId, recurrenceEndDate }) => {
     const eventDetail = advancedCalendar.get(calendarId, recurringEventId);
@@ -351,8 +360,7 @@ const deleteRecurringEvents = (
     };
     advancedCalendar.update(data, calendarId, recurringEventId);
   });
-
-  return { responseCode: 200, comment: "イベントの消去が成功しました" };
+  return {}; //TODO: Result型導入時に削除
 };
 
 const getCalendar = () => {

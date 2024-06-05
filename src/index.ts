@@ -1,16 +1,17 @@
 import { insertModificationAndDeletionSheet } from "./ModificationAndDeletionSheet";
 import { initNotifyDailyShift, notifyDailyShift } from "./notify-daily-shift";
+import { insertRecurringEventSheet } from "./RecurringEventSheet";
 import { insertRegistrationSheet } from "./RegistrationSheet";
 import {
   callModificationAndDeletion,
+  callRecurringEvent,
   callRegistration,
   callShowEvents,
-  doGet,
-  doPost,
   initShiftChanger,
   onOpen,
   onOpenForDev,
 } from "./shift-changer";
+import { doGet, doPost } from "./shift-changer-api";
 /**
  * @file GASエディタから実行できる関数を定義する
  */
@@ -29,3 +30,5 @@ global.callShowEvents = callShowEvents;
 global.callModificationAndDeletion = callModificationAndDeletion;
 global.insertRegistrationSheet = insertRegistrationSheet;
 global.insertModificationAndDeletionSheet = insertModificationAndDeletionSheet;
+global.insertRecurringEventSheet = insertRecurringEventSheet;
+global.callRecurringEvent = callRecurringEvent;

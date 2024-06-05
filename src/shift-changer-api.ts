@@ -91,7 +91,7 @@ const DeleteRecurringEventRequest = z.object({
 });
 type DeleteRecurringEventRequest = z.infer<typeof DeleteRecurringEventRequest>;
 
-//NOTE: クライアントがresponseCodeを取得するには、responseCodeをContentに埋め込む必要があるため
+//NOTE: GASの仕様でレスポンスコードを返すことができないため、エラーメッセージを返す
 export const RecurringEventResponse = z.object({
   error: z.string().optional(),
 });

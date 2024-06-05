@@ -335,6 +335,7 @@ export const callRecurringEvent = () => {
     const response = UrlFetchApp.fetch(API_URL, options);
     const responseContent = RecurringEventResponse.parse(JSON.parse(response.getContentText()));
     if (responseContent.error) {
+      //NOTE: APIのレスポンスがある場合はエラーを出力する
       throw new Error(responseContent.error);
     }
   }
@@ -352,6 +353,7 @@ export const callRecurringEvent = () => {
     const response = UrlFetchApp.fetch(API_URL, options);
     const responseContent = RecurringEventResponse.parse(JSON.parse(response.getContentText()));
     if (responseContent.error) {
+      //NOTE: APIのレスポンスがある場合はエラーを出力する
       throw new Error(responseContent.error);
     }
   }

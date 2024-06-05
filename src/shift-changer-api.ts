@@ -307,7 +307,7 @@ const modifyRecurringEvents = (
       guests: userEmail,
     });
   });
-  return {};
+  return {}; //TODO: Result型導入時に削除
 };
 
 const deleteRecurringEvents = (
@@ -360,7 +360,7 @@ const deleteRecurringEvents = (
     };
     advancedCalendar.update(data, calendarId, recurringEventId);
   });
-  return {};
+  return {}; //TODO: Result型導入時に削除
 };
 
 const getCalendar = () => {

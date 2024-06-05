@@ -162,7 +162,7 @@ const registerEvents = (userEmail: string, registerInfos: Event[]) => {
 };
 
 const registerEvent = (eventInfo: Event, userEmail: string) => {
-  const calendar = getCalendar();
+  const calendar = getCalendar(); //TODO: registerEventの引数にcalendarを追加する
   const [startDate, endDate] = [eventInfo.startTime, eventInfo.endTime];
   calendar.createEvent(eventInfo.title, startDate, endDate, { guests: userEmail });
 };
@@ -245,7 +245,6 @@ const modifyRecurringEvents = (
   { modificationRecurringEvents: { after, events } }: ModifyRecurringEventRequest,
   userEmail: string,
 ): RecurringEventResponse => {
-  const calendar = getCalendar();
   const calendarId = getConfig().CALENDAR_ID;
   const advancedCalendar = getAdvancedCalendar();
 
@@ -302,6 +301,7 @@ const modifyRecurringEvents = (
     const eventEndTime = mergeTimeToDate(recurrenceStartDate, endTime);
     const englishDayOfWeek = convertDayOfWeekJapaneseToEnglish(dayOfWeek);
 
+    const calendar = getCalendar();
     const recurrence = CalendarApp.newRecurrence().addWeeklyRule().onlyOnWeekday(englishDayOfWeek);
     calendar.createEventSeries(title, eventStartTime, eventEndTime, recurrence, {
       guests: userEmail,

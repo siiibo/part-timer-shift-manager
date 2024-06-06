@@ -112,11 +112,8 @@ export const doGet = () => {
 };
 export const doPost = (e: GoogleAppsScript.Events.DoPost): GoogleAppsScript.Content.TextOutput => {
   const parameter = ShiftChangeRequestSchema.parse(JSON.parse(e.postData.contents));
-  if (parameter.apiId === "shift-changer") {
-    const response = shiftChanger(parameter) ?? "";
-    return ContentService.createTextOutput(response).setMimeType(ContentService.MimeType.JSON);
-  }
-  return ContentService.createTextOutput("undefined");
+  const response = shiftChanger(parameter) ?? "";
+  return ContentService.createTextOutput(response).setMimeType(ContentService.MimeType.JSON);
 };
 
 export const shiftChanger = (parameter: ShiftChangeRequestSchema) => {

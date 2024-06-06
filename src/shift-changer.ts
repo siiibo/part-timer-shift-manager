@@ -95,7 +95,7 @@ export const callRegistration = () => {
     apiId: "shift-changer",
     operationType: operationType,
     userEmail: userEmail,
-    registrationEvents: registrationInfos,
+    events: registrationInfos,
   };
   const payload = JSON.stringify(payloadObject);
   const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
@@ -183,7 +183,8 @@ export const callModificationAndDeletion = () => {
   const partTimerProfile = getPartTimerProfile(userEmail);
   const sheet = getSheet("modificationAndDeletion", spreadsheetUrl);
   const comment = sheet.getRange("A2").getValue();
-  const operationType: OperationType = "modifyAndDeleteEvent";
+  const modifyOperationType: OperationType = "modifyEvent";
+  const deleteOperationType: OperationType = "deleteEvent";
   const { modificationRows, deletionRows } = getModificationOrDeletion(sheet);
   const modificationInfos = modificationRows.map(
     ({ title, startTime, endTime, newStartTime, newEndTime, newRestStartTime, newRestEndTime, newWorkingStyle }) => {
@@ -206,27 +207,49 @@ export const callModificationAndDeletion = () => {
       };
     },
   );
-  const payloadObject = {
-    apiId: "shift-changer",
-    operationType: operationType,
-    userEmail: userEmail,
-    modificationEvents: modificationInfos,
-    deletionEvents: deletionRows,
-  };
-  const payload = JSON.stringify(payloadObject);
-  const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
-    method: "post",
-    payload: payload,
-    muteHttpExceptions: true,
-  };
-  const { API_URL, SLACK_CHANNEL_TO_POST } = getConfig();
-  const response = UrlFetchApp.fetch(API_URL, options);
-  if (response.getResponseCode() !== 200) {
-    throw new Error(response.getContentText());
+
+  const { API_URL } = getConfig();
+  if (modificationInfos.length > 0) {
+    const payloadObject = {
+      apiId: "shift-changer",
+      operationType: modifyOperationType,
+      userEmail: userEmail,
+      events: modificationInfos,
+    };
+    const payload = JSON.stringify(payloadObject);
+    const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
+      method: "post",
+      payload: payload,
+      muteHttpExceptions: true,
+    };
+    const response = UrlFetchApp.fetch(API_URL, options);
+    if (response.getResponseCode() !== 200) {
+      throw new Error(response.getContentText());
+    }
   }
-  if (modificationInfos.length == 0 && deletionRows.length == 0) {
-    throw new Error("変更・削除する予定がありません。");
+  if (deletionRows.length > 0) {
+    const deleteInfos = deletionRows.map(({ title, startTime }) => {
+      return { title, date: startTime };
+    });
+    const payloadObject = {
+      apiId: "shift-changer",
+      operationType: deleteOperationType,
+      userEmail: userEmail,
+      events: deleteInfos,
+    };
+    const payload = JSON.stringify(payloadObject);
+    const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
+      method: "post",
+      payload: payload,
+      muteHttpExceptions: true,
+    };
+    const response = UrlFetchApp.fetch(API_URL, options);
+    if (response.getResponseCode() !== 200) {
+      throw new Error(response.getContentText());
+    }
   }
+
+  const { SLACK_CHANNEL_TO_POST } = getConfig();
   const modificationAndDeletionMessageToNotify = [
     createModificationMessage(modificationInfos, partTimerProfile),
     createDeletionMessage(deletionRows, partTimerProfile),
@@ -319,7 +342,7 @@ export const callRecurringEvent = () => {
     const payloadObject = {
       ...payloadBase,
       operationType: "registerRecurringEvent",
-      registrationRecurringEvents: { after, events: registrationInfos },
+      recurringEvents: { after, events: registrationInfos },
     };
     const payload = JSON.stringify(payloadObject);
     const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
@@ -333,7 +356,7 @@ export const callRecurringEvent = () => {
     const payloadObject = {
       ...payloadBase,
       operationType: "modifyRecurringEvent",
-      modificationRecurringEvents: { after, events: modificationInfos },
+      recurringEvents: { after, events: modificationInfos },
     };
     const payload = JSON.stringify(payloadObject);
     const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
@@ -352,7 +375,7 @@ export const callRecurringEvent = () => {
     const payloadObject = {
       ...payloadBase,
       operationType: "deleteRecurringEvent",
-      deletionRecurringEvents: { after, dayOfWeeks: deleteDayOfWeeks },
+      recurringEvents: { after, dayOfWeeks: deleteDayOfWeeks },
     };
     const payload = JSON.stringify(payloadObject);
     const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {

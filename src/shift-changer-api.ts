@@ -20,9 +20,9 @@ const RegisterEventRequest = z.object({
 });
 type RegisterEventRequest = z.infer<typeof RegisterEventRequest>;
 
-const ModifyAndDeleteEventRequest = z.object({
+const ModifyEventRequest = z.object({
   apiId: z.literal("shift-changer"),
-  operationType: z.literal("modifyAndDeleteEvent"),
+  operationType: z.literal("modifyEvent"),
   userEmail: z.string(),
   events: z
     .object({
@@ -30,9 +30,16 @@ const ModifyAndDeleteEventRequest = z.object({
       newEvent: Event,
     })
     .array(),
-  deletionEvents: Event.array(),
 });
-type ModifyAndDeleteEventRequest = z.infer<typeof ModifyAndDeleteEventRequest>;
+type ModifyEventRequest = z.infer<typeof ModifyEventRequest>;
+
+const DeleteEventRequest = z.object({
+  apiId: z.literal("shift-changer"),
+  operationType: z.literal("deleteEvent"),
+  userEmail: z.string(),
+  events: Event.array(),
+});
+type DeleteEventRequest = z.infer<typeof DeleteEventRequest>;
 
 const ShowEventRequest = z.object({
   apiId: z.literal("shift-changer"),
@@ -97,7 +104,8 @@ export type RecurringEventResponse = z.infer<typeof RecurringEventResponse>;
 
 const ShiftChangeRequestSchema = z.union([
   RegisterEventRequest,
-  ModifyAndDeleteEventRequest,
+  ModifyEventRequest,
+  DeleteEventRequest,
   ShowEventRequest,
   RegisterRecurringEventRequest,
   ModifyRecurringEventRequest,
@@ -124,9 +132,12 @@ export const shiftChanger = (parameter: ShiftChangeRequestSchema) => {
       registerEvents(userEmail, parameter.events);
       break;
     }
-    case "modifyAndDeleteEvent": {
+    case "modifyEvent": {
       modifyEvents(parameter.events, userEmail);
-      deleteEvents(parameter.deletionEvents, userEmail);
+      break;
+    }
+    case "deleteEvent": {
+      deleteEvents(parameter.events, userEmail);
       break;
     }
     case "showEvents": {

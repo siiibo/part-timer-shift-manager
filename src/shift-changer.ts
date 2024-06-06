@@ -91,12 +91,12 @@ export const callRegistration = () => {
     );
     return { title, date: startTime, startTime, endTime };
   });
-  const payload = {
+  const payload = JSON.stringify({
     apiId: "shift-changer",
     operationType: operationType,
     userEmail: userEmail,
-    registrationEvents: JSON.stringify(registrationInfos),
-  };
+    registrationEvents: registrationInfos,
+  });
   const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
     method: "post",
     payload: payload,
@@ -204,13 +204,13 @@ export const callModificationAndDeletion = () => {
       };
     },
   );
-  const payload = {
+  const payload = JSON.stringify({
     apiId: "shift-changer",
     operationType: operationType,
     userEmail: userEmail,
-    modificationEvents: JSON.stringify(modificationInfos),
-    deletionEvents: JSON.stringify(deletionRows),
-  };
+    modificationEvents: modificationInfos,
+    deletionEvents: deletionRows,
+  });
   const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
     method: "post",
     payload: payload,
@@ -313,11 +313,11 @@ export const callRecurringEvent = () => {
   const payloadBase = { apiId: "shift-changer", userEmail };
   const { API_URL } = getConfig();
   if (registrationInfos.length > 0) {
-    const payload = {
+    const payload = JSON.stringify({
       ...payloadBase,
       operationType: "registerRecurringEvent",
-      registrationRecurringEvents: JSON.stringify({ after, events: registrationInfos }),
-    };
+      registrationRecurringEvents: { after, events: registrationInfos },
+    });
     const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
       method: "post",
       payload: payload,
@@ -326,11 +326,11 @@ export const callRecurringEvent = () => {
     UrlFetchApp.fetch(API_URL, options);
   }
   if (modificationInfos.length > 0) {
-    const payload = {
+    const payload = JSON.stringify({
       ...payloadBase,
       operationType: "modifyRecurringEvent",
-      modificationRecurringEvents: JSON.stringify({ after, events: modificationInfos }),
-    };
+      modificationRecurringEvents: { after, events: modificationInfos },
+    });
     const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
       method: "post",
       payload: payload,
@@ -344,11 +344,11 @@ export const callRecurringEvent = () => {
     }
   }
   if (deleteDayOfWeeks.length > 0) {
-    const payload = {
+    const payload = JSON.stringify({
       ...payloadBase,
       operationType: "deleteRecurringEvent",
       deletionRecurringEvents: JSON.stringify({ after, dayOfWeeks: deleteDayOfWeeks }),
-    };
+    });
     const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
       method: "post",
       payload: payload,

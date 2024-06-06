@@ -6,7 +6,6 @@ import { getConfig } from "./config";
 
 export const Event = z.object({
   title: z.string(),
-  date: z.coerce.date(), //TODO: 日付情報だけの変数dateを消去する
   startTime: z.coerce.date(),
   endTime: z.coerce.date(),
 });
@@ -218,11 +217,10 @@ const showEvents = (userEmail: string, startDate: Date): Event[] => {
   const events = calendar.getEvents(startDate, endDate).filter((event) => isEventGuest(event, userEmail));
   const eventInfos = events.map((event) => {
     const title = event.getTitle();
-    const date = new Date(event.getStartTime().getTime());
     const startTime = new Date(event.getStartTime().getTime());
     const endTime = new Date(event.getEndTime().getTime());
 
-    return { title, date, startTime, endTime };
+    return { title, startTime, endTime };
   });
   return eventInfos;
 };

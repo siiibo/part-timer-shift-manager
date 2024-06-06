@@ -89,7 +89,7 @@ export const callRegistration = () => {
       },
       partTimerProfile,
     );
-    return { title, date: startTime, startTime, endTime };
+    return { title, startTime, endTime };
   });
   const payloadObject = {
     apiId: "shift-changer",
@@ -157,8 +157,8 @@ export const callShowEvents = () => {
 
   if (eventInfos.length === 0) throw new Error("no events");
 
-  const moldedEventInfos = eventInfos.map(({ title, date, startTime, endTime }) => {
-    const dateStr = format(date, "yyyy/MM/dd");
+  const moldedEventInfos = eventInfos.map(({ title, startTime, endTime }) => {
+    const dateStr = format(startTime, "yyyy/MM/dd");
     const startTimeStr = format(startTime, "HH:mm");
     const endTimeStr = format(endTime, "HH:mm");
     return [title, dateStr, startTimeStr, endTimeStr];
@@ -228,8 +228,8 @@ export const callModificationAndDeletion = () => {
     }
   }
   if (deletionRows.length > 0) {
-    const deleteInfos = deletionRows.map(({ title, startTime }) => {
-      return { title, date: startTime };
+    const deleteInfos = deletionRows.map(({ title, startTime, endTime }) => {
+      return { title, startTime, endTime };
     });
     const payloadObject = {
       apiId: "shift-changer",
@@ -482,7 +482,7 @@ const createTitleFromEventInfo = (
 };
 
 const createMessageFromEventInfo = (eventInfo: Event) => {
-  const date = format(eventInfo.date, "MM/dd");
+  const date = format(eventInfo.startTime, "MM/dd");
   const { workingStyle, restStartTime, restEndTime } = getEventInfoFromTitle(eventInfo.title);
   const startTime = format(eventInfo.startTime, "HH:mm");
   const endTime = format(eventInfo.endTime, "HH:mm");

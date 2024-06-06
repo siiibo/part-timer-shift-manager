@@ -88,7 +88,7 @@ const DeleteRecurringEventRequest = z.object({
   apiId: z.literal("shift-changer"),
   operationType: z.literal("deleteRecurringEvent"),
   userEmail: z.string(),
-  recurringEvents: z.object({
+  weeklyDeletionInfo: z.object({
     after: z.coerce.date(),
     dayOfWeeks: DayOfWeek.array(),
   }),
@@ -314,7 +314,7 @@ const modifyRecurringEvents = (
 };
 
 const deleteRecurringEvents = (
-  { recurringEvents: { after, dayOfWeeks } }: DeleteRecurringEventRequest,
+  { weeklyDeletionInfo: { after, dayOfWeeks } }: DeleteRecurringEventRequest,
   userEmail: string,
 ): RecurringEventResponse => {
   const calendarId = getConfig().CALENDAR_ID;

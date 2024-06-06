@@ -16,7 +16,7 @@ const RegisterEventRequest = z.object({
   apiId: z.literal("shift-changer"),
   operationType: z.literal("registerEvent"),
   userEmail: z.string(),
-  registrationEvents: Event.array(),
+  events: Event.array(),
 });
 type RegisterEventRequest = z.infer<typeof RegisterEventRequest>;
 
@@ -24,7 +24,7 @@ const ModifyAndDeleteEventRequest = z.object({
   apiId: z.literal("shift-changer"),
   operationType: z.literal("modifyAndDeleteEvent"),
   userEmail: z.string(),
-  modificationEvents: z
+  events: z
     .object({
       previousEvent: Event,
       newEvent: Event,
@@ -46,7 +46,7 @@ const RegisterRecurringEventRequest = z.object({
   apiId: z.literal("shift-changer"),
   operationType: z.literal("registerRecurringEvent"),
   userEmail: z.string(),
-  registrationRecurringEvents: z.object({
+  recurringEvents: z.object({
     after: z.coerce.date(),
     events: z
       .object({
@@ -64,7 +64,7 @@ const ModifyRecurringEventRequest = z.object({
   apiId: z.literal("shift-changer"),
   operationType: z.literal("modifyRecurringEvent"),
   userEmail: z.string(),
-  modificationRecurringEvents: z.object({
+  recurringEvents: z.object({
     after: z.coerce.date(),
     events: z
       .object({
@@ -82,7 +82,7 @@ const DeleteRecurringEventRequest = z.object({
   apiId: z.literal("shift-changer"),
   operationType: z.literal("deleteRecurringEvent"),
   userEmail: z.string(),
-  deletionRecurringEvents: z.object({
+  recurringEvents: z.object({
     after: z.coerce.date(),
     dayOfWeeks: DayOfWeek.array(),
   }),
@@ -124,11 +124,11 @@ export const shiftChanger = (parameter: ShiftChangeRequestSchema) => {
   const userEmail = parameter.userEmail;
   switch (operationType) {
     case "registerEvent": {
-      registerEvents(userEmail, parameter.registrationEvents);
+      registerEvents(userEmail, parameter.events);
       break;
     }
     case "modifyAndDeleteEvent": {
-      modifyEvents(parameter.modificationEvents, userEmail);
+      modifyEvents(parameter.events, userEmail);
       deleteEvents(parameter.deletionEvents, userEmail);
       break;
     }
@@ -220,7 +220,7 @@ const showEvents = (userEmail: string, startDate: Date): Event[] => {
 };
 
 const registerRecurringEvents = (
-  { registrationRecurringEvents: { after, events } }: RegisterRecurringEventRequest,
+  { recurringEvents: { after, events } }: RegisterRecurringEventRequest,
   userEmail: string,
 ) => {
   const calendar = getCalendar();
@@ -239,7 +239,7 @@ const registerRecurringEvents = (
 };
 
 const modifyRecurringEvents = (
-  { modificationRecurringEvents: { after, events } }: ModifyRecurringEventRequest,
+  { recurringEvents: { after, events } }: ModifyRecurringEventRequest,
   userEmail: string,
 ): RecurringEventResponse => {
   const calendarId = getConfig().CALENDAR_ID;
@@ -308,7 +308,7 @@ const modifyRecurringEvents = (
 };
 
 const deleteRecurringEvents = (
-  { deletionRecurringEvents: { after, dayOfWeeks } }: DeleteRecurringEventRequest,
+  { recurringEvents: { after, dayOfWeeks } }: DeleteRecurringEventRequest,
   userEmail: string,
 ): RecurringEventResponse => {
   const calendarId = getConfig().CALENDAR_ID;

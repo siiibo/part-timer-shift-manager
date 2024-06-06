@@ -1,6 +1,5 @@
 import { addWeeks, endOfDay, format, nextDay, previousDay, set, startOfDay, subHours } from "date-fns";
 import { z } from "zod";
-import { zu } from "zod_utilz";
 
 import { DayOfWeek } from "./common.schema";
 import { getConfig } from "./config";
@@ -14,28 +13,29 @@ export const Event = z.object({
 export type Event = z.infer<typeof Event>;
 
 const RegisterEventRequest = z.object({
+  apiId: z.literal("shift-changer"),
   operationType: z.literal("registerEvent"),
   userEmail: z.string(),
-  registrationEvents: zu.stringToJSON().pipe(Event.array()),
+  registrationEvents: Event.array(),
 });
 type RegisterEventRequest = z.infer<typeof RegisterEventRequest>;
 
 const ModifyAndDeleteEventRequest = z.object({
+  apiId: z.literal("shift-changer"),
   operationType: z.literal("modifyAndDeleteEvent"),
   userEmail: z.string(),
-  modificationEvents: zu.stringToJSON().pipe(
-    z
-      .object({
-        previousEvent: Event,
-        newEvent: Event,
-      })
-      .array(),
-  ),
-  deletionEvents: zu.stringToJSON().pipe(Event.array()),
+  modificationEvents: z
+    .object({
+      previousEvent: Event,
+      newEvent: Event,
+    })
+    .array(),
+  deletionEvents: Event.array(),
 });
 type ModifyAndDeleteEventRequest = z.infer<typeof ModifyAndDeleteEventRequest>;
 
 const ShowEventRequest = z.object({
+  apiId: z.literal("shift-changer"),
   operationType: z.literal("showEvents"),
   userEmail: z.string(),
   startDate: z.coerce.date(),
@@ -43,52 +43,49 @@ const ShowEventRequest = z.object({
 type ShowEventRequest = z.infer<typeof ShowEventRequest>;
 
 const RegisterRecurringEventRequest = z.object({
+  apiId: z.literal("shift-changer"),
   operationType: z.literal("registerRecurringEvent"),
   userEmail: z.string(),
-  registrationRecurringEvents: zu.stringToJSON().pipe(
-    z.object({
-      after: z.coerce.date(),
-      events: z
-        .object({
-          dayOfWeek: DayOfWeek,
-          title: z.string(),
-          startTime: z.coerce.date(),
-          endTime: z.coerce.date(),
-        })
-        .array(),
-    }),
-  ),
+  registrationRecurringEvents: z.object({
+    after: z.coerce.date(),
+    events: z
+      .object({
+        dayOfWeek: DayOfWeek,
+        title: z.string(),
+        startTime: z.coerce.date(),
+        endTime: z.coerce.date(),
+      })
+      .array(),
+  }),
 });
 type RegisterRecurringEventRequest = z.infer<typeof RegisterRecurringEventRequest>;
 
 const ModifyRecurringEventRequest = z.object({
+  apiId: z.literal("shift-changer"),
   operationType: z.literal("modifyRecurringEvent"),
   userEmail: z.string(),
-  modificationRecurringEvents: zu.stringToJSON().pipe(
-    z.object({
-      after: z.coerce.date(),
-      events: z
-        .object({
-          title: z.string(),
-          dayOfWeek: DayOfWeek,
-          startTime: z.coerce.date(),
-          endTime: z.coerce.date(),
-        })
-        .array(),
-    }),
-  ),
+  modificationRecurringEvents: z.object({
+    after: z.coerce.date(),
+    events: z
+      .object({
+        title: z.string(),
+        dayOfWeek: DayOfWeek,
+        startTime: z.coerce.date(),
+        endTime: z.coerce.date(),
+      })
+      .array(),
+  }),
 });
 type ModifyRecurringEventRequest = z.infer<typeof ModifyRecurringEventRequest>;
 
 const DeleteRecurringEventRequest = z.object({
+  apiId: z.literal("shift-changer"),
   operationType: z.literal("deleteRecurringEvent"),
   userEmail: z.string(),
-  deletionRecurringEvents: zu.stringToJSON().pipe(
-    z.object({
-      after: z.coerce.date(),
-      dayOfWeeks: DayOfWeek.array(),
-    }),
-  ),
+  deletionRecurringEvents: z.object({
+    after: z.coerce.date(),
+    dayOfWeeks: DayOfWeek.array(),
+  }),
 });
 type DeleteRecurringEventRequest = z.infer<typeof DeleteRecurringEventRequest>;
 
@@ -114,15 +111,15 @@ export const doGet = () => {
   return ContentService.createTextOutput("ok");
 };
 export const doPost = (e: GoogleAppsScript.Events.DoPost): GoogleAppsScript.Content.TextOutput => {
-  if (e.parameter.apiId === "shift-changer") {
-    const response = shiftChanger(e) ?? "";
+  const parameter = ShiftChangeRequestSchema.parse(JSON.parse(e.postData.contents));
+  if (parameter.apiId === "shift-changer") {
+    const response = shiftChanger(parameter) ?? "";
     return ContentService.createTextOutput(response).setMimeType(ContentService.MimeType.JSON);
   }
   return ContentService.createTextOutput("undefined");
 };
 
-export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
-  const parameter = ShiftChangeRequestSchema.parse(e.parameter);
+export const shiftChanger = (parameter: ShiftChangeRequestSchema) => {
   const operationType = parameter.operationType;
   const userEmail = parameter.userEmail;
   switch (operationType) {

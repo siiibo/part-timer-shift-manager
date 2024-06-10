@@ -16,7 +16,17 @@ import {
   setValuesRecurringEventSheet,
 } from "./RecurringEventSheet";
 import { getRegistrationRows, insertRegistrationSheet, setValuesRegistrationSheet } from "./RegistrationSheet";
-import { Event, RecurringEventResponse } from "./shift-changer-api";
+import {
+  DeleteEventRequest,
+  DeleteRecurringEventRequest,
+  Event,
+  ModifyEventRequest,
+  ModifyRecurringEventRequest,
+  RecurringEventResponse,
+  RegisterEventRequest,
+  RegisterRecurringEventRequest,
+  ShowEventRequest,
+} from "./shift-changer-api";
 
 type SheetType = "registration" | "modificationAndDeletion" | "recurringEvent";
 
@@ -96,7 +106,7 @@ export const callRegistration = () => {
     operationType: "registerEvent",
     userEmail: userEmail,
     events: registrationInfos,
-  });
+  } satisfies RegisterEventRequest);
   const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
     method: "post",
     payload: payload,
@@ -139,7 +149,7 @@ export const callShowEvents = () => {
     operationType: "showEvents",
     userEmail: userEmail,
     startDate: startDate,
-  });
+  } satisfies ShowEventRequest);
   const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
     method: "post",
     payload: payload,
@@ -204,14 +214,14 @@ export const callModificationAndDeletion = () => {
     },
   );
 
-  const payloadBase = { apiId: "shift-changer", userEmail };
   const { API_URL } = getConfig();
   if (modificationInfos.length > 0) {
     const payload = JSON.stringify({
-      ...payloadBase,
+      apiId: "shift-changer",
+      userEmail: userEmail,
       operationType: "modifyEvent",
       events: modificationInfos,
-    });
+    } satisfies ModifyEventRequest);
     const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
       method: "post",
       payload: payload,
@@ -227,10 +237,11 @@ export const callModificationAndDeletion = () => {
       return { title, startTime, endTime };
     });
     const payload = JSON.stringify({
-      ...payloadBase,
+      apiId: "shift-changer",
+      userEmail: userEmail,
       operationType: "deleteEvent",
       events: deleteInfos,
-    });
+    } satisfies DeleteEventRequest);
     const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
       method: "post",
       payload: payload,
@@ -329,14 +340,14 @@ export const callRecurringEvent = () => {
     return { dayOfWeek: deletionRow };
   });
 
-  const payloadBase = { apiId: "shift-changer", userEmail };
   const { API_URL } = getConfig();
   if (registrationInfos.length > 0) {
     const payload = JSON.stringify({
-      ...payloadBase,
+      apiId: "shift-changer",
+      userEmail: userEmail,
       operationType: "registerRecurringEvent",
-      recurringEvents: { after, events: registrationInfos },
-    });
+      recurringInfo: { after, events: registrationInfos },
+    } satisfies RegisterRecurringEventRequest);
     const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
       method: "post",
       payload: payload,
@@ -346,10 +357,11 @@ export const callRecurringEvent = () => {
   }
   if (modificationInfos.length > 0) {
     const payload = JSON.stringify({
-      ...payloadBase,
+      apiId: "shift-changer",
+      userEmail: userEmail,
       operationType: "modifyRecurringEvent",
-      recurringEvents: { after, events: modificationInfos },
-    });
+      recurringInfo: { after, events: modificationInfos },
+    } satisfies ModifyRecurringEventRequest);
     const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
       method: "post",
       payload: payload,
@@ -364,10 +376,11 @@ export const callRecurringEvent = () => {
   }
   if (deleteDayOfWeeks.length > 0) {
     const payload = JSON.stringify({
-      ...payloadBase,
+      apiId: "shift-changer",
+      userEmail: userEmail,
       operationType: "deleteRecurringEvent",
-      recurringEvents: { after, dayOfWeeks: deleteDayOfWeeks },
-    });
+      recurringInfo: { after, dayOfWeeks: deleteDayOfWeeks },
+    } satisfies DeleteRecurringEventRequest);
     const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
       method: "post",
       payload: payload,

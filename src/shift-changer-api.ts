@@ -11,15 +11,15 @@ export const Event = z.object({
 });
 export type Event = z.infer<typeof Event>;
 
-const RegisterEventRequest = z.object({
+export const RegisterEventRequest = z.object({
   apiId: z.literal("shift-changer"),
   operationType: z.literal("registerEvent"),
   userEmail: z.string(),
   events: Event.array(),
 });
-type RegisterEventRequest = z.infer<typeof RegisterEventRequest>;
+export type RegisterEventRequest = z.infer<typeof RegisterEventRequest>;
 
-const ModifyEventRequest = z.object({
+export const ModifyEventRequest = z.object({
   apiId: z.literal("shift-changer"),
   operationType: z.literal("modifyEvent"),
   userEmail: z.string(),
@@ -30,25 +30,25 @@ const ModifyEventRequest = z.object({
     })
     .array(),
 });
-type ModifyEventRequest = z.infer<typeof ModifyEventRequest>;
+export type ModifyEventRequest = z.infer<typeof ModifyEventRequest>;
 
-const DeleteEventRequest = z.object({
+export const DeleteEventRequest = z.object({
   apiId: z.literal("shift-changer"),
   operationType: z.literal("deleteEvent"),
   userEmail: z.string(),
   events: Event.array(),
 });
-type DeleteEventRequest = z.infer<typeof DeleteEventRequest>;
+export type DeleteEventRequest = z.infer<typeof DeleteEventRequest>;
 
-const ShowEventRequest = z.object({
+export const ShowEventRequest = z.object({
   apiId: z.literal("shift-changer"),
   operationType: z.literal("showEvents"),
   userEmail: z.string(),
   startDate: z.coerce.date(),
 });
-type ShowEventRequest = z.infer<typeof ShowEventRequest>;
+export type ShowEventRequest = z.infer<typeof ShowEventRequest>;
 
-const RegisterRecurringEventRequest = z.object({
+export const RegisterRecurringEventRequest = z.object({
   apiId: z.literal("shift-changer"),
   operationType: z.literal("registerRecurringEvent"),
   userEmail: z.string(),
@@ -64,9 +64,9 @@ const RegisterRecurringEventRequest = z.object({
       .array(),
   }),
 });
-type RegisterRecurringEventRequest = z.infer<typeof RegisterRecurringEventRequest>;
+export type RegisterRecurringEventRequest = z.infer<typeof RegisterRecurringEventRequest>;
 
-const ModifyRecurringEventRequest = z.object({
+export const ModifyRecurringEventRequest = z.object({
   apiId: z.literal("shift-changer"),
   operationType: z.literal("modifyRecurringEvent"),
   userEmail: z.string(),
@@ -82,9 +82,9 @@ const ModifyRecurringEventRequest = z.object({
       .array(),
   }),
 });
-type ModifyRecurringEventRequest = z.infer<typeof ModifyRecurringEventRequest>;
+export type ModifyRecurringEventRequest = z.infer<typeof ModifyRecurringEventRequest>;
 
-const DeleteRecurringEventRequest = z.object({
+export const DeleteRecurringEventRequest = z.object({
   apiId: z.literal("shift-changer"),
   operationType: z.literal("deleteRecurringEvent"),
   userEmail: z.string(),
@@ -93,7 +93,7 @@ const DeleteRecurringEventRequest = z.object({
     dayOfWeeks: DayOfWeek.array(),
   }),
 });
-type DeleteRecurringEventRequest = z.infer<typeof DeleteRecurringEventRequest>;
+export type DeleteRecurringEventRequest = z.infer<typeof DeleteRecurringEventRequest>;
 
 //NOTE: GASの仕様でレスポンスコードを返すことができないため、エラーメッセージを返す
 export const RecurringEventResponse = z.object({

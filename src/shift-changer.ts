@@ -204,12 +204,12 @@ export const callModificationAndDeletion = () => {
     },
   );
 
+  const payloadBase = { apiId: "shift-changer", userEmail };
   const { API_URL } = getConfig();
   if (modificationInfos.length > 0) {
     const payload = JSON.stringify({
-      apiId: "shift-changer",
+      ...payloadBase,
       operationType: "modifyEvent",
-      userEmail: userEmail,
       events: modificationInfos,
     });
     const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
@@ -227,9 +227,8 @@ export const callModificationAndDeletion = () => {
       return { title, startTime, endTime };
     });
     const payload = JSON.stringify({
-      apiId: "shift-changer",
+      ...payloadBase,
       operationType: "deleteEvent",
-      userEmail: userEmail,
       events: deleteInfos,
     });
     const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {

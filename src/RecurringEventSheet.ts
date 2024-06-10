@@ -13,16 +13,28 @@ const OperationString = z.preprocess(
   z.literal("追加").or(z.literal("時間変更")).or(z.literal("消去")).optional(),
 );
 
-const RecurringEventSheetRow = z.object({
-  after: DateAfterNow,
-  operation: OperationString,
-  dayOfWeek: DayOfWeekOrEmptyString,
-  startTime: DateOrEmptyString,
-  endTime: DateOrEmptyString,
-  restStartTime: DateOrEmptyString,
-  restEndTime: DateOrEmptyString,
-  workingStyle: WorkingStyleOrEmptyString,
-});
+const RecurringEventSheetRow = z
+  .object({
+    after: DateAfterNow,
+    operation: OperationString,
+    dayOfWeek: DayOfWeekOrEmptyString,
+    startTime: DateOrEmptyString,
+    endTime: DateOrEmptyString,
+    restStartTime: DateOrEmptyString,
+    restEndTime: DateOrEmptyString,
+    workingStyle: WorkingStyleOrEmptyString,
+  })
+  .refine(
+    (data) => {
+      if (data.restEndTime && data.restStartTime) {
+        return data.restStartTime < data.restEndTime;
+      }
+      return true;
+    },
+    {
+      message: "休憩時間の開始時間が終了時間よりも前になるようにしてください",
+    },
+  );
 type RecurringEventSheetRow = z.infer<typeof RecurringEventSheetRow>;
 
 const RegisterRecurringEventRow = z.object({

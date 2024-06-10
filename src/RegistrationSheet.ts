@@ -3,13 +3,25 @@ import { z } from "zod";
 
 import { DateAfterNow } from "./common.schema";
 
-const RegistrationRow = z.object({
-  startTime: DateAfterNow,
-  endTime: DateAfterNow,
-  restStartTime: z.date().optional(),
-  restEndTime: z.date().optional(),
-  workingStyle: z.literal("出社").or(z.literal("リモート")),
-});
+const RegistrationRow = z
+  .object({
+    startTime: DateAfterNow,
+    endTime: DateAfterNow,
+    restStartTime: z.date().optional(),
+    restEndTime: z.date().optional(),
+    workingStyle: z.literal("出社").or(z.literal("リモート")),
+  })
+  .refine(
+    (data) => {
+      if (data.restEndTime && data.restStartTime) {
+        return data.restStartTime < data.restEndTime;
+      }
+      return true;
+    },
+    {
+      message: "休憩時間の開始時間が終了時間よりも前になるようにしてください",
+    },
+  );
 type RegistrationRow = z.infer<typeof RegistrationRow>;
 
 export const insertRegistrationSheet = () => {

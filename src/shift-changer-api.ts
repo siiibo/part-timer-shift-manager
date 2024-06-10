@@ -112,8 +112,6 @@ const ShiftChangeRequestSchema = z.union([
 ]);
 type ShiftChangeRequestSchema = z.infer<typeof ShiftChangeRequestSchema>;
 
-export type OperationType = ShiftChangeRequestSchema["operationType"];
-
 export const doGet = () => {
   return ContentService.createTextOutput("ok");
 };

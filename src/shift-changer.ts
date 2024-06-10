@@ -16,7 +16,7 @@ import {
   setValuesRecurringEventSheet,
 } from "./RecurringEventSheet";
 import { getRegistrationRows, insertRegistrationSheet, setValuesRegistrationSheet } from "./RegistrationSheet";
-import { Event, OperationType, RecurringEventResponse } from "./shift-changer-api";
+import { Event, RecurringEventResponse } from "./shift-changer-api";
 
 type SheetType = "registration" | "modificationAndDeletion" | "recurringEvent";
 
@@ -77,7 +77,6 @@ export const callRegistration = () => {
   const partTimerProfile = getPartTimerProfile(userEmail);
 
   const sheet = getSheet("registration", spreadsheetUrl);
-  const operationType: OperationType = "registerEvent";
   const comment = sheet.getRange("A2").getValue();
   const registrationRows = getRegistrationRows(sheet);
   const registrationInfos = registrationRows.map(({ startTime, endTime, restStartTime, restEndTime, workingStyle }) => {
@@ -91,9 +90,10 @@ export const callRegistration = () => {
     );
     return { title, startTime, endTime };
   });
+
   const payload = JSON.stringify({
     apiId: "shift-changer",
-    operationType: operationType,
+    operationType: "registerEvent",
     userEmail: userEmail,
     events: registrationInfos,
   });
@@ -131,13 +131,12 @@ export const callShowEvents = () => {
   const userEmail = Session.getActiveUser().getEmail();
   const spreadsheetUrl = SpreadsheetApp.getActiveSpreadsheet().getUrl();
   const sheet = getSheet("modificationAndDeletion", spreadsheetUrl);
-  const operationType: OperationType = "showEvents";
   const startDate: Date = sheet.getRange("A5").getValue();
   if (!startDate) throw new Error("日付を指定してください。");
 
   const payload = JSON.stringify({
     apiId: "shift-changer",
-    operationType: operationType,
+    operationType: "showEvents",
     userEmail: userEmail,
     startDate: startDate,
   });
@@ -181,8 +180,7 @@ export const callModificationAndDeletion = () => {
   const partTimerProfile = getPartTimerProfile(userEmail);
   const sheet = getSheet("modificationAndDeletion", spreadsheetUrl);
   const comment = sheet.getRange("A2").getValue();
-  const modifyOperationType: OperationType = "modifyEvent";
-  const deleteOperationType: OperationType = "deleteEvent";
+
   const { modificationRows, deletionRows } = getModificationOrDeletion(sheet);
   const modificationInfos = modificationRows.map(
     ({ title, startTime, endTime, newStartTime, newEndTime, newRestStartTime, newRestEndTime, newWorkingStyle }) => {
@@ -210,7 +208,7 @@ export const callModificationAndDeletion = () => {
   if (modificationInfos.length > 0) {
     const payload = JSON.stringify({
       apiId: "shift-changer",
-      operationType: modifyOperationType,
+      operationType: "modifyEvent",
       userEmail: userEmail,
       events: modificationInfos,
     });
@@ -230,7 +228,7 @@ export const callModificationAndDeletion = () => {
     });
     const payload = JSON.stringify({
       apiId: "shift-changer",
-      operationType: deleteOperationType,
+      operationType: "deleteEvent",
       userEmail: userEmail,
       events: deleteInfos,
     });

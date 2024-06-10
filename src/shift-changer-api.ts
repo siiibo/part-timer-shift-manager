@@ -52,7 +52,7 @@ const RegisterRecurringEventRequest = z.object({
   apiId: z.literal("shift-changer"),
   operationType: z.literal("registerRecurringEvent"),
   userEmail: z.string(),
-  recurringEvents: z.object({
+  recurringInfo: z.object({
     after: z.coerce.date(),
     events: z
       .object({
@@ -70,7 +70,7 @@ const ModifyRecurringEventRequest = z.object({
   apiId: z.literal("shift-changer"),
   operationType: z.literal("modifyRecurringEvent"),
   userEmail: z.string(),
-  recurringEvents: z.object({
+  recurringInfo: z.object({
     after: z.coerce.date(),
     events: z
       .object({
@@ -128,7 +128,7 @@ export const shiftChanger = (parameter: ShiftChangeRequestSchema) => {
   const userEmail = parameter.userEmail;
   switch (operationType) {
     case "registerEvent": {
-      registerEvents(userEmail, parameter.events);
+      registerEvents(parameter.events, userEmail);
       break;
     }
     case "modifyEvent": {
@@ -159,7 +159,7 @@ export const shiftChanger = (parameter: ShiftChangeRequestSchema) => {
   return;
 };
 
-const registerEvents = (userEmail: string, registerInfos: Event[]) => {
+const registerEvents = (registerInfos: Event[], userEmail: string) => {
   registerInfos.forEach((registerInfo) => {
     registerEvent(registerInfo, userEmail);
   });
@@ -226,7 +226,7 @@ const showEvents = (userEmail: string, startDate: Date): Event[] => {
 };
 
 const registerRecurringEvents = (
-  { recurringEvents: { after, events } }: RegisterRecurringEventRequest,
+  { recurringInfo: { after, events } }: RegisterRecurringEventRequest,
   userEmail: string,
 ) => {
   const calendar = getCalendar();
@@ -245,7 +245,7 @@ const registerRecurringEvents = (
 };
 
 const modifyRecurringEvents = (
-  { recurringEvents: { after, events } }: ModifyRecurringEventRequest,
+  { recurringInfo: { after, events } }: ModifyRecurringEventRequest,
   userEmail: string,
 ): RecurringEventResponse => {
   const calendarId = getConfig().CALENDAR_ID;

@@ -101,10 +101,10 @@ export const callRegistration = () => {
     return { title, startTime, endTime };
   });
 
+  const basePayload = { apiId: "shift-changer", userEmail: userEmail } as const;
   const payload = JSON.stringify({
-    apiId: "shift-changer",
+    ...basePayload,
     operationType: "registerEvent",
-    userEmail: userEmail,
     events: registrationInfos,
   } satisfies RegisterEventRequest);
   const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
@@ -144,10 +144,10 @@ export const callShowEvents = () => {
   const startDate: Date = sheet.getRange("A5").getValue();
   if (!startDate) throw new Error("日付を指定してください。");
 
+  const basePayload = { apiId: "shift-changer", userEmail: userEmail } as const;
   const payload = JSON.stringify({
-    apiId: "shift-changer",
+    ...basePayload,
     operationType: "showEvents",
-    userEmail: userEmail,
     startDate: startDate,
   } satisfies ShowEventRequest);
   const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
@@ -215,10 +215,10 @@ export const callModificationAndDeletion = () => {
   );
 
   const { API_URL } = getConfig();
+  const basePayload = { apiId: "shift-changer", userEmail: userEmail } as const;
   if (modificationInfos.length > 0) {
     const payload = JSON.stringify({
-      apiId: "shift-changer",
-      userEmail: userEmail,
+      ...basePayload,
       operationType: "modifyEvent",
       events: modificationInfos,
     } satisfies ModifyEventRequest);
@@ -237,8 +237,7 @@ export const callModificationAndDeletion = () => {
       return { title, startTime, endTime };
     });
     const payload = JSON.stringify({
-      apiId: "shift-changer",
-      userEmail: userEmail,
+      ...basePayload,
       operationType: "deleteEvent",
       events: deleteInfos,
     } satisfies DeleteEventRequest);
@@ -340,11 +339,11 @@ export const callRecurringEvent = () => {
     return { dayOfWeek: deletionRow };
   });
 
+  const basePayload = { apiId: "shift-changer", userEmail: userEmail } as const;
   const { API_URL } = getConfig();
   if (registrationInfos.length > 0) {
     const payload = JSON.stringify({
-      apiId: "shift-changer",
-      userEmail: userEmail,
+      ...basePayload,
       operationType: "registerRecurringEvent",
       recurringInfo: { after, events: registrationInfos },
     } satisfies RegisterRecurringEventRequest);
@@ -357,8 +356,7 @@ export const callRecurringEvent = () => {
   }
   if (modificationInfos.length > 0) {
     const payload = JSON.stringify({
-      apiId: "shift-changer",
-      userEmail: userEmail,
+      ...basePayload,
       operationType: "modifyRecurringEvent",
       recurringInfo: { after, events: modificationInfos },
     } satisfies ModifyRecurringEventRequest);
@@ -376,8 +374,7 @@ export const callRecurringEvent = () => {
   }
   if (deleteDayOfWeeks.length > 0) {
     const payload = JSON.stringify({
-      apiId: "shift-changer",
-      userEmail: userEmail,
+      ...basePayload,
       operationType: "deleteRecurringEvent",
       recurringInfo: { after, dayOfWeeks: deleteDayOfWeeks },
     } satisfies DeleteRecurringEventRequest);

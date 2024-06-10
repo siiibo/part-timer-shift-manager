@@ -13,7 +13,7 @@ const RegistrationRow = z
   })
   .refine(
     (data) => {
-      if (data.restEndTime && data.restStartTime) {
+      if (data.restStartTime && data.restEndTime) {
         return data.restStartTime < data.restEndTime;
       }
       return true;

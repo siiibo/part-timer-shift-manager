@@ -41,7 +41,7 @@ const ModificationOrDeletionSheetRow = z
   })
   .refine(
     (data) => {
-      if (data.newRestEndTime && data.newRestStartTime) {
+      if (data.newRestStartTime && data.newRestEndTime) {
         return data.newRestStartTime < data.newRestEndTime;
       }
       return true;

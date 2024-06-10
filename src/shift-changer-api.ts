@@ -1,96 +1,99 @@
 import { addWeeks, endOfDay, format, nextDay, previousDay, set, startOfDay, subHours } from "date-fns";
 import { z } from "zod";
-import { zu } from "zod_utilz";
 
 import { DayOfWeek } from "./common.schema";
 import { getConfig } from "./config";
 
 export const Event = z.object({
   title: z.string(),
-  date: z.coerce.date(), //TODO: 日付情報だけの変数dateを消去する
   startTime: z.coerce.date(),
   endTime: z.coerce.date(),
 });
 export type Event = z.infer<typeof Event>;
 
-const RegisterEventRequest = z.object({
+export const RegisterEventRequest = z.object({
+  apiId: z.literal("shift-changer"),
   operationType: z.literal("registerEvent"),
   userEmail: z.string(),
-  registrationEvents: zu.stringToJSON().pipe(Event.array()),
+  events: Event.array(),
 });
-type RegisterEventRequest = z.infer<typeof RegisterEventRequest>;
+export type RegisterEventRequest = z.infer<typeof RegisterEventRequest>;
 
-const ModifyAndDeleteEventRequest = z.object({
-  operationType: z.literal("modifyAndDeleteEvent"),
+export const ModifyEventRequest = z.object({
+  apiId: z.literal("shift-changer"),
+  operationType: z.literal("modifyEvent"),
   userEmail: z.string(),
-  modificationEvents: zu.stringToJSON().pipe(
-    z
-      .object({
-        previousEvent: Event,
-        newEvent: Event,
-      })
-      .array(),
-  ),
-  deletionEvents: zu.stringToJSON().pipe(Event.array()),
+  events: z
+    .object({
+      previousEvent: Event,
+      newEvent: Event,
+    })
+    .array(),
 });
-type ModifyAndDeleteEventRequest = z.infer<typeof ModifyAndDeleteEventRequest>;
+export type ModifyEventRequest = z.infer<typeof ModifyEventRequest>;
 
-const ShowEventRequest = z.object({
+export const DeleteEventRequest = z.object({
+  apiId: z.literal("shift-changer"),
+  operationType: z.literal("deleteEvent"),
+  userEmail: z.string(),
+  events: Event.array(),
+});
+export type DeleteEventRequest = z.infer<typeof DeleteEventRequest>;
+
+export const ShowEventRequest = z.object({
+  apiId: z.literal("shift-changer"),
   operationType: z.literal("showEvents"),
   userEmail: z.string(),
   startDate: z.coerce.date(),
 });
-type ShowEventRequest = z.infer<typeof ShowEventRequest>;
+export type ShowEventRequest = z.infer<typeof ShowEventRequest>;
 
-const RegisterRecurringEventRequest = z.object({
+export const RegisterRecurringEventRequest = z.object({
+  apiId: z.literal("shift-changer"),
   operationType: z.literal("registerRecurringEvent"),
   userEmail: z.string(),
-  registrationRecurringEvents: zu.stringToJSON().pipe(
-    z.object({
-      after: z.coerce.date(),
-      events: z
-        .object({
-          dayOfWeek: DayOfWeek,
-          title: z.string(),
-          startTime: z.coerce.date(),
-          endTime: z.coerce.date(),
-        })
-        .array(),
-    }),
-  ),
+  recurringInfo: z.object({
+    after: z.coerce.date(),
+    events: z
+      .object({
+        dayOfWeek: DayOfWeek,
+        title: z.string(),
+        startTime: z.coerce.date(),
+        endTime: z.coerce.date(),
+      })
+      .array(),
+  }),
 });
-type RegisterRecurringEventRequest = z.infer<typeof RegisterRecurringEventRequest>;
+export type RegisterRecurringEventRequest = z.infer<typeof RegisterRecurringEventRequest>;
 
-const ModifyRecurringEventRequest = z.object({
+export const ModifyRecurringEventRequest = z.object({
+  apiId: z.literal("shift-changer"),
   operationType: z.literal("modifyRecurringEvent"),
   userEmail: z.string(),
-  modificationRecurringEvents: zu.stringToJSON().pipe(
-    z.object({
-      after: z.coerce.date(),
-      events: z
-        .object({
-          title: z.string(),
-          dayOfWeek: DayOfWeek,
-          startTime: z.coerce.date(),
-          endTime: z.coerce.date(),
-        })
-        .array(),
-    }),
-  ),
+  recurringInfo: z.object({
+    after: z.coerce.date(),
+    events: z
+      .object({
+        title: z.string(),
+        dayOfWeek: DayOfWeek,
+        startTime: z.coerce.date(),
+        endTime: z.coerce.date(),
+      })
+      .array(),
+  }),
 });
-type ModifyRecurringEventRequest = z.infer<typeof ModifyRecurringEventRequest>;
+export type ModifyRecurringEventRequest = z.infer<typeof ModifyRecurringEventRequest>;
 
-const DeleteRecurringEventRequest = z.object({
+export const DeleteRecurringEventRequest = z.object({
+  apiId: z.literal("shift-changer"),
   operationType: z.literal("deleteRecurringEvent"),
   userEmail: z.string(),
-  deletionRecurringEvents: zu.stringToJSON().pipe(
-    z.object({
-      after: z.coerce.date(),
-      dayOfWeeks: DayOfWeek.array(),
-    }),
-  ),
+  recurringInfo: z.object({
+    after: z.coerce.date(),
+    dayOfWeeks: DayOfWeek.array(),
+  }),
 });
-type DeleteRecurringEventRequest = z.infer<typeof DeleteRecurringEventRequest>;
+export type DeleteRecurringEventRequest = z.infer<typeof DeleteRecurringEventRequest>;
 
 //NOTE: GASの仕様でレスポンスコードを返すことができないため、エラーメッセージを返す
 export const RecurringEventResponse = z.object({
@@ -100,7 +103,8 @@ export type RecurringEventResponse = z.infer<typeof RecurringEventResponse>;
 
 const ShiftChangeRequestSchema = z.union([
   RegisterEventRequest,
-  ModifyAndDeleteEventRequest,
+  ModifyEventRequest,
+  DeleteEventRequest,
   ShowEventRequest,
   RegisterRecurringEventRequest,
   ModifyRecurringEventRequest,
@@ -108,31 +112,29 @@ const ShiftChangeRequestSchema = z.union([
 ]);
 type ShiftChangeRequestSchema = z.infer<typeof ShiftChangeRequestSchema>;
 
-export type OperationType = ShiftChangeRequestSchema["operationType"];
-
 export const doGet = () => {
   return ContentService.createTextOutput("ok");
 };
 export const doPost = (e: GoogleAppsScript.Events.DoPost): GoogleAppsScript.Content.TextOutput => {
-  if (e.parameter.apiId === "shift-changer") {
-    const response = shiftChanger(e) ?? "";
-    return ContentService.createTextOutput(response).setMimeType(ContentService.MimeType.JSON);
-  }
-  return ContentService.createTextOutput("undefined");
+  const parameter = ShiftChangeRequestSchema.parse(JSON.parse(e.postData.contents));
+  const response = shiftChanger(parameter) ?? "";
+  return ContentService.createTextOutput(response).setMimeType(ContentService.MimeType.JSON);
 };
 
-export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
-  const parameter = ShiftChangeRequestSchema.parse(e.parameter);
+export const shiftChanger = (parameter: ShiftChangeRequestSchema) => {
   const operationType = parameter.operationType;
   const userEmail = parameter.userEmail;
   switch (operationType) {
     case "registerEvent": {
-      registerEvents(userEmail, parameter.registrationEvents);
+      registerEvents(parameter.events, userEmail);
       break;
     }
-    case "modifyAndDeleteEvent": {
-      modifyEvents(parameter.modificationEvents, userEmail);
-      deleteEvents(parameter.deletionEvents, userEmail);
+    case "modifyEvent": {
+      modifyEvents(parameter.events, userEmail);
+      break;
+    }
+    case "deleteEvent": {
+      deleteEvents(parameter.events, userEmail);
       break;
     }
     case "showEvents": {
@@ -155,7 +157,7 @@ export const shiftChanger = (e: GoogleAppsScript.Events.DoPost) => {
   return;
 };
 
-const registerEvents = (userEmail: string, registerInfos: Event[]) => {
+const registerEvents = (registerInfos: Event[], userEmail: string) => {
   registerInfos.forEach((registerInfo) => {
     registerEvent(registerInfo, userEmail);
   });
@@ -213,17 +215,16 @@ const showEvents = (userEmail: string, startDate: Date): Event[] => {
   const events = calendar.getEvents(startDate, endDate).filter((event) => isEventGuest(event, userEmail));
   const eventInfos = events.map((event) => {
     const title = event.getTitle();
-    const date = new Date(event.getStartTime().getTime());
     const startTime = new Date(event.getStartTime().getTime());
     const endTime = new Date(event.getEndTime().getTime());
 
-    return { title, date, startTime, endTime };
+    return { title, startTime, endTime };
   });
   return eventInfos;
 };
 
 const registerRecurringEvents = (
-  { registrationRecurringEvents: { after, events } }: RegisterRecurringEventRequest,
+  { recurringInfo: { after, events } }: RegisterRecurringEventRequest,
   userEmail: string,
 ) => {
   const calendar = getCalendar();
@@ -242,7 +243,7 @@ const registerRecurringEvents = (
 };
 
 const modifyRecurringEvents = (
-  { modificationRecurringEvents: { after, events } }: ModifyRecurringEventRequest,
+  { recurringInfo: { after, events } }: ModifyRecurringEventRequest,
   userEmail: string,
 ): RecurringEventResponse => {
   const calendarId = getConfig().CALENDAR_ID;
@@ -311,7 +312,7 @@ const modifyRecurringEvents = (
 };
 
 const deleteRecurringEvents = (
-  { deletionRecurringEvents: { after, dayOfWeeks } }: DeleteRecurringEventRequest,
+  { recurringInfo: { after, dayOfWeeks } }: DeleteRecurringEventRequest,
   userEmail: string,
 ): RecurringEventResponse => {
   const calendarId = getConfig().CALENDAR_ID;

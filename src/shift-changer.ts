@@ -16,7 +16,17 @@ import {
   setValuesRecurringEventSheet,
 } from "./RecurringEventSheet";
 import { getRegistrationRows, insertRegistrationSheet, setValuesRegistrationSheet } from "./RegistrationSheet";
-import { Event, OperationType, RecurringEventResponse } from "./shift-changer-api";
+import {
+  DeleteEventRequest,
+  DeleteRecurringEventRequest,
+  Event,
+  ModifyEventRequest,
+  ModifyRecurringEventRequest,
+  RecurringEventResponse,
+  RegisterEventRequest,
+  RegisterRecurringEventRequest,
+  ShowEventRequest,
+} from "./shift-changer-api";
 
 type SheetType = "registration" | "modificationAndDeletion" | "recurringEvent";
 
@@ -77,7 +87,6 @@ export const callRegistration = () => {
   const partTimerProfile = getPartTimerProfile(userEmail);
 
   const sheet = getSheet("registration", spreadsheetUrl);
-  const operationType: OperationType = "registerEvent";
   const comment = sheet.getRange("A2").getValue();
   const registrationRows = getRegistrationRows(sheet);
   const registrationInfos = registrationRows.map(({ startTime, endTime, restStartTime, restEndTime, workingStyle }) => {
@@ -89,14 +98,15 @@ export const callRegistration = () => {
       },
       partTimerProfile,
     );
-    return { title, date: startTime, startTime, endTime };
+    return { title, startTime, endTime };
   });
-  const payload = {
-    apiId: "shift-changer",
-    operationType: operationType,
-    userEmail: userEmail,
-    registrationEvents: JSON.stringify(registrationInfos),
-  };
+
+  const basePayload = { apiId: "shift-changer", userEmail: userEmail } as const;
+  const payload = JSON.stringify({
+    ...basePayload,
+    operationType: "registerEvent",
+    events: registrationInfos,
+  } satisfies RegisterEventRequest);
   const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
     method: "post",
     payload: payload,
@@ -131,16 +141,15 @@ export const callShowEvents = () => {
   const userEmail = Session.getActiveUser().getEmail();
   const spreadsheetUrl = SpreadsheetApp.getActiveSpreadsheet().getUrl();
   const sheet = getSheet("modificationAndDeletion", spreadsheetUrl);
-  const operationType: OperationType = "showEvents";
   const startDate: Date = sheet.getRange("A5").getValue();
   if (!startDate) throw new Error("日付を指定してください。");
 
-  const payload = {
-    apiId: "shift-changer",
-    operationType: operationType,
-    userEmail: userEmail,
+  const basePayload = { apiId: "shift-changer", userEmail: userEmail } as const;
+  const payload = JSON.stringify({
+    ...basePayload,
+    operationType: "showEvents",
     startDate: startDate,
-  };
+  } satisfies ShowEventRequest);
   const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
     method: "post",
     payload: payload,
@@ -155,8 +164,8 @@ export const callShowEvents = () => {
 
   if (eventInfos.length === 0) throw new Error("no events");
 
-  const moldedEventInfos = eventInfos.map(({ title, date, startTime, endTime }) => {
-    const dateStr = format(date, "yyyy/MM/dd");
+  const moldedEventInfos = eventInfos.map(({ title, startTime, endTime }) => {
+    const dateStr = format(startTime, "yyyy/MM/dd");
     const startTimeStr = format(startTime, "HH:mm");
     const endTimeStr = format(endTime, "HH:mm");
     return [title, dateStr, startTimeStr, endTimeStr];
@@ -181,7 +190,7 @@ export const callModificationAndDeletion = () => {
   const partTimerProfile = getPartTimerProfile(userEmail);
   const sheet = getSheet("modificationAndDeletion", spreadsheetUrl);
   const comment = sheet.getRange("A2").getValue();
-  const operationType: OperationType = "modifyAndDeleteEvent";
+
   const { modificationRows, deletionRows } = getModificationOrDeletion(sheet);
   const modificationInfos = modificationRows.map(
     ({ title, startTime, endTime, newStartTime, newEndTime, newRestStartTime, newRestEndTime, newWorkingStyle }) => {
@@ -204,26 +213,46 @@ export const callModificationAndDeletion = () => {
       };
     },
   );
-  const payload = {
-    apiId: "shift-changer",
-    operationType: operationType,
-    userEmail: userEmail,
-    modificationEvents: JSON.stringify(modificationInfos),
-    deletionEvents: JSON.stringify(deletionRows),
-  };
-  const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
-    method: "post",
-    payload: payload,
-    muteHttpExceptions: true,
-  };
-  const { API_URL, SLACK_CHANNEL_TO_POST } = getConfig();
-  const response = UrlFetchApp.fetch(API_URL, options);
-  if (response.getResponseCode() !== 200) {
-    throw new Error(response.getContentText());
+
+  const { API_URL } = getConfig();
+  const basePayload = { apiId: "shift-changer", userEmail: userEmail } as const;
+  if (modificationInfos.length > 0) {
+    const payload = JSON.stringify({
+      ...basePayload,
+      operationType: "modifyEvent",
+      events: modificationInfos,
+    } satisfies ModifyEventRequest);
+    const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
+      method: "post",
+      payload: payload,
+      muteHttpExceptions: true,
+    };
+    const response = UrlFetchApp.fetch(API_URL, options);
+    if (response.getResponseCode() !== 200) {
+      throw new Error(response.getContentText());
+    }
   }
-  if (modificationInfos.length == 0 && deletionRows.length == 0) {
-    throw new Error("変更・削除する予定がありません。");
+  if (deletionRows.length > 0) {
+    const deleteInfos = deletionRows.map(({ title, startTime, endTime }) => {
+      return { title, startTime, endTime };
+    });
+    const payload = JSON.stringify({
+      ...basePayload,
+      operationType: "deleteEvent",
+      events: deleteInfos,
+    } satisfies DeleteEventRequest);
+    const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
+      method: "post",
+      payload: payload,
+      muteHttpExceptions: true,
+    };
+    const response = UrlFetchApp.fetch(API_URL, options);
+    if (response.getResponseCode() !== 200) {
+      throw new Error(response.getContentText());
+    }
   }
+
+  const { SLACK_CHANNEL_TO_POST } = getConfig();
   const modificationAndDeletionMessageToNotify = [
     createModificationMessage(modificationInfos, partTimerProfile),
     createDeletionMessage(deletionRows, partTimerProfile),
@@ -310,14 +339,14 @@ export const callRecurringEvent = () => {
     return { dayOfWeek: deletionRow };
   });
 
-  const payloadBase = { apiId: "shift-changer", userEmail };
+  const basePayload = { apiId: "shift-changer", userEmail: userEmail } as const;
   const { API_URL } = getConfig();
   if (registrationInfos.length > 0) {
-    const payload = {
-      ...payloadBase,
+    const payload = JSON.stringify({
+      ...basePayload,
       operationType: "registerRecurringEvent",
-      registrationRecurringEvents: JSON.stringify({ after, events: registrationInfos }),
-    };
+      recurringInfo: { after, events: registrationInfos },
+    } satisfies RegisterRecurringEventRequest);
     const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
       method: "post",
       payload: payload,
@@ -326,11 +355,11 @@ export const callRecurringEvent = () => {
     UrlFetchApp.fetch(API_URL, options);
   }
   if (modificationInfos.length > 0) {
-    const payload = {
-      ...payloadBase,
+    const payload = JSON.stringify({
+      ...basePayload,
       operationType: "modifyRecurringEvent",
-      modificationRecurringEvents: JSON.stringify({ after, events: modificationInfos }),
-    };
+      recurringInfo: { after, events: modificationInfos },
+    } satisfies ModifyRecurringEventRequest);
     const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
       method: "post",
       payload: payload,
@@ -344,11 +373,11 @@ export const callRecurringEvent = () => {
     }
   }
   if (deleteDayOfWeeks.length > 0) {
-    const payload = {
-      ...payloadBase,
+    const payload = JSON.stringify({
+      ...basePayload,
       operationType: "deleteRecurringEvent",
-      deletionRecurringEvents: JSON.stringify({ after, dayOfWeeks: deleteDayOfWeeks }),
-    };
+      recurringInfo: { after, dayOfWeeks: deleteDayOfWeeks },
+    } satisfies DeleteRecurringEventRequest);
     const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
       method: "post",
       payload: payload,
@@ -453,7 +482,7 @@ const createTitleFromEventInfo = (
 };
 
 const createMessageFromEventInfo = (eventInfo: Event) => {
-  const date = format(eventInfo.date, "MM/dd");
+  const date = format(eventInfo.startTime, "MM/dd");
   const { workingStyle, restStartTime, restEndTime } = getEventInfoFromTitle(eventInfo.title);
   const startTime = format(eventInfo.startTime, "HH:mm");
   const endTime = format(eventInfo.endTime, "HH:mm");

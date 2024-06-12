@@ -1,5 +1,4 @@
 import { addWeeks, endOfDay, format, nextDay, previousDay, set, startOfDay, subHours } from "date-fns";
-import { err, ok } from "neverthrow";
 import { z } from "zod";
 
 import { DayOfWeek } from "./common.schema";
@@ -145,7 +144,8 @@ export const shiftChanger = (parameter: ShiftChangeRequestSchema) => {
       return JSON.stringify(eventEvent);
     }
     case "registerRecurringEvent": {
-      return JSON.stringify(registerRecurringEvents(parameter, userEmail));
+      registerRecurringEvents(parameter, userEmail);
+      break;
     }
     case "modifyRecurringEvent": {
       return JSON.stringify(modifyRecurringEvents(parameter, userEmail));
@@ -209,7 +209,7 @@ const deleteEvent = (eventInfo: Event, calendar: GoogleAppsScript.Calendar.Calen
   event.deleteEvent();
 };
 
-const showEvents = (userEmail: string, startDate: Date) => {
+const showEvents = (userEmail: string, startDate: Date): Event[] => {
   const endDate = addWeeks(startDate, 4);
   const calendar = getCalendar();
   const events = calendar.getEvents(startDate, endDate).filter((event) => isEventGuest(event, userEmail));
@@ -220,8 +220,7 @@ const showEvents = (userEmail: string, startDate: Date) => {
 
     return { title, startTime, endTime };
   });
-  if (eventInfos.length === 0) return err("予定が見つかりませんでした");
-  return ok(eventInfos);
+  return eventInfos;
 };
 
 const registerRecurringEvents = (
@@ -241,13 +240,12 @@ const registerRecurringEvents = (
       guests: userEmail,
     });
   });
-  return ok("繰り返し予定の登録に成功しました");
 };
 
 const modifyRecurringEvents = (
   { recurringInfo: { after, events } }: ModifyRecurringEventRequest,
   userEmail: string,
-) => {
+): RecurringEventResponse => {
   const calendarId = getConfig().CALENDAR_ID;
   const advancedCalendar = getAdvancedCalendar();
 
@@ -270,7 +268,7 @@ const modifyRecurringEvents = (
       return recurringEventId ? { recurringEventId, recurrenceEndDate } : undefined;
     })
     .filter(isNotUndefined);
-  if (eventItems.length === 0) return err("消去するイベントの取得に失敗しました");
+  if (eventItems.length === 0) return { error: "消去するイベントの取得に失敗しました" };
 
   const detailedEventItems = eventItems.map(({ recurringEventId, recurrenceEndDate }) => {
     const eventDetail = advancedCalendar.get(calendarId, recurringEventId);
@@ -310,13 +308,13 @@ const modifyRecurringEvents = (
       guests: userEmail,
     });
   });
-  return ok("繰り返し予定の変更に成功しました");
+  return {}; //TODO: Result型導入時に削除
 };
 
 const deleteRecurringEvents = (
   { recurringInfo: { after, dayOfWeeks } }: DeleteRecurringEventRequest,
   userEmail: string,
-) => {
+): RecurringEventResponse => {
   const calendarId = getConfig().CALENDAR_ID;
   const advancedCalendar = getAdvancedCalendar();
 
@@ -337,7 +335,7 @@ const deleteRecurringEvents = (
       return recurringEventId ? { recurringEventId, recurrenceEndDate } : undefined;
     })
     .filter(isNotUndefined);
-  if (eventItems.length === 0) return err("消去するイベントの取得に失敗しました");
+  if (eventItems.length === 0) return { error: "消去するイベントの取得に失敗しました" };
 
   const detailedEventItems = eventItems.map(({ recurringEventId, recurrenceEndDate }) => {
     const eventDetail = advancedCalendar.get(calendarId, recurringEventId);
@@ -363,7 +361,7 @@ const deleteRecurringEvents = (
     };
     advancedCalendar.update(data, calendarId, recurringEventId);
   });
-  return ok("繰り返し予定の消去に成功しました");
+  return {}; //TODO: Result型導入時に削除
 };
 
 const getCalendar = () => {

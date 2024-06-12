@@ -1,4 +1,5 @@
 import { addWeeks, endOfDay, format, nextDay, previousDay, set, startOfDay, subHours } from "date-fns";
+import { err, ok } from "neverthrow";
 import { z } from "zod";
 
 import { DayOfWeek } from "./common.schema";
@@ -245,7 +246,7 @@ const registerRecurringEvents = (
 const modifyRecurringEvents = (
   { recurringInfo: { after, events } }: ModifyRecurringEventRequest,
   userEmail: string,
-): RecurringEventResponse => {
+) => {
   const calendarId = getConfig().CALENDAR_ID;
   const advancedCalendar = getAdvancedCalendar();
 
@@ -268,7 +269,7 @@ const modifyRecurringEvents = (
       return recurringEventId ? { recurringEventId, recurrenceEndDate } : undefined;
     })
     .filter(isNotUndefined);
-  if (eventItems.length === 0) return { error: "消去するイベントの取得に失敗しました" };
+  if (eventItems.length === 0) return err("消去するイベントの取得に失敗しました");
 
   const detailedEventItems = eventItems.map(({ recurringEventId, recurrenceEndDate }) => {
     const eventDetail = advancedCalendar.get(calendarId, recurringEventId);
@@ -308,7 +309,7 @@ const modifyRecurringEvents = (
       guests: userEmail,
     });
   });
-  return {}; //TODO: Result型導入時に削除
+  return ok("繰り返し予定の変更に成功しました");
 };
 
 const deleteRecurringEvents = (

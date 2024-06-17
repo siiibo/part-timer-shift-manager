@@ -120,16 +120,16 @@ export const doGet = () => {
 };
 export const doPost = (e: GoogleAppsScript.Events.DoPost): GoogleAppsScript.Content.TextOutput => {
   const parameter = ShiftChangeRequestSchema.parse(JSON.parse(e.postData.contents));
-  const response = shiftChanger(parameter);
-  if (response.isErr())
-    return ContentService.createTextOutput(JSON.stringify({ error: response.error })).setMimeType(
+  const result = shiftChanger(parameter);
+  if (result.isErr())
+    return ContentService.createTextOutput(JSON.stringify({ error: result.error })).setMimeType(
       ContentService.MimeType.JSON,
     );
-  if (response.value === "成功")
-    return ContentService.createTextOutput(JSON.stringify({ ok: response.value })).setMimeType(
+  if (result.value === "成功")
+    return ContentService.createTextOutput(JSON.stringify({ ok: result.value })).setMimeType(
       ContentService.MimeType.JSON,
     );
-  return ContentService.createTextOutput(JSON.stringify({ events: response.value })).setMimeType(
+  return ContentService.createTextOutput(JSON.stringify({ events: result.value })).setMimeType(
     ContentService.MimeType.JSON,
   );
 };

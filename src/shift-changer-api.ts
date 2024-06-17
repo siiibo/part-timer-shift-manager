@@ -100,6 +100,7 @@ export type DeleteRecurringEventRequest = z.infer<typeof DeleteRecurringEventReq
 export const APIResponse = z.object({
   error: z.string().optional(),
   event: Event.array().optional(),
+  ok: z.literal("成功").optional(),
 });
 export type APIResponse = z.infer<typeof APIResponse>;
 
@@ -121,7 +122,7 @@ export const doPost = (e: GoogleAppsScript.Events.DoPost): GoogleAppsScript.Cont
   const parameter = ShiftChangeRequestSchema.parse(JSON.parse(e.postData.contents));
   const response = shiftChanger(parameter);
   if (!response) {
-    return ContentService.createTextOutput("").setMimeType(ContentService.MimeType.JSON);
+    return ContentService.createTextOutput(JSON.stringify({ ok: "成功" })).setMimeType(ContentService.MimeType.JSON);
   } else {
     return response.match(
       (events) =>

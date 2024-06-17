@@ -17,12 +17,12 @@ import {
 } from "./RecurringEventSheet";
 import { getRegistrationRows, insertRegistrationSheet, setValuesRegistrationSheet } from "./RegistrationSheet";
 import {
+  APIResponse,
   DeleteEventRequest,
   DeleteRecurringEventRequest,
   Event,
   ModifyEventRequest,
   ModifyRecurringEventRequest,
-  RecurringEventResponse,
   RegisterEventRequest,
   RegisterRecurringEventRequest,
   ShowEventRequest,
@@ -113,10 +113,7 @@ export const callRegistration = () => {
     muteHttpExceptions: true,
   };
   const { API_URL, SLACK_CHANNEL_TO_POST } = getConfig();
-  const response = UrlFetchApp.fetch(API_URL, options);
-  if (response.getResponseCode() !== 200) {
-    throw new Error(response.getContentText());
-  }
+  UrlFetchApp.fetch(API_URL, options);
   const messageToNotify = createRegistrationMessage(registrationInfos, comment, partTimerProfile);
   postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, messageToNotify, partTimerProfile);
   sheet.clear();
@@ -157,12 +154,9 @@ export const callShowEvents = () => {
   };
   const { API_URL } = getConfig();
   const response = UrlFetchApp.fetch(API_URL, options);
-  if (response.getResponseCode() !== 200) {
-    throw new Error(response.getContentText());
-  }
-  const eventInfos = Event.array().parse(JSON.parse(response.getContentText()));
-
-  if (eventInfos.length === 0) throw new Error("no events");
+  const responseContent = APIResponse.parse(JSON.parse(response.getContentText()));
+  const eventInfos = responseContent.event;
+  if (!eventInfos || eventInfos.length === 0) throw new Error("no events");
 
   const moldedEventInfos = eventInfos.map(({ title, startTime, endTime }) => {
     const dateStr = format(startTime, "yyyy/MM/dd");
@@ -227,10 +221,7 @@ export const callModificationAndDeletion = () => {
       payload: payload,
       muteHttpExceptions: true,
     };
-    const response = UrlFetchApp.fetch(API_URL, options);
-    if (response.getResponseCode() !== 200) {
-      throw new Error(response.getContentText());
-    }
+    UrlFetchApp.fetch(API_URL, options);
   }
   if (deletionRows.length > 0) {
     const deleteInfos = deletionRows.map(({ title, startTime, endTime }) => {
@@ -246,10 +237,7 @@ export const callModificationAndDeletion = () => {
       payload: payload,
       muteHttpExceptions: true,
     };
-    const response = UrlFetchApp.fetch(API_URL, options);
-    if (response.getResponseCode() !== 200) {
-      throw new Error(response.getContentText());
-    }
+    UrlFetchApp.fetch(API_URL, options);
   }
 
   const { SLACK_CHANNEL_TO_POST } = getConfig();
@@ -366,7 +354,7 @@ export const callRecurringEvent = () => {
       muteHttpExceptions: true,
     };
     const response = UrlFetchApp.fetch(API_URL, options);
-    const responseContent = RecurringEventResponse.parse(JSON.parse(response.getContentText()));
+    const responseContent = APIResponse.parse(JSON.parse(response.getContentText()));
     if (responseContent.error) {
       //NOTE: APIのレスポンスがある場合はエラーを出力する
       throw new Error(responseContent.error);
@@ -384,7 +372,7 @@ export const callRecurringEvent = () => {
       muteHttpExceptions: true,
     };
     const response = UrlFetchApp.fetch(API_URL, options);
-    const responseContent = RecurringEventResponse.parse(JSON.parse(response.getContentText()));
+    const responseContent = APIResponse.parse(JSON.parse(response.getContentText()));
     if (responseContent.error) {
       //NOTE: APIのレスポンスがある場合はエラーを出力する
       throw new Error(responseContent.error);

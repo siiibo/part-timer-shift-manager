@@ -134,7 +134,7 @@ export const doPost = (e: GoogleAppsScript.Events.DoPost): GoogleAppsScript.Cont
 
 export const shiftChanger = (
   parameter: ShiftChangeRequestSchema,
-): Result<never, string> | Result<Event[], string> | undefined => {
+): Result<Event[] | never, string> | undefined => {
   const operationType = parameter.operationType;
   const userEmail = parameter.userEmail;
   switch (operationType) {

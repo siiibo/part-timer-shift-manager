@@ -166,10 +166,11 @@ export const shiftChanger = (
   }
 };
 
-const registerEvents = (registerInfos: Event[], userEmail: string) => {
+const registerEvents = (registerInfos: Event[], userEmail: string): Result<string, never> => {
   registerInfos.forEach((registerInfo) => {
     registerEvent(registerInfo, userEmail);
   });
+  return ok("成功");
 };
 
 const registerEvent = (eventInfo: Event, userEmail: string) => {
@@ -184,9 +185,10 @@ const modifyEvents = (
     newEvent: Event;
   }[],
   userEmail: string,
-) => {
+): Result<string, never> => {
   const calendar = getCalendar();
   modifyInfos.forEach((eventInfo) => modifyEvent(eventInfo, calendar, userEmail));
+  return ok("成功");
 };
 
 const modifyEvent = (
@@ -206,9 +208,10 @@ const modifyEvent = (
   event.setTitle(newTitle);
 };
 
-const deleteEvents = (deleteInfos: Event[], userEmail: string) => {
+const deleteEvents = (deleteInfos: Event[], userEmail: string): Result<string, never> => {
   const calendar = getCalendar();
   deleteInfos.forEach((eventInfo) => deleteEvent(eventInfo, calendar, userEmail));
+  return ok("成功");
 };
 
 const deleteEvent = (eventInfo: Event, calendar: GoogleAppsScript.Calendar.Calendar, userEmail: string) => {
@@ -235,7 +238,7 @@ const showEvents = (userEmail: string, startDate: Date): Result<Event[], never> 
 const registerRecurringEvents = (
   { recurringInfo: { after, events } }: RegisterRecurringEventRequest,
   userEmail: string,
-) => {
+): Result<string, never> => {
   const calendar = getCalendar();
 
   events.forEach(({ title, startTime, endTime, dayOfWeek }) => {
@@ -249,12 +252,13 @@ const registerRecurringEvents = (
       guests: userEmail,
     });
   });
+  return ok("成功");
 };
 
 const modifyRecurringEvents = (
   { recurringInfo: { after, events } }: ModifyRecurringEventRequest,
   userEmail: string,
-): Result<never, string> | undefined => {
+): Result<string, string> => {
   const calendarId = getConfig().CALENDAR_ID;
   const advancedCalendar = getAdvancedCalendar();
 
@@ -317,12 +321,13 @@ const modifyRecurringEvents = (
       guests: userEmail,
     });
   });
+  return ok("成功");
 };
 
 const deleteRecurringEvents = (
   { recurringInfo: { after, dayOfWeeks } }: DeleteRecurringEventRequest,
   userEmail: string,
-): Result<never, string> | undefined => {
+): Result<string, string> => {
   const calendarId = getConfig().CALENDAR_ID;
   const advancedCalendar = getAdvancedCalendar();
 
@@ -369,6 +374,7 @@ const deleteRecurringEvents = (
     };
     advancedCalendar.update(data, calendarId, recurringEventId);
   });
+  return ok("成功");
 };
 
 const getCalendar = () => {

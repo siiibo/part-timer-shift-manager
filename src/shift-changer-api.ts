@@ -99,7 +99,6 @@ export type DeleteRecurringEventRequest = z.infer<typeof DeleteRecurringEventReq
 //NOTE: GASの仕様でレスポンスコードを返すことができないため、エラーメッセージを返す
 export const APIResponse = z.object({
   error: z.string().optional(),
-  ok: z.string().optional(),
   events: Event.array().optional(),
 });
 export type APIResponse = z.infer<typeof APIResponse>;

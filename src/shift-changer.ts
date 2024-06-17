@@ -161,7 +161,7 @@ export const callShowEvents = () => {
     throw new Error(response.getContentText());
   }
   const responseContent = APIResponse.parse(JSON.parse(response.getContentText()));
-  const eventInfos = responseContent.event;
+  const eventInfos = responseContent.events;
   if (!eventInfos || eventInfos.length === 0) throw new Error("no events");
 
   const moldedEventInfos = eventInfos.map(({ title, startTime, endTime }) => {

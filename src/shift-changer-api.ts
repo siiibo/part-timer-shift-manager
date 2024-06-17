@@ -99,8 +99,8 @@ export type DeleteRecurringEventRequest = z.infer<typeof DeleteRecurringEventReq
 //NOTE: GASの仕様でレスポンスコードを返すことができないため、エラーメッセージを返す
 export const APIResponse = z.object({
   error: z.string().optional(),
-  event: Event.array().optional(),
-  ok: z.literal("成功").optional(),
+  ok: z.string().optional(),
+  events: Event.array().optional(),
 });
 export type APIResponse = z.infer<typeof APIResponse>;
 
@@ -125,8 +125,13 @@ export const doPost = (e: GoogleAppsScript.Events.DoPost): GoogleAppsScript.Cont
     return ContentService.createTextOutput(JSON.stringify({ error: response.error })).setMimeType(
       ContentService.MimeType.JSON,
     );
-  const okResponse = APIResponse.parse(response.value);
-  return ContentService.createTextOutput(JSON.stringify(okResponse)).setMimeType(ContentService.MimeType.JSON);
+  if (response.value === "成功")
+    return ContentService.createTextOutput(JSON.stringify({ ok: response.value })).setMimeType(
+      ContentService.MimeType.JSON,
+    );
+  return ContentService.createTextOutput(JSON.stringify({ events: response.value })).setMimeType(
+    ContentService.MimeType.JSON,
+  );
 };
 
 export const shiftChanger = (

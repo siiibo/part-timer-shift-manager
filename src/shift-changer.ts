@@ -113,7 +113,10 @@ export const callRegistration = () => {
     muteHttpExceptions: true,
   };
   const { API_URL, SLACK_CHANNEL_TO_POST } = getConfig();
-  UrlFetchApp.fetch(API_URL, options);
+  const response = UrlFetchApp.fetch(API_URL, options);
+  if (response.getResponseCode() !== 200) {
+    throw new Error(response.getContentText());
+  }
   const messageToNotify = createRegistrationMessage(registrationInfos, comment, partTimerProfile);
   postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, messageToNotify, partTimerProfile);
   sheet.clear();
@@ -154,6 +157,9 @@ export const callShowEvents = () => {
   };
   const { API_URL } = getConfig();
   const response = UrlFetchApp.fetch(API_URL, options);
+  if (response.getResponseCode() !== 200) {
+    throw new Error(response.getContentText());
+  }
   const responseContent = APIResponse.parse(JSON.parse(response.getContentText()));
   const eventInfos = responseContent.event;
   if (!eventInfos || eventInfos.length === 0) throw new Error("no events");
@@ -221,7 +227,10 @@ export const callModificationAndDeletion = () => {
       payload: payload,
       muteHttpExceptions: true,
     };
-    UrlFetchApp.fetch(API_URL, options);
+    const response = UrlFetchApp.fetch(API_URL, options);
+    if (response.getResponseCode() !== 200) {
+      throw new Error(response.getContentText());
+    }
   }
   if (deletionRows.length > 0) {
     const deleteInfos = deletionRows.map(({ title, startTime, endTime }) => {

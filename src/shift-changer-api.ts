@@ -125,7 +125,7 @@ export const doPost = (e: GoogleAppsScript.Events.DoPost): GoogleAppsScript.Cont
       ContentService.MimeType.JSON,
     );
   if (result.value === "成功")
-    return ContentService.createTextOutput(JSON.stringify({ ok: result.value })).setMimeType(
+    return ContentService.createTextOutput("").setMimeType(
       ContentService.MimeType.JSON,
     );
   return ContentService.createTextOutput(JSON.stringify({ events: result.value })).setMimeType(

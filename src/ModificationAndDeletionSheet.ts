@@ -25,19 +25,31 @@ const DeletionRow = z.object({
 });
 type DeletionRow = z.infer<typeof DeletionRow>;
 
-const ModificationOrDeletionSheetRow = z.object({
-  title: z.string(),
-  date: z.date(),
-  startTime: z.date(),
-  endTime: z.date(),
-  newDate: DateOrEmptyString,
-  newStartTime: DateOrEmptyString,
-  newEndTime: DateOrEmptyString,
-  newRestStartTime: DateOrEmptyString,
-  newRestEndTime: DateOrEmptyString,
-  newWorkingStyle: z.literal("出社").or(z.literal("リモート")).or(z.literal("")),
-  isDeletionTarget: z.coerce.boolean(),
-});
+const ModificationOrDeletionSheetRow = z
+  .object({
+    title: z.string(),
+    date: z.date(),
+    startTime: z.date(),
+    endTime: z.date(),
+    newDate: DateOrEmptyString,
+    newStartTime: DateOrEmptyString,
+    newEndTime: DateOrEmptyString,
+    newRestStartTime: DateOrEmptyString,
+    newRestEndTime: DateOrEmptyString,
+    newWorkingStyle: z.literal("出社").or(z.literal("リモート")).or(z.literal("")),
+    isDeletionTarget: z.coerce.boolean(),
+  })
+  .refine(
+    (data) => {
+      if (data.newRestStartTime && data.newRestEndTime) {
+        return data.newRestStartTime < data.newRestEndTime;
+      }
+      return true;
+    },
+    {
+      message: "休憩時間の開始時間が終了時間よりも前になるようにしてください",
+    },
+  );
 type ModificationOrDeletionSheetRow = z.infer<typeof ModificationOrDeletionSheetRow>;
 
 const NoOperationRow = z.object({

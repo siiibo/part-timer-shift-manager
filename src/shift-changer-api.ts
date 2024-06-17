@@ -121,41 +121,34 @@ export const doGet = () => {
 export const doPost = (e: GoogleAppsScript.Events.DoPost): GoogleAppsScript.Content.TextOutput => {
   const parameter = ShiftChangeRequestSchema.parse(JSON.parse(e.postData.contents));
   const response = shiftChanger(parameter);
-  if (!response) {
-    return ContentService.createTextOutput(JSON.stringify({ ok: "成功" })).setMimeType(ContentService.MimeType.JSON);
-  } else {
-    return response.match(
-      (events) =>
-        ContentService.createTextOutput(JSON.stringify({ event: events })).setMimeType(ContentService.MimeType.JSON),
-      (error) => ContentService.createTextOutput(JSON.stringify({ error })).setMimeType(ContentService.MimeType.JSON),
+  if (response.isErr())
+    return ContentService.createTextOutput(JSON.stringify({ error: response.error })).setMimeType(
+      ContentService.MimeType.JSON,
     );
-  }
+  const okResponse = APIResponse.parse(response.value);
+  return ContentService.createTextOutput(JSON.stringify(okResponse)).setMimeType(ContentService.MimeType.JSON);
 };
 
 export const shiftChanger = (
   parameter: ShiftChangeRequestSchema,
-): Result<Event[] | never, string> | undefined => {
+): Result<Event[] | never, string> | Result<string, string> => {
   const operationType = parameter.operationType;
   const userEmail = parameter.userEmail;
   switch (operationType) {
     case "registerEvent": {
-      registerEvents(parameter.events, userEmail);
-      break;
+      return registerEvents(parameter.events, userEmail);
     }
     case "modifyEvent": {
-      modifyEvents(parameter.events, userEmail);
-      break;
+      return modifyEvents(parameter.events, userEmail);
     }
     case "deleteEvent": {
-      deleteEvents(parameter.events, userEmail);
-      break;
+      return deleteEvents(parameter.events, userEmail);
     }
     case "showEvents": {
       return showEvents(userEmail, parameter.startDate);
     }
     case "registerRecurringEvent": {
-      registerRecurringEvents(parameter, userEmail);
-      break;
+      return registerRecurringEvents(parameter, userEmail);
     }
     case "modifyRecurringEvent": {
       return modifyRecurringEvents(parameter, userEmail);

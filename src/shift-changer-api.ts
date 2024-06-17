@@ -187,7 +187,6 @@ const modifyEvents = (
 ) => {
   const calendar = getCalendar();
   modifyInfos.forEach((eventInfo) => modifyEvent(eventInfo, calendar, userEmail));
-  return ok("成功");
 };
 
 const modifyEvent = (
@@ -236,7 +235,7 @@ const showEvents = (userEmail: string, startDate: Date): Result<Event[], never> 
 const registerRecurringEvents = (
   { recurringInfo: { after, events } }: RegisterRecurringEventRequest,
   userEmail: string,
-): Result<string, never> => {
+) => {
   const calendar = getCalendar();
 
   events.forEach(({ title, startTime, endTime, dayOfWeek }) => {
@@ -250,7 +249,6 @@ const registerRecurringEvents = (
       guests: userEmail,
     });
   });
-  return ok("成功");
 };
 
 const modifyRecurringEvents = (

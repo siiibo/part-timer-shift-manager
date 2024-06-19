@@ -155,8 +155,10 @@ export const callShowEvents = () => {
   const { API_URL } = getConfig();
   const response = UrlFetchApp.fetch(API_URL, options);
   const responseContent = APIResponse.parse(JSON.parse(response.getContentText()));
+  if (!("events" in responseContent) || responseContent.events.length === 0) {
+    throw new Error("no events");
+  }
   const eventInfos = responseContent.events;
-  if (!eventInfos || eventInfos.length === 0) throw new Error("no events");
 
   const moldedEventInfos = eventInfos.map(({ title, startTime, endTime }) => {
     const dateStr = format(startTime, "yyyy/MM/dd");
@@ -355,7 +357,7 @@ export const callRecurringEvent = () => {
     };
     const response = UrlFetchApp.fetch(API_URL, options);
     const responseContent = APIResponse.parse(JSON.parse(response.getContentText()));
-    if (responseContent.error) {
+    if ("error" in responseContent) {
       //NOTE: APIのレスポンスがある場合はエラーを出力する
       throw new Error(responseContent.error);
     }
@@ -373,7 +375,7 @@ export const callRecurringEvent = () => {
     };
     const response = UrlFetchApp.fetch(API_URL, options);
     const responseContent = APIResponse.parse(JSON.parse(response.getContentText()));
-    if (responseContent.error) {
+    if ("error" in responseContent) {
       //NOTE: APIのレスポンスがある場合はエラーを出力する
       throw new Error(responseContent.error);
     }

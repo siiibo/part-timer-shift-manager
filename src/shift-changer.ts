@@ -155,7 +155,10 @@ export const callShowEvents = () => {
   const { API_URL } = getConfig();
   const response = UrlFetchApp.fetch(API_URL, options);
   const responseContent = APIResponse.parse(JSON.parse(response.getContentText()));
-  if (!("events" in responseContent) || responseContent.events.length === 0) {
+  if ("error" in responseContent) {
+    throw new Error(responseContent.error);
+  }
+  if (responseContent.events.length === 0) {
     throw new Error("no events");
   }
   const eventInfos = responseContent.events;

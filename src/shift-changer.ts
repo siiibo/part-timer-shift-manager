@@ -359,10 +359,13 @@ export const callRecurringEvent = () => {
       muteHttpExceptions: true,
     };
     const response = UrlFetchApp.fetch(API_URL, options);
-    const responseContent = APIResponse.parse(JSON.parse(response.getContentText()));
-    if ("error" in responseContent) {
-      //NOTE: APIのレスポンスがある場合はエラーを出力する
-      throw new Error(responseContent.error);
+    const content = response.getContentText();
+    if (content) {
+      const responseContent = APIResponse.parse(JSON.parse(content));
+      if ("error" in responseContent) {
+        //NOTE: APIのレスポンスがある場合はエラーを出力する
+        throw new Error(responseContent.error);
+      }
     }
   }
   if (deleteDayOfWeeks.length > 0) {
@@ -377,10 +380,13 @@ export const callRecurringEvent = () => {
       muteHttpExceptions: true,
     };
     const response = UrlFetchApp.fetch(API_URL, options);
-    const responseContent = APIResponse.parse(JSON.parse(response.getContentText()));
-    if ("error" in responseContent) {
-      //NOTE: APIのレスポンスがある場合はエラーを出力する
-      throw new Error(responseContent.error);
+    const content = response.getContentText();
+    if (content) {
+      const responseContent = APIResponse.parse(JSON.parse(content));
+      if ("error" in responseContent) {
+        //NOTE: APIのレスポンスがある場合はエラーを出力する
+        throw new Error(responseContent.error);
+      }
     }
   }
 

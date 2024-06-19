@@ -126,6 +126,7 @@ export const doPost = (e: GoogleAppsScript.Events.DoPost): GoogleAppsScript.Cont
   const result = shiftChanger(parameter);
   return result.match(
     (result) => {
+      //NOTE: reusltが"成功"以外の場合はShowEventで用いるEventを返す
       if (result === "成功") {
         return ContentService.createTextOutput("").setMimeType(ContentService.MimeType.JSON);
       } else {

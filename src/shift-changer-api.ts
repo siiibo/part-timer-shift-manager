@@ -121,9 +121,16 @@ export const doPost = (e: GoogleAppsScript.Events.DoPost): GoogleAppsScript.Cont
   const parameter = ShiftChangeRequestSchema.parse(JSON.parse(e.postData.contents));
   const result = shiftChanger(parameter);
   return result.match(
-    (ok) => {
-      if (ok === "成功") return ContentService.createTextOutput("").setMimeType(ContentService.MimeType.JSON);
-      return ContentService.createTextOutput(JSON.stringify({ events: ok })).setMimeType(ContentService.MimeType.JSON);
+    (result) => {
+      if (result === "成功") {
+        return ContentService.createTextOutput(JSON.stringify({ ok: "成功" })).setMimeType(
+          ContentService.MimeType.JSON,
+        );
+      } else {
+        return ContentService.createTextOutput(JSON.stringify({ events: result })).setMimeType(
+          ContentService.MimeType.JSON,
+        );
+      }
     },
     (error) => {
       return ContentService.createTextOutput(JSON.stringify({ error })).setMimeType(ContentService.MimeType.JSON);
@@ -131,9 +138,7 @@ export const doPost = (e: GoogleAppsScript.Events.DoPost): GoogleAppsScript.Cont
   );
 };
 
-export const shiftChanger = (
-  parameter: ShiftChangeRequestSchema,
-): Result<Event[] | string | never, string> => {
+export const shiftChanger = (parameter: ShiftChangeRequestSchema): Result<Event[] | string | never, string> => {
   const operationType = parameter.operationType;
   const userEmail = parameter.userEmail;
   switch (operationType) {

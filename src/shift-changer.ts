@@ -360,6 +360,7 @@ export const callRecurringEvent = () => {
     };
     const response = UrlFetchApp.fetch(API_URL, options);
     const content = response.getContentText();
+    //NOTE: contentが空白文字の場合にJSON.parseするとエラーが発生するため、空文字の場合は処理をスキップする
     if (content) {
       const responseContent = APIResponse.parse(JSON.parse(content));
       if ("error" in responseContent) {
@@ -381,6 +382,7 @@ export const callRecurringEvent = () => {
     };
     const response = UrlFetchApp.fetch(API_URL, options);
     const content = response.getContentText();
+    //NOTE: contentが空白文字の場合にJSON.parseするとエラーが発生するため、空文字の場合は処理をスキップする
     if (content) {
       const responseContent = APIResponse.parse(JSON.parse(content));
       if ("error" in responseContent) {

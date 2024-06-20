@@ -104,6 +104,9 @@ export const APIResponse = z.union([
   z.object({
     events: Event.array(),
   }),
+  z.object({
+    ok: z.literal("成功"),
+  }),
 ]);
 export type APIResponse = z.infer<typeof APIResponse>;
 
@@ -128,7 +131,9 @@ export const doPost = (e: GoogleAppsScript.Events.DoPost): GoogleAppsScript.Cont
     (result) => {
       //NOTE: reusltが"成功"以外の場合はShowEventで用いるEventを返す
       if (result === "成功") {
-        return ContentService.createTextOutput("").setMimeType(ContentService.MimeType.JSON);
+        return ContentService.createTextOutput(JSON.stringify({ ok: "成功" })).setMimeType(
+          ContentService.MimeType.JSON,
+        );
       } else {
         return ContentService.createTextOutput(JSON.stringify({ events: result })).setMimeType(
           ContentService.MimeType.JSON,

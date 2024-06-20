@@ -1,5 +1,6 @@
 import { GasWebClient as SlackClient } from "@hi-se/web-api";
 import { format } from "date-fns";
+import { object } from "zod";
 
 import { DayOfWeek } from "./common.schema";
 import { getConfig } from "./config";
@@ -158,7 +159,7 @@ export const callShowEvents = () => {
   if ("error" in responseContent) {
     throw new Error(responseContent.error);
   }
-  if (responseContent.events.length === 0) {
+  if (!("events" in responseContent) || responseContent.events.length === 0) {
     throw new Error("no events");
   }
 
@@ -358,14 +359,10 @@ export const callRecurringEvent = () => {
       muteHttpExceptions: true,
     };
     const response = UrlFetchApp.fetch(API_URL, options);
-    const content = response.getContentText();
-    //NOTE: contentが空白文字の場合にJSON.parseするとエラーが発生するため、空文字の場合は処理をスキップする
-    if (content) {
-      const responseContent = APIResponse.parse(JSON.parse(content));
-      if ("error" in responseContent) {
-        //NOTE: APIのレスポンスがある場合はエラーを出力する
-        throw new Error(responseContent.error);
-      }
+    const responseContent = APIResponse.parse(JSON.parse(response.getContentText()));
+    if ("error" in responseContent) {
+      //NOTE: APIのレスポンスがある場合はエラーを出力する
+      throw new Error(responseContent.error);
     }
   }
   if (deleteDayOfWeeks.length > 0) {
@@ -380,14 +377,10 @@ export const callRecurringEvent = () => {
       muteHttpExceptions: true,
     };
     const response = UrlFetchApp.fetch(API_URL, options);
-    const content = response.getContentText();
-    //NOTE: contentが空白文字の場合にJSON.parseするとエラーが発生するため、空文字の場合は処理をスキップする
-    if (content) {
-      const responseContent = APIResponse.parse(JSON.parse(content));
-      if ("error" in responseContent) {
-        //NOTE: APIのレスポンスがある場合はエラーを出力する
-        throw new Error(responseContent.error);
-      }
+    const responseContent = APIResponse.parse(JSON.parse(response.getContentText()));
+    if (typeof object && "error" in responseContent) {
+      //NOTE: APIのレスポンスがある場合はエラーを出力する
+      throw new Error(responseContent.error);
     }
   }
 

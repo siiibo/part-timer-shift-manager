@@ -161,9 +161,8 @@ export const callShowEvents = () => {
   if (responseContent.events.length === 0) {
     throw new Error("no events");
   }
-  const eventInfos = responseContent.events;
 
-  const moldedEventInfos = eventInfos.map(({ title, startTime, endTime }) => {
+  const moldedEventInfos = responseContent.events.map(({ title, startTime, endTime }) => {
     const dateStr = format(startTime, "yyyy/MM/dd");
     const startTimeStr = format(startTime, "HH:mm");
     const endTimeStr = format(endTime, "HH:mm");

@@ -17,12 +17,12 @@ import {
 } from "./RecurringEventSheet";
 import { getRegistrationRows, insertRegistrationSheet, setValuesRegistrationSheet } from "./RegistrationSheet";
 import {
+  APIResponse,
   DeleteEventRequest,
   DeleteRecurringEventRequest,
   Event,
   ModifyEventRequest,
   ModifyRecurringEventRequest,
-  RecurringEventResponse,
   RegisterEventRequest,
   RegisterRecurringEventRequest,
   ShowEventRequest,
@@ -113,10 +113,7 @@ export const callRegistration = () => {
     muteHttpExceptions: true,
   };
   const { API_URL, SLACK_CHANNEL_TO_POST } = getConfig();
-  const response = UrlFetchApp.fetch(API_URL, options);
-  if (response.getResponseCode() !== 200) {
-    throw new Error(response.getContentText());
-  }
+  UrlFetchApp.fetch(API_URL, options);
   const messageToNotify = createRegistrationMessage(registrationInfos, comment, partTimerProfile);
   postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, messageToNotify, partTimerProfile);
   sheet.clear();
@@ -157,14 +154,15 @@ export const callShowEvents = () => {
   };
   const { API_URL } = getConfig();
   const response = UrlFetchApp.fetch(API_URL, options);
-  if (response.getResponseCode() !== 200) {
-    throw new Error(response.getContentText());
+  const responseContent = APIResponse.parse(JSON.parse(response.getContentText()));
+  if ("error" in responseContent) {
+    throw new Error(responseContent.error);
   }
-  const eventInfos = Event.array().parse(JSON.parse(response.getContentText()));
+  if (responseContent.events.length === 0) {
+    throw new Error("no events");
+  }
 
-  if (eventInfos.length === 0) throw new Error("no events");
-
-  const moldedEventInfos = eventInfos.map(({ title, startTime, endTime }) => {
+  const eventInfos = responseContent.events.map(({ title, startTime, endTime }) => {
     const dateStr = format(startTime, "yyyy/MM/dd");
     const startTimeStr = format(startTime, "HH:mm");
     const endTimeStr = format(endTime, "HH:mm");
@@ -175,7 +173,7 @@ export const callShowEvents = () => {
     sheet.getRange(9, 1, sheet.getLastRow() - 8, sheet.getLastColumn()).clearContent();
   }
 
-  sheet.getRange(9, 1, moldedEventInfos.length, moldedEventInfos[0].length).setValues(moldedEventInfos);
+  sheet.getRange(9, 1, eventInfos.length, eventInfos[0].length).setValues(eventInfos);
 };
 
 export const callModificationAndDeletion = () => {
@@ -227,10 +225,7 @@ export const callModificationAndDeletion = () => {
       payload: payload,
       muteHttpExceptions: true,
     };
-    const response = UrlFetchApp.fetch(API_URL, options);
-    if (response.getResponseCode() !== 200) {
-      throw new Error(response.getContentText());
-    }
+    UrlFetchApp.fetch(API_URL, options);
   }
   if (deletionRows.length > 0) {
     const deleteInfos = deletionRows.map(({ title, startTime, endTime }) => {
@@ -246,10 +241,7 @@ export const callModificationAndDeletion = () => {
       payload: payload,
       muteHttpExceptions: true,
     };
-    const response = UrlFetchApp.fetch(API_URL, options);
-    if (response.getResponseCode() !== 200) {
-      throw new Error(response.getContentText());
-    }
+    UrlFetchApp.fetch(API_URL, options);
   }
 
   const { SLACK_CHANNEL_TO_POST } = getConfig();
@@ -366,8 +358,8 @@ export const callRecurringEvent = () => {
       muteHttpExceptions: true,
     };
     const response = UrlFetchApp.fetch(API_URL, options);
-    const responseContent = RecurringEventResponse.parse(JSON.parse(response.getContentText()));
-    if (responseContent.error) {
+    const responseContent = APIResponse.parse(JSON.parse(response.getContentText()));
+    if ("error" in responseContent) {
       //NOTE: APIのレスポンスがある場合はエラーを出力する
       throw new Error(responseContent.error);
     }
@@ -384,8 +376,8 @@ export const callRecurringEvent = () => {
       muteHttpExceptions: true,
     };
     const response = UrlFetchApp.fetch(API_URL, options);
-    const responseContent = RecurringEventResponse.parse(JSON.parse(response.getContentText()));
-    if (responseContent.error) {
+    const responseContent = APIResponse.parse(JSON.parse(response.getContentText()));
+    if ("error" in responseContent) {
       //NOTE: APIのレスポンスがある場合はエラーを出力する
       throw new Error(responseContent.error);
     }

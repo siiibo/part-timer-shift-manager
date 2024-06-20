@@ -346,6 +346,7 @@ export const callRecurringEvent = () => {
     };
     UrlFetchApp.fetch(API_URL, options);
   }
+  let beforeModificationInfos: { title: string; startTime: Date; endTime: Date }[] = [];
   if (modificationInfos.length > 0) {
     const payload = JSON.stringify({
       ...basePayload,
@@ -363,6 +364,7 @@ export const callRecurringEvent = () => {
       //NOTE: APIのレスポンスがある場合はエラーを出力する
       throw new Error(responseContent.error);
     }
+    beforeModificationInfos = responseContent.events;
   }
   if (deleteDayOfWeeks.length > 0) {
     const payload = JSON.stringify({
@@ -390,6 +392,7 @@ export const callRecurringEvent = () => {
     modificationInfos,
     deleteInfos,
     comment,
+    beforeModificationInfos,
   );
 
   const { SLACK_ACCESS_TOKEN, SLACK_CHANNEL_TO_POST } = getConfig();
@@ -407,15 +410,24 @@ const createMessageForRecurringEvent = (
   modificationInfos: { title: string; dayOfWeek: DayOfWeek; startTime: Date; endTime: Date }[],
   deletionInfos: { dayOfWeek: DayOfWeek }[],
   comment: string | undefined,
+  beforeModificationInfos?: { title: string; startTime: Date; endTime: Date }[],
 ): string => {
   const registrationMessages = registrationInfos.map(
     ({ title, dayOfWeek, startTime, endTime }) =>
       `${dayOfWeek} : ${title} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`,
   );
   const modificationMessages = modificationInfos.map(
-    ({ title, dayOfWeek, startTime, endTime }) =>
-      `${dayOfWeek} : ${title} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`,
+    ({ title, startTime, endTime }) => `${title} : ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`,
   );
+  const beforeModificationMessage = beforeModificationInfos ?? [];
+  const beforeModificationMessages = beforeModificationMessage.map(
+    ({ title, startTime, endTime }) => `${title} : ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`,
+  );
+  const mergeModificationMessagesList = [];
+  for (let i = 0; i < modificationMessages.length; i++) {
+    mergeModificationMessagesList[i] =
+      `${modificationInfos[i].dayOfWeek} \n ${beforeModificationMessages[i]}\n↓\n${modificationMessages[i]}`;
+  }
   const deletionMessages = deletionInfos.map(({ dayOfWeek }) => `${dayOfWeek}`).join(", ");
 
   const message = [
@@ -423,8 +435,8 @@ const createMessageForRecurringEvent = (
     registrationMessages.length > 0
       ? `${job}${lastName}さんの以下の繰り返し予定が追加されました\n${registrationMessages.join("\n")}`
       : "",
-    modificationMessages.length > 0
-      ? `${job}${lastName}さんの以下の繰り返し予定が変更されました\n${modificationMessages.join("\n")}`
+    mergeModificationMessagesList?.length > 0
+      ? `${job}${lastName}さんの以下の繰り返し予定が変更されました\n${mergeModificationMessagesList.join("\n")}`
       : "",
     deletionMessages.length > 0 ? `${job}${lastName}さんの以下の繰り返し予定が削除されました\n${deletionMessages}` : "",
   ]

@@ -1,6 +1,5 @@
 import { GasWebClient as SlackClient } from "@hi-se/web-api";
 import { format } from "date-fns";
-import { object } from "zod";
 
 import { DayOfWeek } from "./common.schema";
 import { getConfig } from "./config";
@@ -378,7 +377,7 @@ export const callRecurringEvent = () => {
     };
     const response = UrlFetchApp.fetch(API_URL, options);
     const responseContent = APIResponse.parse(JSON.parse(response.getContentText()));
-    if (typeof object && "error" in responseContent) {
+    if ("error" in responseContent) {
       //NOTE: APIのレスポンスがある場合はエラーを出力する
       throw new Error(responseContent.error);
     }

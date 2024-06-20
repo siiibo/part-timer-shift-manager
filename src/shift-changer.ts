@@ -392,7 +392,7 @@ export const callRecurringEvent = () => {
     modificationInfos,
     deleteInfos,
     comment,
-    beforeModificationInfos,
+    beforeModificationInfos ?? undefined,
   );
 
   const { SLACK_ACCESS_TOKEN, SLACK_CHANNEL_TO_POST } = getConfig();

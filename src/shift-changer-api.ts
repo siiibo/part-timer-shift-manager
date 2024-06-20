@@ -104,9 +104,6 @@ export const APIResponse = z.union([
   z.object({
     events: Event.array(),
   }),
-  z.object({
-    ok: z.literal("成功"),
-  }),
 ]);
 export type APIResponse = z.infer<typeof APIResponse>;
 
@@ -127,23 +124,14 @@ export const doGet = () => {
 export const doPost = (e: GoogleAppsScript.Events.DoPost): GoogleAppsScript.Content.TextOutput => {
   const parameter = ShiftChangeRequestSchema.parse(JSON.parse(e.postData.contents));
   const result = shiftChanger(parameter);
-  return result.match(
-    (result) => {
-      //NOTE: reusltが"成功"以外の場合はShowEventで用いるEventを返す
-      if (result === "成功") {
-        return ContentService.createTextOutput(JSON.stringify({ ok: "成功" })).setMimeType(
-          ContentService.MimeType.JSON,
-        );
-      } else {
-        return ContentService.createTextOutput(JSON.stringify({ events: result })).setMimeType(
-          ContentService.MimeType.JSON,
-        );
-      }
-    },
-    (error) => {
-      return ContentService.createTextOutput(JSON.stringify({ error })).setMimeType(ContentService.MimeType.JSON);
-    },
-  );
+  return result
+    .match(
+      (maybeEvent) =>
+        // NOTE: 2024/06時点ではshowEventsのみeventsを返す
+        ContentService.createTextOutput(JSON.stringify({ events: maybeEvent === "成功" ? [] : maybeEvent })),
+      (error) => ContentService.createTextOutput(JSON.stringify({ error })),
+    )
+    .setMimeType(ContentService.MimeType.JSON);
 };
 
 export const shiftChanger = (parameter: ShiftChangeRequestSchema): Result<Event[] | string | never, string> => {

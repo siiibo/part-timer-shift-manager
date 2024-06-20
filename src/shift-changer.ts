@@ -158,7 +158,7 @@ export const callShowEvents = () => {
   if ("error" in responseContent) {
     throw new Error(responseContent.error);
   }
-  if (!("events" in responseContent) || responseContent.events.length === 0) {
+  if (responseContent.events.length === 0) {
     throw new Error("no events");
   }
 

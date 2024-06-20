@@ -162,7 +162,7 @@ export const callShowEvents = () => {
     throw new Error("no events");
   }
 
-  const moldedEventInfos = responseContent.events.map(({ title, startTime, endTime }) => {
+  const eventInfos = responseContent.events.map(({ title, startTime, endTime }) => {
     const dateStr = format(startTime, "yyyy/MM/dd");
     const startTimeStr = format(startTime, "HH:mm");
     const endTimeStr = format(endTime, "HH:mm");
@@ -173,7 +173,7 @@ export const callShowEvents = () => {
     sheet.getRange(9, 1, sheet.getLastRow() - 8, sheet.getLastColumn()).clearContent();
   }
 
-  sheet.getRange(9, 1, moldedEventInfos.length, moldedEventInfos[0].length).setValues(moldedEventInfos);
+  sheet.getRange(9, 1, eventInfos.length, eventInfos[0].length).setValues(eventInfos);
 };
 
 export const callModificationAndDeletion = () => {

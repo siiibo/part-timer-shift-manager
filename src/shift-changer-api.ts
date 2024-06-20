@@ -254,7 +254,7 @@ const registerRecurringEvents = (
 const modifyRecurringEvents = (
   { recurringInfo: { after, events } }: ModifyRecurringEventRequest,
   userEmail: string,
-): Result<string, string> => {
+): Result<Event[], string> => {
   const calendarId = getConfig().CALENDAR_ID;
   const advancedCalendar = getAdvancedCalendar();
 
@@ -283,6 +283,15 @@ const modifyRecurringEvents = (
     const eventDetail = advancedCalendar.get(calendarId, recurringEventId);
     return { eventDetail, recurrenceEndDate, recurringEventId };
   });
+  const beforeEvents = detailedEventItems
+    .map(({ eventDetail }) => {
+      if (!eventDetail.start?.dateTime || !eventDetail.end?.dateTime || !eventDetail.summary) return;
+      const title = eventDetail.summary;
+      const startTime = new Date(eventDetail.start.dateTime);
+      const endTime = new Date(eventDetail.end.dateTime);
+      return { title, startTime, endTime };
+    })
+    .filter(isNotUndefined);
 
   detailedEventItems.forEach(({ eventDetail, recurrenceEndDate, recurringEventId }) => {
     if (!eventDetail.start?.dateTime || !eventDetail.end?.dateTime) return;
@@ -317,7 +326,7 @@ const modifyRecurringEvents = (
       guests: userEmail,
     });
   });
-  return ok("成功");
+  return ok(beforeEvents);
 };
 
 const deleteRecurringEvents = (

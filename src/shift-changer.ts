@@ -327,12 +327,10 @@ export const callRecurringEvent = () => {
   const deleteDayOfWeeks = deletionRows.map((deletionRow) => {
     return deletionRow.dayOfWeek;
   });
-  const deleteInfos = deleteDayOfWeeks.map((deletionRow) => {
-    return { dayOfWeek: deletionRow };
-  });
 
   const basePayload = { apiId: "shift-changer", userEmail: userEmail } as const;
   const { API_URL } = getConfig();
+  let registerEventStrings = "";
   if (registrationInfos.length > 0) {
     const payload = JSON.stringify({
       ...basePayload,
@@ -345,8 +343,9 @@ export const callRecurringEvent = () => {
       muteHttpExceptions: true,
     };
     UrlFetchApp.fetch(API_URL, options);
+    registerEventStrings = createRegisterMessageForRecurringEvent(registrationInfos, partTimerProfile);
   }
-  let beforeModificationInfos: { title: string; startTime: Date; endTime: Date }[] = [];
+  let modifyEventStrings = "";
   if (modificationInfos.length > 0) {
     const payload = JSON.stringify({
       ...basePayload,
@@ -364,8 +363,13 @@ export const callRecurringEvent = () => {
       //NOTE: APIのレスポンスがある場合はエラーを出力する
       throw new Error(responseContent.error);
     }
-    beforeModificationInfos = responseContent.events;
+    modifyEventStrings = createModifyMessageForRecurringEvent(
+      responseContent?.events,
+      modificationInfos,
+      partTimerProfile,
+    );
   }
+  let deleteEventStrings = "";
   if (deleteDayOfWeeks.length > 0) {
     const payload = JSON.stringify({
       ...basePayload,
@@ -383,15 +387,13 @@ export const callRecurringEvent = () => {
       //NOTE: APIのレスポンスがある場合はエラーを出力する
       throw new Error(responseContent.error);
     }
+    deleteEventStrings = createDeleteMessageForRecurringEvent(deleteDayOfWeeks, partTimerProfile);
   }
-
   const recurringEventMessageToNotify = createMessageForRecurringEvent(
     after,
-    partTimerProfile,
-    registrationInfos,
-    beforeModificationInfos,
-    modificationInfos,
-    deleteInfos,
+    registerEventStrings,
+    modifyEventStrings,
+    deleteEventStrings,
     comment,
   );
 
@@ -403,39 +405,59 @@ export const callRecurringEvent = () => {
   setValuesRecurringEventSheet(sheet);
 };
 
-const createMessageForRecurringEvent = (
-  after: Date,
-  { job, lastName }: PartTimerProfile,
+const createRegisterMessageForRecurringEvent = (
   registrationInfos: { title: string; dayOfWeek: DayOfWeek; startTime: Date; endTime: Date }[],
+  partTimerProfile: PartTimerProfile,
+): string => {
+  const messages = registrationInfos.map(({ title, dayOfWeek, startTime, endTime }) => {
+    return `${dayOfWeek} : ${title} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
+  });
+  const { job, lastName } = partTimerProfile;
+  const messageTitle = `${job}${lastName}さんの以下の繰り返し予定が追加されました。`;
+  return `${messageTitle}\n${messages.join("\n")}`;
+};
+
+const createModifyMessageForRecurringEvent = (
   beforeModificationInfos: { title: string; startTime: Date; endTime: Date }[],
   modificationInfos: { title: string; dayOfWeek: DayOfWeek; startTime: Date; endTime: Date }[],
-  deletionInfos: { dayOfWeek: DayOfWeek }[],
+  { job, lastName }: PartTimerProfile,
+): string => {
+  const beforeMessages = beforeModificationInfos.map(({ title, startTime, endTime }) => {
+    return `${title} : ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
+  });
+  const afterMessages = modificationInfos.map(({ title, startTime, endTime }) => {
+    return `${title} : ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
+  });
+  const messages = beforeMessages.map((message, index) => {
+    return `${modificationInfos[index].dayOfWeek} \n ${message}\n↓\n${afterMessages[index]}`;
+  });
+  const messageTitle = `${job}${lastName}さんの以下の繰り返し予定が変更されました。`;
+  return `${messageTitle}\n${messages.join("\n")}`;
+};
+
+const createDeleteMessageForRecurringEvent = (
+  deletionInfos: DayOfWeek[],
+  { job, lastName }: PartTimerProfile,
+): string => {
+  const messages = deletionInfos.map((DayOfWeek) => {
+    return `${DayOfWeek}`;
+  });
+  const messageTitle = `${job}${lastName}さんの以下の繰り返し予定が削除されました。`;
+  return `${messageTitle}\n${messages.join("\n")}`;
+};
+
+const createMessageForRecurringEvent = (
+  after: Date,
+  registerEventStrings: string,
+  modifyEventStrings: string,
+  deleteEventStrings: string,
   comment: string | undefined,
 ): string => {
-  const registrationMessages = registrationInfos.map(
-    ({ title, dayOfWeek, startTime, endTime }) =>
-      `${dayOfWeek} : ${title} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`,
-  );
-  const beforeModificationMessages = beforeModificationInfos.map(
-    ({ title, startTime, endTime }) => `${title} : ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`,
-  );
-  const afterModificationMessages = modificationInfos.map(
-    ({ title, startTime, endTime }) => `${title} : ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`,
-  );
-  const modificationMessages = beforeModificationMessages.map(
-    (message, index) => `${modificationInfos[index].dayOfWeek} \n ${message}\n↓\n${afterModificationMessages[index]}`,
-  );
-  const deletionMessages = deletionInfos.map(({ dayOfWeek }) => `${dayOfWeek}`).join(", ");
-
   const message = [
     `${format(after, "yyyy/MM/dd")}以降の繰り返し予定を変更しました`,
-    registrationMessages.length > 0
-      ? `${job}${lastName}さんの以下の繰り返し予定が追加されました\n${registrationMessages.join("\n")}`
-      : "",
-    modificationMessages?.length > 0
-      ? `${job}${lastName}さんの以下の繰り返し予定が変更されました\n${modificationMessages.join("\n")}`
-      : "",
-    deletionMessages.length > 0 ? `${job}${lastName}さんの以下の繰り返し予定が削除されました\n${deletionMessages}` : "",
+    registerEventStrings,
+    modifyEventStrings,
+    deleteEventStrings,
   ]
     .filter(Boolean)
     .join("\n---\n");

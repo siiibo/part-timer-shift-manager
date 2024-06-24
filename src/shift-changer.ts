@@ -423,7 +423,7 @@ const createMessageForRecurringEvent = (
     ({ title, startTime, endTime }) => `${title} : ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`,
   );
   const mergeModificationMessagesList = [];
-  for (let i = 0; i < modificationMessages.length; i++) {
+  for (let i = 0; i < beforeModificationMessages.length; i++) {
     mergeModificationMessagesList[i] =
       `${modificationInfos[i].dayOfWeek} \n ${beforeModificationMessages[i]}\n↓\n${modificationMessages[i]}`;
   }

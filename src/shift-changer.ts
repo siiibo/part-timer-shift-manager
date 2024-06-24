@@ -330,7 +330,6 @@ export const callRecurringEvent = () => {
 
   const basePayload = { apiId: "shift-changer", userEmail: userEmail } as const;
   const { API_URL } = getConfig();
-  let registerEventStrings = "";
   if (registrationInfos.length > 0) {
     const payload = JSON.stringify({
       ...basePayload,
@@ -343,7 +342,6 @@ export const callRecurringEvent = () => {
       muteHttpExceptions: true,
     };
     UrlFetchApp.fetch(API_URL, options);
-    registerEventStrings = createRegisterMessageForRecurringEvent(registrationInfos, partTimerProfile);
   }
   let modifyEventStrings = "";
   if (modificationInfos.length > 0) {
@@ -369,7 +367,6 @@ export const callRecurringEvent = () => {
       partTimerProfile,
     );
   }
-  let deleteEventStrings = "";
   if (deleteDayOfWeeks.length > 0) {
     const payload = JSON.stringify({
       ...basePayload,
@@ -387,13 +384,12 @@ export const callRecurringEvent = () => {
       //NOTE: APIのレスポンスがある場合はエラーを出力する
       throw new Error(responseContent.error);
     }
-    deleteEventStrings = createDeleteMessageForRecurringEvent(deleteDayOfWeeks, partTimerProfile);
   }
   const recurringEventMessageToNotify = createMessageForRecurringEvent(
     after,
-    registerEventStrings,
-    modifyEventStrings,
-    deleteEventStrings,
+    createRegisterMessageForRecurringEvent(registrationInfos, partTimerProfile),
+    modifyEventStrings, //NOTE: 繰り返し予定の変更APIの情報を利用するため、modifyEventStringsを利用する
+    createDeleteMessageForRecurringEvent(deleteDayOfWeeks, partTimerProfile),
     comment,
   );
 

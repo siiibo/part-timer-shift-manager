@@ -419,14 +419,12 @@ const createMessageForRecurringEvent = (
   const beforeModificationMessages = beforeModificationInfos.map(
     ({ title, startTime, endTime }) => `${title} : ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`,
   );
-  const modificationMessages = modificationInfos.map(
+  const afterModificationMessages = modificationInfos.map(
     ({ title, startTime, endTime }) => `${title} : ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`,
   );
-  const mergeModificationMessagesList = [];
-  for (let i = 0; i < beforeModificationMessages.length; i++) {
-    mergeModificationMessagesList[i] =
-      `${modificationInfos[i].dayOfWeek} \n ${beforeModificationMessages[i]}\n↓\n${modificationMessages[i]}`;
-  }
+  const modificationMessages = beforeModificationMessages.map(
+    (message, index) => `${modificationInfos[index].dayOfWeek} \n ${message}\n↓\n${afterModificationMessages[index]}`,
+  );
   const deletionMessages = deletionInfos.map(({ dayOfWeek }) => `${dayOfWeek}`).join(", ");
 
   const message = [
@@ -434,8 +432,8 @@ const createMessageForRecurringEvent = (
     registrationMessages.length > 0
       ? `${job}${lastName}さんの以下の繰り返し予定が追加されました\n${registrationMessages.join("\n")}`
       : "",
-    mergeModificationMessagesList?.length > 0
-      ? `${job}${lastName}さんの以下の繰り返し予定が変更されました\n${mergeModificationMessagesList.join("\n")}`
+    modificationMessages?.length > 0
+      ? `${job}${lastName}さんの以下の繰り返し予定が変更されました\n${modificationMessages.join("\n")}`
       : "",
     deletionMessages.length > 0 ? `${job}${lastName}さんの以下の繰り返し予定が削除されました\n${deletionMessages}` : "",
   ]

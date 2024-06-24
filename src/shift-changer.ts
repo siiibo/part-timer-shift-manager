@@ -389,10 +389,10 @@ export const callRecurringEvent = () => {
     after,
     partTimerProfile,
     registrationInfos,
+    beforeModificationInfos,
     modificationInfos,
     deleteInfos,
     comment,
-    beforeModificationInfos,
   );
 
   const { SLACK_ACCESS_TOKEN, SLACK_CHANNEL_TO_POST } = getConfig();
@@ -407,10 +407,10 @@ const createMessageForRecurringEvent = (
   after: Date,
   { job, lastName }: PartTimerProfile,
   registrationInfos: { title: string; dayOfWeek: DayOfWeek; startTime: Date; endTime: Date }[],
+  beforeModificationInfos: { title: string; startTime: Date; endTime: Date }[],
   modificationInfos: { title: string; dayOfWeek: DayOfWeek; startTime: Date; endTime: Date }[],
   deletionInfos: { dayOfWeek: DayOfWeek }[],
   comment: string | undefined,
-  beforeModificationInfos: { title: string; startTime: Date; endTime: Date }[],
 ): string => {
   const registrationMessages = registrationInfos.map(
     ({ title, dayOfWeek, startTime, endTime }) =>

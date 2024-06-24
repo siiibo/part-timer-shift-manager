@@ -283,35 +283,33 @@ const modifyRecurringEvents = (
     const eventDetail = advancedCalendar.get(calendarId, recurringEventId);
     return { eventDetail, recurrenceEndDate, recurringEventId };
   });
+
   const beforeEvents = detailedEventItems
-    .map(({ eventDetail }) => {
+    .map(({ eventDetail, recurrenceEndDate, recurringEventId }) => {
       if (!eventDetail.start?.dateTime || !eventDetail.end?.dateTime || !eventDetail.summary) return;
-      const title = eventDetail.summary;
-      const startTime = new Date(eventDetail.start.dateTime);
-      const endTime = new Date(eventDetail.end.dateTime);
-      return { title, startTime, endTime };
+
+      const untilTimeUTC = getEndOfDayFormattedAsUTCISO(recurrenceEndDate);
+      const data = {
+        summary: eventDetail.summary,
+        attendees: [{ email: userEmail }],
+        start: {
+          dateTime: eventDetail.start.dateTime,
+          timeZone: "Asia/Tokyo",
+        },
+        end: {
+          dateTime: eventDetail.end.dateTime,
+          timeZone: "Asia/Tokyo",
+        },
+        recurrence: ["RRULE:FREQ=WEEKLY;UNTIL=" + untilTimeUTC],
+      };
+      advancedCalendar.update(data, calendarId, recurringEventId);
+      return {
+        title: eventDetail.summary,
+        startTime: new Date(eventDetail.start.dateTime),
+        endTime: new Date(eventDetail.end.dateTime),
+      };
     })
     .filter(isNotUndefined);
-
-  detailedEventItems.forEach(({ eventDetail, recurrenceEndDate, recurringEventId }) => {
-    if (!eventDetail.start?.dateTime || !eventDetail.end?.dateTime) return;
-
-    const untilTimeUTC = getEndOfDayFormattedAsUTCISO(recurrenceEndDate);
-    const data = {
-      summary: eventDetail.summary,
-      attendees: [{ email: userEmail }],
-      start: {
-        dateTime: eventDetail.start.dateTime,
-        timeZone: "Asia/Tokyo",
-      },
-      end: {
-        dateTime: eventDetail.end.dateTime,
-        timeZone: "Asia/Tokyo",
-      },
-      recurrence: ["RRULE:FREQ=WEEKLY;UNTIL=" + untilTimeUTC],
-    };
-    advancedCalendar.update(data, calendarId, recurringEventId);
-  });
 
   //NOTE: 繰り返し予定を登録する機能
   events.forEach(({ title, startTime, endTime, dayOfWeek }) => {

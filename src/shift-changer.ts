@@ -343,7 +343,7 @@ export const callRecurringEvent = () => {
     };
     UrlFetchApp.fetch(API_URL, options);
   }
-  let modifyEventStrings = "";
+  let modifyEventStrings = ""; //NOTE: 繰り返し予定の変更APIの情報を利用するため、letで宣言
   if (modificationInfos.length > 0) {
     const payload = JSON.stringify({
       ...basePayload,
@@ -388,7 +388,7 @@ export const callRecurringEvent = () => {
   const recurringEventMessageToNotify = createMessageForRecurringEvent(
     after,
     createRegisterMessageForRecurringEvent(registrationInfos, partTimerProfile),
-    modifyEventStrings, //NOTE: 繰り返し予定の変更APIの情報を利用するため、modifyEventStringsを利用する
+    modifyEventStrings,
     createDeleteMessageForRecurringEvent(deleteDayOfWeeks, partTimerProfile),
     comment,
   );
@@ -410,6 +410,7 @@ const createRegisterMessageForRecurringEvent = (
   });
   const { job, lastName } = partTimerProfile;
   const messageTitle = `${job}${lastName}さんの以下の繰り返し予定が追加されました。`;
+  if (messages.length == 0) return "";
   return `${messageTitle}\n${messages.join("\n")}`;
 };
 
@@ -435,11 +436,9 @@ const createDeleteMessageForRecurringEvent = (
   deletionInfos: DayOfWeek[],
   { job, lastName }: PartTimerProfile,
 ): string => {
-  const messages = deletionInfos.map((DayOfWeek) => {
-    return `${DayOfWeek}`;
-  });
   const messageTitle = `${job}${lastName}さんの以下の繰り返し予定が削除されました。`;
-  return `${messageTitle}\n${messages.join("\n")}`;
+  if (deletionInfos.length == 0) return "";
+  return `${messageTitle}\n${deletionInfos.join("\n")}`;
 };
 
 const createMessageForRecurringEvent = (

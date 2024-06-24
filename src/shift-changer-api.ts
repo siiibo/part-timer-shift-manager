@@ -127,7 +127,7 @@ export const doPost = (e: GoogleAppsScript.Events.DoPost): GoogleAppsScript.Cont
   return result
     .match(
       (maybeEvent) =>
-        // NOTE: 2024/06時点ではshowEventsのみeventsを返す
+        // NOTE: 2024/06時点ではshowEvents,modifyRecurringEventだけがeventsを返す
         ContentService.createTextOutput(JSON.stringify({ events: maybeEvent === "成功" ? [] : maybeEvent })),
       (error) => ContentService.createTextOutput(JSON.stringify({ error })),
     )

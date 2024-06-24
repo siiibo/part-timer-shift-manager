@@ -392,7 +392,7 @@ export const callRecurringEvent = () => {
     modificationInfos,
     deleteInfos,
     comment,
-    beforeModificationInfos ?? undefined,
+    beforeModificationInfos,
   );
 
   const { SLACK_ACCESS_TOKEN, SLACK_CHANNEL_TO_POST } = getConfig();
@@ -410,17 +410,16 @@ const createMessageForRecurringEvent = (
   modificationInfos: { title: string; dayOfWeek: DayOfWeek; startTime: Date; endTime: Date }[],
   deletionInfos: { dayOfWeek: DayOfWeek }[],
   comment: string | undefined,
-  beforeModificationInfos?: { title: string; startTime: Date; endTime: Date }[],
+  beforeModificationInfos: { title: string; startTime: Date; endTime: Date }[],
 ): string => {
   const registrationMessages = registrationInfos.map(
     ({ title, dayOfWeek, startTime, endTime }) =>
       `${dayOfWeek} : ${title} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`,
   );
-  const modificationMessages = modificationInfos.map(
+  const beforeModificationMessages = beforeModificationInfos.map(
     ({ title, startTime, endTime }) => `${title} : ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`,
   );
-  const beforeModificationMessage = beforeModificationInfos ?? [];
-  const beforeModificationMessages = beforeModificationMessage.map(
+  const modificationMessages = modificationInfos.map(
     ({ title, startTime, endTime }) => `${title} : ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`,
   );
   const mergeModificationMessagesList = [];

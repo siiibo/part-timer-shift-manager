@@ -405,6 +405,7 @@ const createMessageForRegisterRecurringEvent = (
   { job, lastName }: PartTimerProfile,
 ): string => {
   if (registrationInfos.length == 0) return "";
+
   const messages = registrationInfos.map(({ title, dayOfWeek, startTime, endTime }) => {
     return `${dayOfWeek} : ${title} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
   });
@@ -434,8 +435,9 @@ const createMessageForDeleteRecurringEvent = (
   deletionInfos: DayOfWeek[],
   { job, lastName }: PartTimerProfile,
 ): string => {
-  const messageTitle = `${job}${lastName}さんの以下の繰り返し予定が削除されました。`;
   if (deletionInfos.length == 0) return "";
+
+  const messageTitle = `${job}${lastName}さんの以下の繰り返し予定が削除されました。`;
   return `${messageTitle}\n${deletionInfos.join("\n")}`;
 };
 

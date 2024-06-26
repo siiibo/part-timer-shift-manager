@@ -413,7 +413,7 @@ const createMessageForRegisterRecurringEvent = (
 };
 
 const createMessageForModifyRecurringEvent = (
-  beforeModificationInfos: { title: string; startTime: Date; endTime: Date }[],
+  beforeModificationInfos: Event[],
   modificationInfos: { title: string; dayOfWeek: DayOfWeek; startTime: Date; endTime: Date }[],
   { job, lastName }: PartTimerProfile,
 ): string => {

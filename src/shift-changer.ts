@@ -361,7 +361,7 @@ export const callRecurringEvent = () => {
       //NOTE: APIのレスポンスがある場合はエラーを出力する
       throw new Error(responseContent.error);
     }
-    modifyEventStrings = createModifyMessageForRecurringEvent(
+    modifyEventStrings = createMessageForModifyRecurringEvent(
       responseContent?.events,
       modificationInfos,
       partTimerProfile,
@@ -387,9 +387,9 @@ export const callRecurringEvent = () => {
   }
   const recurringEventMessageToNotify = createMessageForRecurringEvent(
     after,
-    createRegisterMessageForRecurringEvent(registrationInfos, partTimerProfile),
+    createMessageForRegisterRecurringEvent(registrationInfos, partTimerProfile),
     modifyEventStrings,
-    createDeleteMessageForRecurringEvent(deleteDayOfWeeks, partTimerProfile),
+    createMessageForDeleteRecurringEvent(deleteDayOfWeeks, partTimerProfile),
     comment,
   );
 
@@ -401,7 +401,7 @@ export const callRecurringEvent = () => {
   setValuesRecurringEventSheet(sheet);
 };
 
-const createRegisterMessageForRecurringEvent = (
+const createMessageForRegisterRecurringEvent = (
   registrationInfos: { title: string; dayOfWeek: DayOfWeek; startTime: Date; endTime: Date }[],
   partTimerProfile: PartTimerProfile,
 ): string => {
@@ -414,7 +414,7 @@ const createRegisterMessageForRecurringEvent = (
   return `${messageTitle}\n${messages.join("\n")}`;
 };
 
-const createModifyMessageForRecurringEvent = (
+const createMessageForModifyRecurringEvent = (
   beforeModificationInfos: { title: string; startTime: Date; endTime: Date }[],
   modificationInfos: { title: string; dayOfWeek: DayOfWeek; startTime: Date; endTime: Date }[],
   { job, lastName }: PartTimerProfile,
@@ -432,7 +432,7 @@ const createModifyMessageForRecurringEvent = (
   return `${messageTitle}\n${messages.join("\n")}`;
 };
 
-const createDeleteMessageForRecurringEvent = (
+const createMessageForDeleteRecurringEvent = (
   deletionInfos: DayOfWeek[],
   { job, lastName }: PartTimerProfile,
 ): string => {

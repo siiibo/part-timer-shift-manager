@@ -405,7 +405,7 @@ const createMessageForRegisterRecurringEvent = (
   if (registrationInfos.length === 0) return "";
   const messages = registrationInfos.map(({ title, dayOfWeek, startTime, endTime }) => {
     const remoteOrShussha = title.match(/【(.*?)】/g);
-    return `- ${dayOfWeek} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} ${remoteOrShussha}`;
+    return `• ${dayOfWeek} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} ${remoteOrShussha}`;
   });
 
   return `[追加]\n${messages.join("\n")}`;
@@ -425,7 +425,7 @@ const createMessageForModifyRecurringEvent = (
     return `${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} ${remoteOrShussha}`;
   });
   const messages = beforeMessages.map((message, index) => {
-    return `- ${modificationInfos[index].dayOfWeek} ${message} → ${afterMessages[index]}`;
+    return `• ${modificationInfos[index].dayOfWeek} ${message} → ${afterMessages[index]}`;
   });
   return `[変更]\n${messages.join("\n")}`;
 };
@@ -433,7 +433,7 @@ const createMessageForModifyRecurringEvent = (
 const createMessageForDeleteRecurringEvent = (deleteEvens: Event[], deletionInfos: DayOfWeek[]): string => {
   const message = deleteEvens.map(({ title, startTime, endTime }, index) => {
     const remoteOrShussha = title.match(/【(.*?)】/g);
-    return `- ${deletionInfos[index]} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} ${remoteOrShussha}`;
+    return `• ${deletionInfos[index]} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} ${remoteOrShussha}`;
   });
 
   return `[消去]\n${message.join("\n")}`;

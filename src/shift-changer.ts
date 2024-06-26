@@ -400,17 +400,16 @@ export const callRecurringEvent = () => {
   SpreadsheetApp.flush();
   setValuesRecurringEventSheet(sheet);
 };
-
 const createMessageForRegisterRecurringEvent = (
   registrationInfos: { title: string; dayOfWeek: DayOfWeek; startTime: Date; endTime: Date }[],
   partTimerProfile: PartTimerProfile,
 ): string => {
+  if (registrationInfos.length == 0) return "";
   const messages = registrationInfos.map(({ title, dayOfWeek, startTime, endTime }) => {
     return `${dayOfWeek} : ${title} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
   });
   const { job, lastName } = partTimerProfile;
   const messageTitle = `${job}${lastName}さんの以下の繰り返し予定が追加されました。`;
-  if (messages.length == 0) return "";
   return `${messageTitle}\n${messages.join("\n")}`;
 };
 

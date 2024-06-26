@@ -534,6 +534,7 @@ const postMessageToSlackChannel = (
   const mentionMessage = mentionMessageToManagers.map(slackIdToMention).join(" ");
   client.chat.postMessage({
     channel: slackChannelToPost,
+    type: "mrkdwn",
     text: `${mentionMessage}\n${messageToNotify}`,
   });
 };

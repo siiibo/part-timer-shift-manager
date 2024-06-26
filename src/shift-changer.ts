@@ -404,8 +404,12 @@ const createMessageForRegisterRecurringEvent = (
 ): string => {
   if (registrationInfos.length === 0) return "";
   const messages = registrationInfos.map(({ title, dayOfWeek, startTime, endTime }) => {
-    const remoteOrShussha = title.match(/【(.*?)】/g);
-    return `• ${dayOfWeek} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} ${remoteOrShussha}`;
+    const { workingStyle, restStartTime, restEndTime } = getEventInfoFromTitle(title);
+    if (!restStartTime || !restEndTime) {
+      return `• ${dayOfWeek} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} ${workingStyle}`;
+    } else {
+      return `• ${dayOfWeek} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} (休憩: ${restStartTime}~${restEndTime}) ${workingStyle} `;
+    }
   });
 
   return `[追加]\n${messages.join("\n")}`;
@@ -416,13 +420,20 @@ const createMessageForModifyRecurringEvent = (
   modificationInfos: { title: string; dayOfWeek: DayOfWeek; startTime: Date; endTime: Date }[],
 ): string => {
   const beforeMessages = beforeModificationInfos.map(({ title, startTime, endTime }) => {
-    const remoteOrShussha = title.match(/【(.*?)】/g);
-
-    return `${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} ${remoteOrShussha}`;
+    const { workingStyle, restStartTime, restEndTime } = getEventInfoFromTitle(title);
+    if (!restStartTime || !restEndTime) {
+      return `${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} ${workingStyle}`;
+    } else {
+      return `${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} (休憩: ${restStartTime}~${restEndTime}) ${workingStyle}`;
+    }
   });
   const afterMessages = modificationInfos.map(({ title, startTime, endTime }) => {
-    const remoteOrShussha = title.match(/【(.*?)】/g);
-    return `${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} ${remoteOrShussha}`;
+    const { workingStyle, restStartTime, restEndTime } = getEventInfoFromTitle(title);
+    if (!restStartTime || !restEndTime) {
+      return `${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} ${workingStyle}`;
+    } else {
+      return `${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} (休憩: ${restStartTime}~${restEndTime}) ${workingStyle}`;
+    }
   });
   const messages = beforeMessages.map((message, index) => {
     return `• ${modificationInfos[index].dayOfWeek} ${message} → ${afterMessages[index]}`;
@@ -432,8 +443,12 @@ const createMessageForModifyRecurringEvent = (
 
 const createMessageForDeleteRecurringEvent = (deleteEvens: Event[], deletionInfos: DayOfWeek[]): string => {
   const message = deleteEvens.map(({ title, startTime, endTime }, index) => {
-    const remoteOrShussha = title.match(/【(.*?)】/g);
-    return `• ${deletionInfos[index]} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} ${remoteOrShussha}`;
+    const { workingStyle, restStartTime, restEndTime } = getEventInfoFromTitle(title);
+    if (!restStartTime || !restEndTime) {
+      return `• ${deletionInfos[index]} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} ${workingStyle}`;
+    } else {
+      return `• ${deletionInfos[index]} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} (休憩: ${restStartTime}~${restEndTime}) ${workingStyle}`;
+    }
   });
 
   return `[消去]\n${message.join("\n")}`;

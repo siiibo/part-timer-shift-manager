@@ -35,7 +35,7 @@ const isHoliday = (day: Date): boolean => {
   return holidayEvents.length > 0;
 };
 
-const isHolidayOrSpecialDate = (date: Date): boolean => {
+export const isHolidayOrSpecialDate = (date: Date): boolean => {
   // 12/31
   if (getMonth(date) === 11 && getDate(date) === 31) {
     return true;

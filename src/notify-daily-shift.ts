@@ -1,6 +1,7 @@
 import { GasWebClient as SlackClient } from "@hi-se/web-api";
 import { isWeekend, set } from "date-fns";
 
+import { isHolidayOrSpecialDate } from "./autoDeleteHolidayEvent";
 import { getConfig } from "./config";
 
 const ANNOUNCE_HOUR = 9;
@@ -24,7 +25,7 @@ export function notifyDailyShift() {
   const calendar = CalendarApp.getCalendarById(CALENDAR_ID);
 
   const now = new Date();
-  if (isWeekend(now) || isHoliday(now)) return;
+  if (isWeekend(now) || isHolidayOrSpecialDate(now)) return;
   if (!checkTime(now)) throw new Error(`設定時刻に誤りがあります.\nANNOUNCE_HOUR: ${ANNOUNCE_HOUR}\nnow: ${now}`);
 
   const targetDate = new Date();
@@ -65,11 +66,4 @@ function getUnixTimeStampString(date: Date): string {
 function getSlackClient() {
   const { SLACK_ACCESS_TOKEN } = getConfig();
   return new SlackClient(SLACK_ACCESS_TOKEN);
-}
-
-function isHoliday(day: Date): boolean {
-  const calendarId = "ja.japanese#holiday@group.v.calendar.google.com";
-  const calendar = CalendarApp.getCalendarById(calendarId);
-  const holidayEvents = calendar.getEventsForDay(day);
-  return holidayEvents.length > 0;
 }

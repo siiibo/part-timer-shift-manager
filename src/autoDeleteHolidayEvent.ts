@@ -18,7 +18,7 @@ export const deleteHolidayShift = () => {
   const { CALENDAR_ID } = getConfig();
   const calendar = CalendarApp.getCalendarById(CALENDAR_ID);
   const today = new Date();
-  const twoMonthLater = addMonths(today, 10);
+  const twoMonthLater = addMonths(today, 2);
   const events = calendar.getEvents(today, twoMonthLater);
   events.forEach((event) => {
     const statTime = new Date(event.getStartTime().getTime());

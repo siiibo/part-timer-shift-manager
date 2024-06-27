@@ -129,7 +129,7 @@ export const getRecurringEventSheetValues = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
 ): {
   after: Date;
-  comment: string | undefined;
+  comment: string;
   registrationRows: RegisterRecurringEventRow[];
   modificationRows: ModifyRecurringEventRow[];
   deletionRows: DeleteRecurringEventRow[];
@@ -137,6 +137,7 @@ export const getRecurringEventSheetValues = (
   const sheetRows = getRecurringEventSheetRows(sheet);
   const after = sheet.getRange("A5").getValue();
   const comment = sheet.getRange("A2").getValue(); //NOTE: 何も入力されていない場合は空文字列が取得される
+  if (comment === "") throw new Error("コメント欄にコメントを入力してください");
 
   return {
     after: after,

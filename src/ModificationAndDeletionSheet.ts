@@ -200,9 +200,12 @@ const isDeletionRow = (row: ModificationRow | DeletionRow | NoOperationRow): row
 
 export const getModificationOrDeletion = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
-): { modificationRows: ModificationRow[]; deletionRows: DeletionRow[] } => {
+): { comment: string; modificationRows: ModificationRow[]; deletionRows: DeletionRow[] } => {
   const sheetValues = getModificationOrDeletionSheetValues(sheet);
+  const comment = sheet.getRange("A2").getValue();
+  if (comment === "") throw new Error("コメント欄にコメントを記入してください");
   return {
+    comment,
     modificationRows: sheetValues.filter(isModificationRow),
     deletionRows: sheetValues.filter(isDeletionRow),
   };

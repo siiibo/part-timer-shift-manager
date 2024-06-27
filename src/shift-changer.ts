@@ -87,8 +87,7 @@ export const callRegistration = () => {
   const partTimerProfile = getPartTimerProfile(userEmail);
 
   const sheet = getSheet("registration", spreadsheetUrl);
-  const comment = sheet.getRange("A2").getValue();
-  const registrationRows = getRegistrationRows(sheet);
+  const { comment, registrationRows } = getRegistrationRows(sheet);
   const registrationInfos = registrationRows.map(({ startTime, endTime, restStartTime, restEndTime, workingStyle }) => {
     const title = createTitleFromEventInfo(
       {
@@ -129,9 +128,7 @@ const createRegistrationMessage = (
   const messages = registrationInfos.map(createMessageFromEventInfo);
   const { job, lastName } = partTimerProfile;
   const messageTitle = `${job}${lastName}さんの以下の予定が追加されました。`;
-  return comment
-    ? `${messageTitle}\n${messages.join("\n")}\n\nコメント: ${comment}`
-    : `${messageTitle}\n${messages.join("\n")}`;
+  return `${messageTitle}\n${messages.join("\n")}\n\nコメント: ${comment}`;
 };
 
 export const callShowEvents = () => {
@@ -187,9 +184,8 @@ export const callModificationAndDeletion = () => {
   const client = getSlackClient(SLACK_ACCESS_TOKEN);
   const partTimerProfile = getPartTimerProfile(userEmail);
   const sheet = getSheet("modificationAndDeletion", spreadsheetUrl);
-  const comment = sheet.getRange("A2").getValue();
 
-  const { modificationRows, deletionRows } = getModificationOrDeletion(sheet);
+  const { comment, modificationRows, deletionRows } = getModificationOrDeletion(sheet);
   const modificationInfos = modificationRows.map(
     ({ title, startTime, endTime, newStartTime, newEndTime, newRestStartTime, newRestEndTime, newWorkingStyle }) => {
       const newTitle = createTitleFromEventInfo(
@@ -248,7 +244,7 @@ export const callModificationAndDeletion = () => {
   const modificationAndDeletionMessageToNotify = [
     createModificationMessage(modificationInfos, partTimerProfile),
     createDeletionMessage(deletionRows, partTimerProfile),
-    comment ? `コメント: ${comment}` : undefined,
+    `コメント: ${comment}`,
   ]
     .filter(Boolean)
     .join("\n---\n");
@@ -406,7 +402,7 @@ const createMessageForRecurringEvent = (
   registrationInfos: { title: string; dayOfWeek: DayOfWeek; startTime: Date; endTime: Date }[],
   modificationInfos: { title: string; dayOfWeek: DayOfWeek; startTime: Date; endTime: Date }[],
   deletionInfos: { dayOfWeek: DayOfWeek }[],
-  comment: string | undefined,
+  comment: string,
 ): string => {
   const registrationMessages = registrationInfos.map(
     ({ title, dayOfWeek, startTime, endTime }) =>
@@ -431,7 +427,7 @@ const createMessageForRecurringEvent = (
     .filter(Boolean)
     .join("\n---\n");
 
-  return comment ? `${message}\n---\nコメント: ${comment}` : message;
+  return `${message}\n---\nコメント: ${comment}`;
 };
 
 const getSlackClient = (slackToken: string): SlackClient => {

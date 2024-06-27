@@ -67,7 +67,11 @@ export const setValuesRegistrationSheet = (sheet: GoogleAppsScript.Spreadsheet.S
   timeCells.setDataValidation(timeRule);
 };
 
-export const getRegistrationRows = (sheet: GoogleAppsScript.Spreadsheet.Sheet): RegistrationRow[] => {
+export const getRegistrationRows = (
+  sheet: GoogleAppsScript.Spreadsheet.Sheet,
+): { comment: string; registrationRows: RegistrationRow[] } => {
+  const comment = sheet.getRange("A2").getValue();
+  if (comment === "") throw new Error("コメント欄に記入してください");
   const registrationRows = sheet
     .getRange(5, 1, sheet.getLastRow() - 4, sheet.getLastColumn())
     .getValues()
@@ -92,5 +96,5 @@ export const getRegistrationRows = (sheet: GoogleAppsScript.Spreadsheet.Sheet): 
         workingStyle,
       });
     });
-  return registrationRows;
+  return { comment, registrationRows };
 };

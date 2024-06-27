@@ -417,7 +417,7 @@ const createMessageForRegisterRecurringEvent = (
 
 const createMessageForModifyRecurringEvent = (
   beforeModificationInfos: Event[],
-  modificationInfos: { title: string; dayOfWeek: DayOfWeek; startTime: Date; endTime: Date }[],
+  afterModificationInfos: { title: string; dayOfWeek: DayOfWeek; startTime: Date; endTime: Date }[],
 ): string => {
   const beforeMessages = beforeModificationInfos.map(({ title, startTime, endTime }) => {
     const { workingStyle, restStartTime, restEndTime } = getEventInfoFromTitle(title);
@@ -427,7 +427,7 @@ const createMessageForModifyRecurringEvent = (
       return `${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} (休憩: ${restStartTime}~${restEndTime}) ${workingStyle}`;
     }
   });
-  const afterMessages = modificationInfos.map(({ title, startTime, endTime }) => {
+  const afterMessages = afterModificationInfos.map(({ title, startTime, endTime }) => {
     const { workingStyle, restStartTime, restEndTime } = getEventInfoFromTitle(title);
     if (!restStartTime || !restEndTime) {
       return `${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} ${workingStyle}`;
@@ -436,7 +436,7 @@ const createMessageForModifyRecurringEvent = (
     }
   });
   const messages = beforeMessages.map((message, index) => {
-    return `• ${modificationInfos[index].dayOfWeek} ${message} → ${afterMessages[index]}`;
+    return `• ${afterModificationInfos[index].dayOfWeek} ${message} → ${afterMessages[index]}`;
   });
   return `[変更]\n${messages.join("\n")}`;
 };

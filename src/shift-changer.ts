@@ -471,9 +471,7 @@ const createMessageForRecurringEvent = (
     registerEventStrings,
     modifyEventStrings,
     deleteEventStrings,
-  ]
-    .filter(Boolean)
-    .join("\n");
+  ].join("\n");
 
   return comment ? `${message}\n---\nコメント: ${comment}` : message;
 };

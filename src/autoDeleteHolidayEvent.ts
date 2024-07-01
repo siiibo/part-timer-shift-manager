@@ -1,4 +1,4 @@
-import { addMonths, getDate, getMonth } from "date-fns";
+import { addWeeks, getDate, getMonth } from "date-fns";
 
 import { getConfig } from "./config";
 
@@ -18,8 +18,8 @@ export const deleteHolidayShift = () => {
   const { CALENDAR_ID } = getConfig();
   const calendar = CalendarApp.getCalendarById(CALENDAR_ID);
   const today = new Date();
-  const twoMonthLater = addMonths(today, 2);
-  const events = calendar.getEvents(today, twoMonthLater);
+  const twoWeekLater = addWeeks(today, 2);
+  const events = calendar.getEvents(today, twoWeekLater);
   events.forEach((event) => {
     const statTime = new Date(event.getStartTime().getTime());
     if (isHolidayOrSpecialDate(statTime)) {

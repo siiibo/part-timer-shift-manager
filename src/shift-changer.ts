@@ -405,10 +405,11 @@ const createMessageForRegisterRecurringEvent = (
   if (registrationInfos.length === 0) return "";
   const messages = registrationInfos.map(({ title, dayOfWeek, startTime, endTime }) => {
     const { workingStyle, restStartTime, restEndTime } = getEventInfoFromTitle(title);
+    const emojiWorkingStyle = workingStyle === "出社" ? ":office:" : workingStyle === "リモート" ? ":house:" : "";
     if (!restStartTime || !restEndTime) {
-      return `• ${dayOfWeek} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} ${workingStyle}`;
+      return `• ${dayOfWeek} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} ${emojiWorkingStyle}`;
     } else {
-      return `• ${dayOfWeek} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} (休憩: ${restStartTime}~${restEndTime}) ${workingStyle} `;
+      return `• ${dayOfWeek} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} (休憩: ${restStartTime}~${restEndTime}) ${emojiWorkingStyle} `;
     }
   });
 
@@ -421,18 +422,20 @@ const createMessageForModifyRecurringEvent = (
 ): string => {
   const beforeMessages = beforeModificationInfos.map(({ title, startTime, endTime }) => {
     const { workingStyle, restStartTime, restEndTime } = getEventInfoFromTitle(title);
+    const emojiWorkingStyle = workingStyle === "出社" ? ":office:" : workingStyle === "リモート" ? ":house:" : "";
     if (!restStartTime || !restEndTime) {
-      return `${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} ${workingStyle}`;
+      return `${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} ${emojiWorkingStyle}`;
     } else {
-      return `${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} (休憩: ${restStartTime}~${restEndTime}) ${workingStyle}`;
+      return `${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} (休憩: ${restStartTime}~${restEndTime}) ${emojiWorkingStyle}`;
     }
   });
   const afterMessages = afterModificationInfos.map(({ title, startTime, endTime }) => {
     const { workingStyle, restStartTime, restEndTime } = getEventInfoFromTitle(title);
+    const emojiWorkingStyle = workingStyle === "出社" ? ":office:" : workingStyle === "リモート" ? ":house:" : "";
     if (!restStartTime || !restEndTime) {
-      return `${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} ${workingStyle}`;
+      return `${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} ${emojiWorkingStyle}`;
     } else {
-      return `${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} (休憩: ${restStartTime}~${restEndTime}) ${workingStyle}`;
+      return `${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} (休憩: ${restStartTime}~${restEndTime}) ${emojiWorkingStyle}`;
     }
   });
   const messages = beforeMessages.map((message, index) => {
@@ -444,10 +447,11 @@ const createMessageForModifyRecurringEvent = (
 const createMessageForDeleteRecurringEvent = (deleteEvens: Event[], deletionInfos: DayOfWeek[]): string => {
   const message = deleteEvens.map(({ title, startTime, endTime }, index) => {
     const { workingStyle, restStartTime, restEndTime } = getEventInfoFromTitle(title);
+    const emojiWorkingStyle = workingStyle === "出社" ? ":office:" : workingStyle === "リモート" ? ":house:" : "";
     if (!restStartTime || !restEndTime) {
-      return `• ${deletionInfos[index]} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} ${workingStyle}`;
+      return `• ${deletionInfos[index]} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} ${emojiWorkingStyle}`;
     } else {
-      return `• ${deletionInfos[index]} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} (休憩: ${restStartTime}~${restEndTime}) ${workingStyle}`;
+      return `• ${deletionInfos[index]} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} (休憩: ${restStartTime}~${restEndTime}) ${emojiWorkingStyle}`;
     }
   });
 

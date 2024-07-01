@@ -202,7 +202,7 @@ export const getModificationOrDeletion = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
 ): { comment: string; modificationRows: ModificationRow[]; deletionRows: DeletionRow[] } => {
   const sheetValues = getModificationOrDeletionSheetValues(sheet);
-  const comment = sheet.getRange("A2").getValue();
+  const comment = sheet.getRange("A2").getValue(); //NOTE: 何も入力されていない場合は空文字列が取得される
   if (comment === "") throw new Error("コメント欄にコメントを記入してください");
   return {
     comment,

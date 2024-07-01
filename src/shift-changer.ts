@@ -407,9 +407,9 @@ const createMessageForRegisterRecurringEvent = (
     const { workingStyle, restStartTime, restEndTime } = getEventInfoFromTitle(title);
     const emojiWorkingStyle = workingStyle === "出勤" ? ":shussha:" : workingStyle === "リモート" ? ":remote:" : "";
     if (!restStartTime || !restEndTime) {
-      return `• ${dayOfWeek}: 【${emojiWorkingStyle}】${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
+      return `• ${dayOfWeek}: ${emojiWorkingStyle} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
     } else {
-      return `• ${dayOfWeek}: 【${emojiWorkingStyle}】${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} (休憩: ${restStartTime}~${restEndTime})`;
+      return `• ${dayOfWeek}: ${emojiWorkingStyle} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} (休憩: ${restStartTime}~${restEndTime})`;
     }
   });
 

@@ -1,6 +1,7 @@
 import { GasWebClient as SlackClient } from "@hi-se/web-api";
 import { format } from "date-fns";
 
+import { deleteHolidayShift } from "./autoDeleteHolidayEvent";
 import { DayOfWeek } from "./common.schema";
 import { getConfig } from "./config";
 import { PartTimerProfile } from "./JobSheet";
@@ -398,6 +399,7 @@ export const callRecurringEvent = () => {
   sheet.clear();
   SpreadsheetApp.flush();
   setValuesRecurringEventSheet(sheet);
+  deleteHolidayShift();
 };
 
 const createMessageForRecurringEvent = (

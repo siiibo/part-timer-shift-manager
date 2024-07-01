@@ -2,7 +2,7 @@ import { addWeeks, getDate, getMonth } from "date-fns";
 
 import { getConfig } from "./config";
 
-export const initDeletionHolidayShift = () => {
+export const initDeleteHolidayShift = () => {
   ScriptApp.getProjectTriggers()
     .filter((trigger) => trigger.getHandlerFunction() === deleteHolidayShift.name)
     .forEach((trigger) => ScriptApp.deleteTrigger(trigger));

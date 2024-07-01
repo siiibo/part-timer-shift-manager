@@ -1,4 +1,4 @@
-import { deleteHolidayShift, initDeletionHolidayShift } from "./autoDeleteHolidayEvent";
+import { deleteHolidayShift, initDeleteHolidayShift } from "./autoDeleteHolidayEvent";
 import { insertModificationAndDeletionSheet } from "./ModificationAndDeletionSheet";
 import { initNotifyDailyShift, notifyDailyShift } from "./notify-daily-shift";
 import { insertRecurringEventSheet } from "./RecurringEventSheet";
@@ -33,5 +33,5 @@ global.insertRegistrationSheet = insertRegistrationSheet;
 global.insertModificationAndDeletionSheet = insertModificationAndDeletionSheet;
 global.insertRecurringEventSheet = insertRecurringEventSheet;
 global.callRecurringEvent = callRecurringEvent;
-global.initDeletionHolidayShift = initDeletionHolidayShift;
+global.initDeleteHolidayShift = initDeleteHolidayShift;
 global.deleteHolidayShift = deleteHolidayShift;

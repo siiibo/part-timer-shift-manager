@@ -245,9 +245,7 @@ export const callModificationAndDeletion = () => {
     createModificationMessage(modificationInfos, partTimerProfile),
     createDeletionMessage(deletionRows, partTimerProfile),
     `コメント: ${comment}`,
-  ]
-    .filter(Boolean)
-    .join("\n---\n");
+  ].join("\n---\n");
 
   postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, modificationAndDeletionMessageToNotify, partTimerProfile);
   sheet.clear();

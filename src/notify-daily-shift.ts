@@ -1,8 +1,8 @@
 import { GasWebClient as SlackClient } from "@hi-se/web-api";
 import { isWeekend, set } from "date-fns";
 
-import { isHolidayOrSpecialDate } from "./autoDeleteHolidayEvent";
 import { getConfig } from "./config";
+import { isHolidayOrSpecialDate } from "./date-utils";
 
 const ANNOUNCE_HOUR = 9;
 

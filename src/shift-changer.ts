@@ -405,11 +405,11 @@ const createMessageForRegisterRecurringEvent = (
   if (registrationInfos.length === 0) return "";
   const messages = registrationInfos.map(({ title, dayOfWeek, startTime, endTime }) => {
     const { workingStyle, restStartTime, restEndTime } = getEventInfoFromTitle(title);
-    const emojiWorkingStyle = workingStyle === "出勤" ? ":office:" : workingStyle === "リモート" ? ":house:" : "";
+    const emojiWorkingStyle = workingStyle === "出勤" ? ":shussha:" : workingStyle === "リモート" ? ":remote:" : "";
     if (!restStartTime || !restEndTime) {
-      return `• ${dayOfWeek} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} ${emojiWorkingStyle}`;
+      return `• ${dayOfWeek}: 【${emojiWorkingStyle}】${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
     } else {
-      return `• ${dayOfWeek} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} (休憩: ${restStartTime}~${restEndTime}) ${emojiWorkingStyle} `;
+      return `• ${dayOfWeek}: 【${emojiWorkingStyle}】${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} (休憩: ${restStartTime}~${restEndTime})`;
     }
   });
 
@@ -422,24 +422,24 @@ const createMessageForModifyRecurringEvent = (
 ): string => {
   const beforeMessages = beforeModificationInfos.map(({ title, startTime, endTime }) => {
     const { workingStyle, restStartTime, restEndTime } = getEventInfoFromTitle(title);
-    const emojiWorkingStyle = workingStyle === "出勤" ? ":office:" : workingStyle === "リモート" ? ":house:" : "";
+    const emojiWorkingStyle = workingStyle === "出勤" ? ":shussha:" : workingStyle === "リモート" ? ":remote:" : "";
     if (!restStartTime || !restEndTime) {
-      return `${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} ${emojiWorkingStyle}`;
+      return `${emojiWorkingStyle} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
     } else {
-      return `${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} (休憩: ${restStartTime}~${restEndTime}) ${emojiWorkingStyle}`;
+      return `${emojiWorkingStyle} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} (休憩: ${restStartTime}~${restEndTime})`;
     }
   });
   const afterMessages = afterModificationInfos.map(({ title, startTime, endTime }) => {
     const { workingStyle, restStartTime, restEndTime } = getEventInfoFromTitle(title);
-    const emojiWorkingStyle = workingStyle === "出勤" ? ":office:" : workingStyle === "リモート" ? ":house:" : "";
+    const emojiWorkingStyle = workingStyle === "出勤" ? ":shussha:" : workingStyle === "リモート" ? ":remote:" : "";
     if (!restStartTime || !restEndTime) {
-      return `${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} ${emojiWorkingStyle}`;
+      return `${emojiWorkingStyle} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
     } else {
-      return `${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} (休憩: ${restStartTime}~${restEndTime}) ${emojiWorkingStyle}`;
+      return `${emojiWorkingStyle} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} (休憩: ${restStartTime}~${restEndTime})`;
     }
   });
   const messages = beforeMessages.map((message, index) => {
-    return `• ${afterModificationInfos[index].dayOfWeek} ${message} → ${afterMessages[index]}`;
+    return `• ${afterModificationInfos[index].dayOfWeek}: ${message} → ${afterMessages[index]}`;
   });
   return `[変更]\n${messages.join("\n")}`;
 };
@@ -447,11 +447,11 @@ const createMessageForModifyRecurringEvent = (
 const createMessageForDeleteRecurringEvent = (deleteEvens: Event[], deletionInfos: DayOfWeek[]): string => {
   const message = deleteEvens.map(({ title, startTime, endTime }, index) => {
     const { workingStyle, restStartTime, restEndTime } = getEventInfoFromTitle(title);
-    const emojiWorkingStyle = workingStyle === "出勤" ? ":office:" : workingStyle === "リモート" ? ":house:" : "";
+    const emojiWorkingStyle = workingStyle === "出勤" ? ":shussha:" : workingStyle === "リモート" ? ":remote:" : "";
     if (!restStartTime || !restEndTime) {
-      return `• ${deletionInfos[index]} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} ${emojiWorkingStyle}`;
+      return `• ${deletionInfos[index]}: ${emojiWorkingStyle}${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
     } else {
-      return `• ${deletionInfos[index]} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} (休憩: ${restStartTime}~${restEndTime}) ${emojiWorkingStyle}`;
+      return `• ${deletionInfos[index]}: ${emojiWorkingStyle}${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} (休憩: ${restStartTime}~${restEndTime})`;
     }
   });
 

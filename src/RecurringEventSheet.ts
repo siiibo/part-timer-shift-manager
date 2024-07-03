@@ -45,7 +45,7 @@ const RegisterRecurringEventRow = z.object({
   endTime: z.date(),
   restStartTime: z.date().optional(),
   restEndTime: z.date().optional(),
-  workingStyle: z.literal("リモート").or(z.literal("出社")),
+  workingStyle: z.literal("出社").or(z.literal("リモート")),
 });
 type RegisterRecurringEventRow = z.infer<typeof RegisterRecurringEventRow>;
 
@@ -57,7 +57,7 @@ const ModifyRecurringEventRow = z.object({
   endTime: z.date(),
   restStartTime: z.date().optional(),
   restEndTime: z.date().optional(),
-  workingStyle: z.literal("リモート").or(z.literal("出社")),
+  workingStyle: z.literal("出社").or(z.literal("リモート")),
 });
 type ModifyRecurringEventRow = z.infer<typeof ModifyRecurringEventRow>;
 

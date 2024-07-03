@@ -17,5 +17,5 @@ export const DateAfterNow = z.date().min(new Date(), { message: "過去の時間
 
 export const WorkingStyleOrEmptyString = z.preprocess(
   (val) => (val === "" ? undefined : val),
-  z.literal("リモート").or(z.literal("出勤")).optional(),
+  z.literal("出社").or(z.literal("リモート")).optional(),
 );

@@ -399,7 +399,7 @@ export const callRecurringEvent = () => {
   sheet.clear();
   SpreadsheetApp.flush();
   setValuesRecurringEventSheet(sheet);
-  deleteHolidayShift();
+  deleteHolidayShift(); //NOTE: 繰り返し予定の入力制限ができないため、deleteHolidayShiftを実行して祝日の予定を削除する
 };
 
 const createMessageForRecurringEvent = (

@@ -2,7 +2,7 @@ import { GasWebClient as SlackClient } from "@hi-se/web-api";
 import { isWeekend, set } from "date-fns";
 
 import { getConfig } from "./config";
-import { isHolidayOrSpecialDate } from "./date-utils";
+import { isBankHoliday } from "./date-utils";
 
 const ANNOUNCE_HOUR = 9;
 
@@ -25,7 +25,7 @@ export function notifyDailyShift() {
   const calendar = CalendarApp.getCalendarById(CALENDAR_ID);
 
   const now = new Date();
-  if (isWeekend(now) || isHolidayOrSpecialDate(now)) return;
+  if (isWeekend(now) || isBankHoliday(now)) return;
   if (!checkTime(now)) throw new Error(`設定時刻に誤りがあります.\nANNOUNCE_HOUR: ${ANNOUNCE_HOUR}\nnow: ${now}`);
 
   const targetDate = new Date();

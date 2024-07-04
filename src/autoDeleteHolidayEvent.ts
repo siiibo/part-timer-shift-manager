@@ -1,7 +1,7 @@
 import { addWeeks } from "date-fns";
 
 import { getConfig } from "./config";
-import { isHolidayOrSpecialDate } from "./date-utils";
+import { isBankHoliday } from "./date-utils";
 
 export const initDeleteHolidayShift = () => {
   ScriptApp.getProjectTriggers()
@@ -23,7 +23,7 @@ export const deleteHolidayShift = () => {
   const events = calendar.getEvents(today, twoWeekLater);
   events.forEach((event) => {
     const statTime = new Date(event.getStartTime().getTime());
-    if (isHolidayOrSpecialDate(statTime)) {
+    if (isBankHoliday(statTime)) {
       event.deleteEvent();
     }
   });

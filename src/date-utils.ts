@@ -1,4 +1,11 @@
-import { getDate, getMonth } from "date-fns";
+import { getDate, getMonth, isWeekend } from "date-fns";
+
+const isHoliday = (day: Date): boolean => {
+  const calendarId = "ja.japanese#holiday@group.v.calendar.google.com";
+  const calendar = CalendarApp.getCalendarById(calendarId);
+  const holidayEvents = calendar.getEventsForDay(day);
+  return holidayEvents.length > 0;
+};
 
 export const isBankHoliday = (date: Date): boolean => {
   // 12/31
@@ -11,10 +18,7 @@ export const isBankHoliday = (date: Date): boolean => {
       return true;
     }
   }
-  const calendarId = "ja.japanese#holiday@group.v.calendar.google.com";
-  const calendar = CalendarApp.getCalendarById(calendarId);
-  const holidayEvents = calendar.getEventsForDay(date);
-  if (holidayEvents.length > 0) {
+  if (isHoliday(date) || isWeekend(date)) {
     return true;
   }
   return false;

@@ -522,11 +522,12 @@ const createTitleFromEventInfo = (
 const createMessageFromEventInfo = (eventInfo: Event) => {
   const date = format(eventInfo.startTime, "MM/dd");
   const { workingStyle, restStartTime, restEndTime } = getEventInfoFromTitle(eventInfo.title);
+  const emojiWorkingStyle = workingStyle === "出社" ? ":shussha:" : workingStyle === "リモート" ? ":remote:" : "";
   const startTime = format(eventInfo.startTime, "HH:mm");
   const endTime = format(eventInfo.endTime, "HH:mm");
   if (restStartTime === undefined || restEndTime === undefined)
-    return `【${workingStyle}】 ${date} ${startTime}~${endTime}`;
-  else return `【${workingStyle}】 ${date} ${startTime}~${endTime} (休憩: ${restStartTime}~${restEndTime})`;
+    return `${emojiWorkingStyle} ${date} ${startTime}~${endTime}`;
+  else return `${emojiWorkingStyle} ${date} ${startTime}~${endTime} (休憩: ${restStartTime}~${restEndTime})`;
 };
 const getEventInfoFromTitle = (
   title: string,

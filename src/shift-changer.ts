@@ -268,7 +268,7 @@ const createModificationMessage = (
   partTimerProfile: PartTimerProfile,
 ): string | undefined => {
   const messages = modificationInfos.map(({ previousEvent, newEvent }) => {
-    return `${createMessageFromEventInfo(previousEvent)}\n↓\n${createMessageFromEventInfo(newEvent)}`;
+    return `${createMessageFromEventInfo(previousEvent)} → ${createMessageFromEventInfo(newEvent)}`;
   });
   if (messages.length == 0) return;
   const { job, lastName } = partTimerProfile;

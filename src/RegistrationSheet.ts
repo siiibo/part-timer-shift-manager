@@ -28,9 +28,9 @@ export const insertRegistrationSheet = () => {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   let sheet;
   try {
-    sheet = spreadsheet.insertSheet(`登録`, 0);
+    sheet = spreadsheet.insertSheet(`単発シフト登録`, 0);
   } catch {
-    throw new Error("既存の「登録」シートを使用してください");
+    throw new Error("既存の「単発シフト登録」シートを使用してください");
   }
   sheet.addDeveloperMetadata(`part-timer-shift-manager-registration`);
   setValuesRegistrationSheet(sheet);

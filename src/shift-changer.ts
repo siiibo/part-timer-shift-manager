@@ -1,6 +1,7 @@
 import { GasWebClient as SlackClient } from "@hi-se/web-api";
 import { format } from "date-fns";
 
+import { deleteHolidayShift } from "./autoDeleteHolidayEvent";
 import { DayOfWeek } from "./common.schema";
 import { getConfig } from "./config";
 import { PartTimerProfile } from "./JobSheet";
@@ -52,14 +53,14 @@ const createMenu = (ui: GoogleAppsScript.Base.Ui, menu: GoogleAppsScript.Base.Me
   return menu
     .addSubMenu(
       ui
-        .createMenu("シフト登録")
+        .createMenu("単発シフト登録")
         .addItem("シートの追加", insertRegistrationSheet.name)
         .addSeparator()
         .addItem("提出", callRegistration.name),
     )
     .addSubMenu(
       ui
-        .createMenu("シフト変更・削除")
+        .createMenu("単発シフト変更・削除")
         .addItem("シートの追加", insertModificationAndDeletionSheet.name)
         .addSeparator()
         .addItem("予定を表示", callShowEvents.name)
@@ -265,14 +266,14 @@ const createModificationMessage = (
   });
   if (messages.length == 0) return;
   const { job, lastName } = partTimerProfile;
-  const messageTitle = `${job}${lastName}さんの以下の予定が変更されました。`;
+  const messageTitle = `${job}${lastName}さんの以下の単発シフトが変更されました。`;
   return `${messageTitle}\n${messages.join("\n\n")}`;
 };
 const createDeletionMessage = (deletionInfos: Event[], partTimerProfile: PartTimerProfile): string | undefined => {
   const messages = deletionInfos.map(createMessageFromEventInfo);
   if (messages.length == 0) return;
   const { job, lastName } = partTimerProfile;
-  const messageTitle = `${job}${lastName}さんの以下の予定が削除されました。`;
+  const messageTitle = `${job}${lastName}さんの以下の単発シフトが削除されました。`;
   return `${messageTitle}\n${messages.join("\n")}`;
 };
 
@@ -321,9 +322,6 @@ export const callRecurringEvent = () => {
   const deleteDayOfWeeks = deletionRows.map((deletionRow) => {
     return deletionRow.dayOfWeek;
   });
-  const deleteInfos = deleteDayOfWeeks.map((deletionRow) => {
-    return { dayOfWeek: deletionRow };
-  });
 
   const basePayload = { apiId: "shift-changer", userEmail: userEmail } as const;
   const { API_URL } = getConfig();
@@ -340,6 +338,7 @@ export const callRecurringEvent = () => {
     };
     UrlFetchApp.fetch(API_URL, options);
   }
+  let modifyEventStrings = ""; //NOTE: 繰り返し予定の変更APIの情報を利用するため、letで宣言
   if (modificationInfos.length > 0) {
     const payload = JSON.stringify({
       ...basePayload,
@@ -357,7 +356,9 @@ export const callRecurringEvent = () => {
       //NOTE: APIのレスポンスがある場合はエラーを出力する
       throw new Error(responseContent.error);
     }
+    modifyEventStrings = createMessageForModifyRecurringEvent(responseContent?.events, modificationInfos);
   }
+  let deleteEventStrings = ""; //NOTE: 繰り返し予定の削除APIの情報を利用するため、letで宣言
   if (deleteDayOfWeeks.length > 0) {
     const payload = JSON.stringify({
       ...basePayload,
@@ -375,14 +376,14 @@ export const callRecurringEvent = () => {
       //NOTE: APIのレスポンスがある場合はエラーを出力する
       throw new Error(responseContent.error);
     }
+    deleteEventStrings = createMessageForDeleteRecurringEvent(responseContent?.events, deleteDayOfWeeks);
   }
-
   const recurringEventMessageToNotify = createMessageForRecurringEvent(
-    after,
     partTimerProfile,
-    registrationInfos,
-    modificationInfos,
-    deleteInfos,
+    after,
+    createMessageForRegisterRecurringEvent(registrationInfos),
+    modifyEventStrings,
+    deleteEventStrings,
     comment,
   );
 
@@ -392,38 +393,83 @@ export const callRecurringEvent = () => {
   sheet.clear();
   SpreadsheetApp.flush();
   setValuesRecurringEventSheet(sheet);
+  //NOTE: 繰り返し予定の入力制限ができないため、deleteHolidayShiftを実行して祝日の予定を削除する
+  // ref: https://github.com/siiibo/part-timer-shift-manager/pull/53#discussion_r1665084529
+  deleteHolidayShift();
+};
+const createMessageForRegisterRecurringEvent = (
+  registrationInfos: { title: string; dayOfWeek: DayOfWeek; startTime: Date; endTime: Date }[],
+): string => {
+  if (registrationInfos.length === 0) return "";
+  const messages = registrationInfos.map(({ title, dayOfWeek, startTime, endTime }) => {
+    const { workingStyle, restStartTime, restEndTime } = getEventInfoFromTitle(title);
+    const emojiWorkingStyle = workingStyle === "出社" ? ":shussha:" : workingStyle === "リモート" ? ":remote:" : "";
+    if (restStartTime === undefined || restEndTime === undefined) {
+      return `• ${dayOfWeek}: ${emojiWorkingStyle} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
+    } else {
+      return `• ${dayOfWeek}: ${emojiWorkingStyle} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} (休憩: ${restStartTime}~${restEndTime})`;
+    }
+  });
+
+  return `[追加]\n${messages.join("\n")}`;
+};
+
+const createMessageForModifyRecurringEvent = (
+  beforeModificationInfos: Event[],
+  afterModificationInfos: { title: string; dayOfWeek: DayOfWeek; startTime: Date; endTime: Date }[],
+): string => {
+  const beforeMessages = beforeModificationInfos.map(({ title, startTime, endTime }) => {
+    const { workingStyle, restStartTime, restEndTime } = getEventInfoFromTitle(title);
+    const emojiWorkingStyle = workingStyle === "出社" ? ":shussha:" : workingStyle === "リモート" ? ":remote:" : "";
+    if (restStartTime === undefined || restEndTime === undefined) {
+      return `${emojiWorkingStyle} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
+    } else {
+      return `${emojiWorkingStyle} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} (休憩: ${restStartTime}~${restEndTime})`;
+    }
+  });
+  const afterMessages = afterModificationInfos.map(({ title, startTime, endTime }) => {
+    const { workingStyle, restStartTime, restEndTime } = getEventInfoFromTitle(title);
+    const emojiWorkingStyle = workingStyle === "出社" ? ":shussha:" : workingStyle === "リモート" ? ":remote:" : "";
+    if (restStartTime === undefined || restEndTime === undefined) {
+      return `${emojiWorkingStyle} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
+    } else {
+      return `${emojiWorkingStyle} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} (休憩: ${restStartTime}~${restEndTime})`;
+    }
+  });
+  const messages = beforeMessages.map((message, index) => {
+    return `• ${afterModificationInfos[index].dayOfWeek}: ${message} → ${afterMessages[index]}`;
+  });
+  return `[変更]\n${messages.join("\n")}`;
+};
+
+const createMessageForDeleteRecurringEvent = (deleteEvens: Event[], deletionInfos: DayOfWeek[]): string => {
+  const message = deleteEvens.map(({ title, startTime, endTime }, index) => {
+    const { workingStyle, restStartTime, restEndTime } = getEventInfoFromTitle(title);
+    const emojiWorkingStyle = workingStyle === "出社" ? ":shussha:" : workingStyle === "リモート" ? ":remote:" : "";
+    if (restStartTime === undefined || restEndTime === undefined) {
+      return `• ${deletionInfos[index]}: ${emojiWorkingStyle}${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
+    } else {
+      return `• ${deletionInfos[index]}: ${emojiWorkingStyle}${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} (休憩: ${restStartTime}~${restEndTime})`;
+    }
+  });
+
+  return `[消去]\n${message.join("\n")}`;
 };
 
 const createMessageForRecurringEvent = (
-  after: Date,
   { job, lastName }: PartTimerProfile,
-  registrationInfos: { title: string; dayOfWeek: DayOfWeek; startTime: Date; endTime: Date }[],
-  modificationInfos: { title: string; dayOfWeek: DayOfWeek; startTime: Date; endTime: Date }[],
-  deletionInfos: { dayOfWeek: DayOfWeek }[],
-  comment: string,
+  after: Date,
+  registerEventStrings: string,
+  modifyEventStrings: string,
+  deleteEventStrings: string,
+  comment: string ,
 ): string => {
-  const registrationMessages = registrationInfos.map(
-    ({ title, dayOfWeek, startTime, endTime }) =>
-      `${dayOfWeek} : ${title} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`,
-  );
-  const modificationMessages = modificationInfos.map(
-    ({ title, dayOfWeek, startTime, endTime }) =>
-      `${dayOfWeek} : ${title} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`,
-  );
-  const deletionMessages = deletionInfos.map(({ dayOfWeek }) => `${dayOfWeek}`).join(", ");
-
   const message = [
-    `${format(after, "yyyy/MM/dd")}以降の繰り返し予定を変更しました`,
-    registrationMessages.length > 0
-      ? `${job}${lastName}さんの以下の繰り返し予定が追加されました\n${registrationMessages.join("\n")}`
-      : "",
-    modificationMessages.length > 0
-      ? `${job}${lastName}さんの以下の繰り返し予定が変更されました\n${modificationMessages.join("\n")}`
-      : "",
-    deletionMessages.length > 0 ? `${job}${lastName}さんの以下の繰り返し予定が削除されました\n${deletionMessages}` : "",
-  ]
-    .filter(Boolean)
-    .join("\n---\n");
+    `${job}${lastName}さんが${format(after, "yyyy/MM/dd")}以降の固定シフトを変更しました`,
+    registerEventStrings,
+    modifyEventStrings,
+    deleteEventStrings,
+  ].join("\n");
 
   return `${message}\n---\nコメント: ${comment}`;
 };

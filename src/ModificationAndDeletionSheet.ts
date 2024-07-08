@@ -61,9 +61,9 @@ export const insertModificationAndDeletionSheet = () => {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   let sheet;
   try {
-    sheet = spreadsheet.insertSheet(`変更・削除`, 0);
+    sheet = spreadsheet.insertSheet(`単発シフト変更・削除`, 0);
   } catch {
-    throw new Error("既存の「変更・削除」シートを使用してください");
+    throw new Error("既存の「単発シフト変更・削除」シートを使用してください");
   }
   sheet.addDeveloperMetadata(`part-timer-shift-manager-modificationAndDeletion`);
   setValuesModificationAndDeletionSheet(sheet);

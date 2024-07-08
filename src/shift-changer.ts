@@ -399,7 +399,9 @@ export const callRecurringEvent = () => {
   sheet.clear();
   SpreadsheetApp.flush();
   setValuesRecurringEventSheet(sheet);
-  deleteHolidayShift(); //NOTE: 繰り返し予定の入力制限ができないため、deleteHolidayShiftを実行して祝日の予定を削除する
+  //NOTE: 繰り返し予定の入力制限ができないため、deleteHolidayShiftを実行して祝日の予定を削除する
+  // ref: https://github.com/siiibo/part-timer-shift-manager/pull/53#discussion_r1665084529
+  deleteHolidayShift();
 };
 
 const createMessageForRecurringEvent = (

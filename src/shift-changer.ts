@@ -52,14 +52,14 @@ const createMenu = (ui: GoogleAppsScript.Base.Ui, menu: GoogleAppsScript.Base.Me
   return menu
     .addSubMenu(
       ui
-        .createMenu("シフト登録")
+        .createMenu("単発シフト登録")
         .addItem("シートの追加", insertRegistrationSheet.name)
         .addSeparator()
         .addItem("提出", callRegistration.name),
     )
     .addSubMenu(
       ui
-        .createMenu("シフト変更・削除")
+        .createMenu("単発シフト変更・削除")
         .addItem("シートの追加", insertModificationAndDeletionSheet.name)
         .addSeparator()
         .addItem("予定を表示", callShowEvents.name)

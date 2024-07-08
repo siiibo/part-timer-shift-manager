@@ -71,7 +71,7 @@ export const getRegistrationRows = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
 ): { comment: string; registrationRows: RegistrationRow[] } => {
   const comment = sheet.getRange("A2").getValue(); //NOTE: 何も入力されていない場合は空文字列が取得される
-  if (comment === "") throw new Error("コメント欄に記入してください");
+  if (comment === "") throw new Error("コメント欄にコメントを記入してください");
   const registrationRows = sheet
     .getRange(5, 1, sheet.getLastRow() - 4, sheet.getLastColumn())
     .getValues()

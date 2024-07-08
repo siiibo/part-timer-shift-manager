@@ -1,6 +1,7 @@
 import { GasWebClient as SlackClient } from "@hi-se/web-api";
 import { format } from "date-fns";
 
+import { deleteHolidayShift } from "./autoDeleteHolidayEvent";
 import { DayOfWeek } from "./common.schema";
 import { getConfig } from "./config";
 import { PartTimerProfile } from "./JobSheet";
@@ -398,6 +399,9 @@ export const callRecurringEvent = () => {
   sheet.clear();
   SpreadsheetApp.flush();
   setValuesRecurringEventSheet(sheet);
+  //NOTE: 繰り返し予定の入力制限ができないため、deleteHolidayShiftを実行して祝日の予定を削除する
+  // ref: https://github.com/siiibo/part-timer-shift-manager/pull/53#discussion_r1665084529
+  deleteHolidayShift();
 };
 const createMessageForRegisterRecurringEvent = (
   registrationInfos: { title: string; dayOfWeek: DayOfWeek; startTime: Date; endTime: Date }[],

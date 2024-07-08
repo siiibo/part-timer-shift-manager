@@ -52,14 +52,14 @@ const createMenu = (ui: GoogleAppsScript.Base.Ui, menu: GoogleAppsScript.Base.Me
   return menu
     .addSubMenu(
       ui
-        .createMenu("シフト登録")
+        .createMenu("単発シフト登録")
         .addItem("シートの追加", insertRegistrationSheet.name)
         .addSeparator()
         .addItem("提出", callRegistration.name),
     )
     .addSubMenu(
       ui
-        .createMenu("シフト変更・削除")
+        .createMenu("単発シフト変更・削除")
         .addItem("シートの追加", insertModificationAndDeletionSheet.name)
         .addSeparator()
         .addItem("予定を表示", callShowEvents.name)
@@ -128,7 +128,7 @@ const createRegistrationMessage = (
 ): string => {
   const messages = registrationInfos.map(createMessageFromEventInfo);
   const { job, lastName } = partTimerProfile;
-  const messageTitle = `${job}${lastName}さんの以下の予定が追加されました。`;
+  const messageTitle = `${job}${lastName}さんの以下の単発シフトが追加されました。`;
   return comment
     ? `${messageTitle}\n${messages.join("\n")}\n\nコメント: ${comment}`
     : `${messageTitle}\n${messages.join("\n")}`;
@@ -271,14 +271,14 @@ const createModificationMessage = (
   });
   if (messages.length == 0) return;
   const { job, lastName } = partTimerProfile;
-  const messageTitle = `${job}${lastName}さんの以下の予定が変更されました。`;
+  const messageTitle = `${job}${lastName}さんの以下の単発シフトが変更されました。`;
   return `${messageTitle}\n${messages.join("\n\n")}`;
 };
 const createDeletionMessage = (deletionInfos: Event[], partTimerProfile: PartTimerProfile): string | undefined => {
   const messages = deletionInfos.map(createMessageFromEventInfo);
   if (messages.length == 0) return;
   const { job, lastName } = partTimerProfile;
-  const messageTitle = `${job}${lastName}さんの以下の予定が削除されました。`;
+  const messageTitle = `${job}${lastName}さんの以下の単発シフトが削除されました。`;
   return `${messageTitle}\n${messages.join("\n")}`;
 };
 
@@ -467,7 +467,7 @@ const createMessageForRecurringEvent = (
   comment: string | undefined,
 ): string => {
   const message = [
-    `${job}${lastName}さんが${format(after, "yyyy/MM/dd")}以降の繰り返し予定を変更しました`,
+    `${job}${lastName}さんが${format(after, "yyyy/MM/dd")}以降の固定シフトを変更しました`,
     registerEventStrings,
     modifyEventStrings,
     deleteEventStrings,

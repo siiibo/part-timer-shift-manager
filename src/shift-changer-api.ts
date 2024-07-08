@@ -127,7 +127,7 @@ export const doPost = (e: GoogleAppsScript.Events.DoPost): GoogleAppsScript.Cont
   return result
     .match(
       (maybeEvent) =>
-        // NOTE: 2024/06時点ではshowEventsのみeventsを返す
+        // NOTE: 2024/06時点ではshowEvents,modifyRecurringEvent,deleteRecurringEventがeventsを返す
         ContentService.createTextOutput(JSON.stringify({ events: maybeEvent === "成功" ? [] : maybeEvent })),
       (error) => ContentService.createTextOutput(JSON.stringify({ error })),
     )
@@ -254,7 +254,7 @@ const registerRecurringEvents = (
 const modifyRecurringEvents = (
   { recurringInfo: { after, events } }: ModifyRecurringEventRequest,
   userEmail: string,
-): Result<string, string> => {
+): Result<Event[], string> => {
   const calendarId = getConfig().CALENDAR_ID;
   const advancedCalendar = getAdvancedCalendar();
 
@@ -284,25 +284,32 @@ const modifyRecurringEvents = (
     return { eventDetail, recurrenceEndDate, recurringEventId };
   });
 
-  detailedEventItems.forEach(({ eventDetail, recurrenceEndDate, recurringEventId }) => {
-    if (!eventDetail.start?.dateTime || !eventDetail.end?.dateTime) return;
+  const beforeEvents = detailedEventItems
+    .map(({ eventDetail, recurrenceEndDate, recurringEventId }) => {
+      if (!eventDetail.start?.dateTime || !eventDetail.end?.dateTime || !eventDetail.summary) return;
 
-    const untilTimeUTC = getEndOfDayFormattedAsUTCISO(recurrenceEndDate);
-    const data = {
-      summary: eventDetail.summary,
-      attendees: [{ email: userEmail }],
-      start: {
-        dateTime: eventDetail.start.dateTime,
-        timeZone: "Asia/Tokyo",
-      },
-      end: {
-        dateTime: eventDetail.end.dateTime,
-        timeZone: "Asia/Tokyo",
-      },
-      recurrence: ["RRULE:FREQ=WEEKLY;UNTIL=" + untilTimeUTC],
-    };
-    advancedCalendar.update(data, calendarId, recurringEventId);
-  });
+      const untilTimeUTC = getEndOfDayFormattedAsUTCISO(recurrenceEndDate);
+      const data = {
+        summary: eventDetail.summary,
+        attendees: [{ email: userEmail }],
+        start: {
+          dateTime: eventDetail.start.dateTime,
+          timeZone: "Asia/Tokyo",
+        },
+        end: {
+          dateTime: eventDetail.end.dateTime,
+          timeZone: "Asia/Tokyo",
+        },
+        recurrence: ["RRULE:FREQ=WEEKLY;UNTIL=" + untilTimeUTC],
+      };
+      advancedCalendar.update(data, calendarId, recurringEventId);
+      return {
+        title: eventDetail.summary,
+        startTime: new Date(eventDetail.start.dateTime),
+        endTime: new Date(eventDetail.end.dateTime),
+      };
+    })
+    .filter(isNotUndefined);
 
   //NOTE: 繰り返し予定を登録する機能
   events.forEach(({ title, startTime, endTime, dayOfWeek }) => {
@@ -317,13 +324,13 @@ const modifyRecurringEvents = (
       guests: userEmail,
     });
   });
-  return ok("成功");
+  return ok(beforeEvents);
 };
 
 const deleteRecurringEvents = (
   { recurringInfo: { after, dayOfWeeks } }: DeleteRecurringEventRequest,
   userEmail: string,
-): Result<string, string> => {
+): Result<Event[], string> => {
   const calendarId = getConfig().CALENDAR_ID;
   const advancedCalendar = getAdvancedCalendar();
 
@@ -351,26 +358,33 @@ const deleteRecurringEvents = (
     return { eventDetail, recurrenceEndDate, recurringEventId };
   });
 
-  detailedEventItems.forEach(({ eventDetail, recurrenceEndDate, recurringEventId }) => {
-    if (!eventDetail.start?.dateTime || !eventDetail.end?.dateTime) return;
+  const deleteEvents = detailedEventItems
+    .map(({ eventDetail, recurrenceEndDate, recurringEventId }) => {
+      if (!eventDetail.start?.dateTime || !eventDetail.end?.dateTime || !eventDetail.summary) return;
 
-    const untilTimeUTC = getEndOfDayFormattedAsUTCISO(recurrenceEndDate);
-    const data = {
-      summary: eventDetail.summary,
-      attendees: [{ email: userEmail }],
-      start: {
-        dateTime: eventDetail.start.dateTime,
-        timeZone: "Asia/Tokyo",
-      },
-      end: {
-        dateTime: eventDetail.end.dateTime,
-        timeZone: "Asia/Tokyo",
-      },
-      recurrence: ["RRULE:FREQ=WEEKLY;UNTIL=" + untilTimeUTC],
-    };
-    advancedCalendar.update(data, calendarId, recurringEventId);
-  });
-  return ok("成功");
+      const untilTimeUTC = getEndOfDayFormattedAsUTCISO(recurrenceEndDate);
+      const data = {
+        summary: eventDetail.summary,
+        attendees: [{ email: userEmail }],
+        start: {
+          dateTime: eventDetail.start.dateTime,
+          timeZone: "Asia/Tokyo",
+        },
+        end: {
+          dateTime: eventDetail.end.dateTime,
+          timeZone: "Asia/Tokyo",
+        },
+        recurrence: ["RRULE:FREQ=WEEKLY;UNTIL=" + untilTimeUTC],
+      };
+      advancedCalendar.update(data, calendarId, recurringEventId);
+      return {
+        title: eventDetail.summary,
+        startTime: new Date(eventDetail.start.dateTime),
+        endTime: new Date(eventDetail.end.dateTime),
+      };
+    })
+    .filter(isNotUndefined);
+  return ok(deleteEvents);
 };
 
 const getCalendar = () => {

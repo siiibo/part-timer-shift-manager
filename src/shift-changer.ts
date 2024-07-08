@@ -526,8 +526,8 @@ const createMessageFromEventInfo = (eventInfo: Event) => {
   const startTime = format(eventInfo.startTime, "HH:mm");
   const endTime = format(eventInfo.endTime, "HH:mm");
   if (restStartTime === undefined || restEndTime === undefined)
-    return `${emojiWorkingStyle} ${date} ${startTime}~${endTime}`;
-  else return `${emojiWorkingStyle} ${date} ${startTime}~${endTime} (休憩: ${restStartTime}~${restEndTime})`;
+    return `${date}: ${emojiWorkingStyle} ${startTime}~${endTime}`;
+  else return `${date}: ${emojiWorkingStyle} ${startTime}~${endTime} (休憩: ${restStartTime}~${restEndTime})`;
 };
 const getEventInfoFromTitle = (
   title: string,

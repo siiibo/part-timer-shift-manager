@@ -1,7 +1,7 @@
 import { set } from "date-fns";
 import { z } from "zod";
 
-import { CommentStringOrError, DateAfterNow, DateOrEmptyString } from "./common.schema";
+import { CommentString, DateAfterNow, DateOrEmptyString } from "./common.schema";
 
 const ModificationRow = z.object({
   type: z.literal("modification"),
@@ -27,7 +27,7 @@ type DeletionRow = z.infer<typeof DeletionRow>;
 
 const ModificationOrDeletionSheetRow = z
   .object({
-    comment: CommentStringOrError,
+    comment: CommentString,
     title: z.string(),
     date: z.date(),
     startTime: z.date(),

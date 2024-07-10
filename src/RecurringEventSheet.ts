@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import {
-  CommentStringOrError,
+  CommentString,
   DateAfterNow,
   DateOrEmptyString,
   DayOfWeek,
@@ -16,7 +16,7 @@ const OperationString = z.preprocess(
 
 const RecurringEventSheetRow = z
   .object({
-    comment: CommentStringOrError,
+    comment: CommentString,
     after: DateAfterNow,
     operation: OperationString,
     dayOfWeek: DayOfWeekOrEmptyString,

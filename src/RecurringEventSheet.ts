@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import {
+  CommentStringOrError,
   DateAfterNow,
   DateOrEmptyString,
   DayOfWeek,
@@ -12,9 +13,6 @@ const OperationString = z.preprocess(
   (val) => (val === "" ? undefined : val),
   z.literal("追加").or(z.literal("時間変更")).or(z.literal("消去")).optional(),
 );
-
-//NOTE: min(1)で空文字を許容しないようにしている
-const CommentStringOrError = z.string().min(1, { message: "コメントを記入してください" });
 
 const RecurringEventSheetRow = z
   .object({

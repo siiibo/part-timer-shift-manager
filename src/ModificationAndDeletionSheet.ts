@@ -1,7 +1,7 @@
 import { set } from "date-fns";
 import { z } from "zod";
 
-import { DateAfterNow, DateOrEmptyString } from "./common.schema";
+import { CommentStringOrError, DateAfterNow, DateOrEmptyString } from "./common.schema";
 
 const ModificationRow = z.object({
   type: z.literal("modification"),
@@ -27,6 +27,7 @@ type DeletionRow = z.infer<typeof DeletionRow>;
 
 const ModificationOrDeletionSheetRow = z
   .object({
+    comment: CommentStringOrError,
     title: z.string(),
     date: z.date(),
     startTime: z.date(),
@@ -139,12 +140,14 @@ export const setValuesModificationAndDeletionSheet = (sheet: GoogleAppsScript.Sp
 
 const getModificationOrDeletionSheetValues = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
-): (ModificationRow | DeletionRow | NoOperationRow)[] => {
+): { comment: string; sheetValues: (ModificationRow | DeletionRow | NoOperationRow)[] } => {
+  const comment = sheet.getRange("A2").getValue(); //NOTE: 何も入力されていない場合は空文字列が取得される
   const sheetValues = sheet
     .getRange(9, 1, sheet.getLastRow() - 8, sheet.getLastColumn())
     .getValues()
     .map((row) =>
       ModificationOrDeletionSheetRow.parse({
+        comment: comment,
         title: row[0],
         date: row[1],
         startTime: row[2],
@@ -191,7 +194,7 @@ const getModificationOrDeletionSheetValues = (
         });
       }
     });
-  return sheetValues;
+  return { comment, sheetValues };
 };
 const isModificationRow = (row: ModificationRow | DeletionRow | NoOperationRow): row is ModificationRow =>
   row.type === "modification";
@@ -201,9 +204,9 @@ const isDeletionRow = (row: ModificationRow | DeletionRow | NoOperationRow): row
 export const getModificationOrDeletion = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
 ): { comment: string; modificationRows: ModificationRow[]; deletionRows: DeletionRow[] } => {
-  const sheetValues = getModificationOrDeletionSheetValues(sheet);
-  const comment = sheet.getRange("A2").getValue(); //NOTE: 何も入力されていない場合は空文字列が取得される
-  if (comment === "") throw new Error("コメント欄にコメントを記入してください");
+  const sheetRows = getModificationOrDeletionSheetValues(sheet);
+  const comment = sheetRows.comment;
+  const sheetValues = sheetRows.sheetValues;
   return {
     comment,
     modificationRows: sheetValues.filter(isModificationRow),

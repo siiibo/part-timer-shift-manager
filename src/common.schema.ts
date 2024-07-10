@@ -19,3 +19,6 @@ export const WorkingStyleOrEmptyString = z.preprocess(
   (val) => (val === "" ? undefined : val),
   z.literal("出社").or(z.literal("リモート")).optional(),
 );
+
+//NOTE: min(1)で空文字を許容しないようにしている
+export const CommentStringOrError = z.string().min(1, { message: "コメントを記入してください" });

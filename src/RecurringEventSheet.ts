@@ -13,6 +13,7 @@ const OperationString = z.preprocess(
   z.literal("追加").or(z.literal("時間変更")).or(z.literal("消去")).optional(),
 );
 
+//NOTE: min(1)で空文字を許容しないようにしている
 const CommentStringOrError = z.string().min(1, { message: "コメントを記入してください" });
 
 const RecurringEventSheetRow = z

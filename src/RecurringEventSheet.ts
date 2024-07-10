@@ -13,17 +13,7 @@ const OperationString = z.preprocess(
   z.literal("追加").or(z.literal("時間変更")).or(z.literal("消去")).optional(),
 );
 
-const CommentStringOrError = z.string().refine(
-  (val) => {
-    if (val === "") {
-      return false;
-    }
-    return true;
-  },
-  {
-    message: "コメントを記入してください",
-  },
-);
+const CommentStringOrError = z.string().min(1, { message: "コメントを記入してください" });
 
 const RecurringEventSheetRow = z
   .object({

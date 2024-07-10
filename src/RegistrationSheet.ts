@@ -8,8 +8,8 @@ const RegistrationSheetRow = z.object({
   date: z.date(),
   startTimeDate: z.date(),
   endTimeDate: z.date(),
-  restStartTime: z.date().optional(),
-  restEndTime: z.date().optional(),
+  restStartTime: DateOrEmptyString,
+  restEndTime: DateOrEmptyString,
   workingStyle: z.literal("出社").or(z.literal("リモート")),
 });
 type RegistrationSheetRow = z.infer<typeof RegistrationSheetRow>;
@@ -18,8 +18,8 @@ const RegistrationRow = z
   .object({
     startTime: DateAfterNow,
     endTime: DateAfterNow,
-    restStartTime: DateOrEmptyString,
-    restEndTime: DateOrEmptyString,
+    restStartTime: z.date().optional(),
+    restEndTime: z.date().optional(),
     workingStyle: z.literal("出社").or(z.literal("リモート")),
   })
   .refine(

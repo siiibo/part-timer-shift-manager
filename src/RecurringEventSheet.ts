@@ -15,6 +15,7 @@ const OperationString = z.preprocess(
 
 const RecurringEventSheetRow = z
   .object({
+    comment: z.string(),
     after: DateAfterNow,
     operation: OperationString,
     dayOfWeek: DayOfWeekOrEmptyString,
@@ -135,29 +136,35 @@ export const getRecurringEventSheetValues = (
   deletionRows: DeleteRecurringEventRow[];
 } => {
   const sheetRows = getRecurringEventSheetRows(sheet);
-  const after = sheet.getRange("A5").getValue();
-  const comment = sheet.getRange("A2").getValue(); //NOTE: 何も入力されていない場合は空文字列が取得される
-  if (comment === "") throw new Error("コメント欄にコメントを入力してください");
+  const after = sheetRows.after;
+  const comment = sheetRows.comment;
+  const sheetValues = sheetRows.sheetValues;
 
   return {
     after: after,
     comment: comment,
-    registrationRows: sheetRows.filter(isRegistrationRow),
-    modificationRows: sheetRows.filter(isModificationRow),
-    deletionRows: sheetRows.filter(isDeletionRow),
+    registrationRows: sheetValues.filter(isRegistrationRow),
+    modificationRows: sheetValues.filter(isModificationRow),
+    deletionRows: sheetValues.filter(isDeletionRow),
   };
 };
 
 const getRecurringEventSheetRows = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
-): (RegisterRecurringEventRow | ModifyRecurringEventRow | DeleteRecurringEventRow | NoOperationRow)[] => {
+): {
+  after: Date;
+  comment: string;
+  sheetValues: (RegisterRecurringEventRow | ModifyRecurringEventRow | DeleteRecurringEventRow | NoOperationRow)[];
+} => {
   const after = sheet.getRange("A5").getValue();
+  const comment = sheet.getRange("A2").getValue();
   const sheetValues = sheet
     .getRange("A9:G13")
     .getValues()
     .map((row) =>
       RecurringEventSheetRow.parse({
         after: after,
+        comment: comment,
         operation: row[0],
         dayOfWeek: row[1],
         startTime: row[2],
@@ -202,7 +209,7 @@ const getRecurringEventSheetRows = (
         } satisfies NoOperationRow;
       }
     });
-  return sheetValues;
+  return { after, comment, sheetValues };
 };
 
 const isRegistrationRow = (

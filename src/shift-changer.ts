@@ -262,7 +262,7 @@ const createModificationMessage = (
   partTimerProfile: PartTimerProfile,
 ): string | undefined => {
   const messages = modificationInfos.map(({ previousEvent, newEvent }) => {
-    return `${createMessageFromEventInfo(previousEvent)}\n↓\n${createMessageFromEventInfo(newEvent)}`;
+    return `${createMessageFromEventInfo(previousEvent)} → ${createMessageFromEventInfo(newEvent)}`;
   });
   if (messages.length == 0) return;
   const { job, lastName } = partTimerProfile;
@@ -462,7 +462,7 @@ const createMessageForRecurringEvent = (
   registerEventStrings: string,
   modifyEventStrings: string,
   deleteEventStrings: string,
-  comment: string ,
+  comment: string,
 ): string => {
   const message = [
     `${job}${lastName}さんが${format(after, "yyyy/MM/dd")}以降の固定シフトを変更しました`,
@@ -516,11 +516,12 @@ const createTitleFromEventInfo = (
 const createMessageFromEventInfo = (eventInfo: Event) => {
   const date = format(eventInfo.startTime, "MM/dd");
   const { workingStyle, restStartTime, restEndTime } = getEventInfoFromTitle(eventInfo.title);
+  const emojiWorkingStyle = workingStyle === "出社" ? ":shussha:" : workingStyle === "リモート" ? ":remote:" : "";
   const startTime = format(eventInfo.startTime, "HH:mm");
   const endTime = format(eventInfo.endTime, "HH:mm");
   if (restStartTime === undefined || restEndTime === undefined)
-    return `【${workingStyle}】 ${date} ${startTime}~${endTime}`;
-  else return `【${workingStyle}】 ${date} ${startTime}~${endTime} (休憩: ${restStartTime}~${restEndTime})`;
+    return `${date}: ${emojiWorkingStyle} ${startTime}~${endTime}`;
+  else return `${date}: ${emojiWorkingStyle} ${startTime}~${endTime} (休憩: ${restStartTime}~${restEndTime})`;
 };
 const getEventInfoFromTitle = (
   title: string,

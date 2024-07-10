@@ -88,8 +88,8 @@ export const callRegistration = () => {
   const partTimerProfile = getPartTimerProfile(userEmail);
 
   const sheet = getSheet("registration", spreadsheetUrl);
-  const { comment, registrationRows } = getRegistrationRows(sheet);
-  const registrationInfos = registrationRows.map(({ startTime, endTime, restStartTime, restEndTime, workingStyle }) => {
+  const { comment, sheetValues } = getRegistrationRows(sheet);
+  const registrationInfos = sheetValues.map(({ startTime, endTime, restStartTime, restEndTime, workingStyle }) => {
     const title = createTitleFromEventInfo(
       {
         ...(restStartTime && { restStartTime: restStartTime }),

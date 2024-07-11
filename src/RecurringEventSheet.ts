@@ -154,8 +154,9 @@ const getRecurringEventSheetRows = (
   const sheetValues = sheet
     .getRange("A9:G13")
     .getValues()
-    .map((row) =>
-      RecurringEventSheetRow.parse({
+    .map((row) => {
+      console.log(row);
+      return RecurringEventSheetRow.parse({
         after: after,
         operation: row[0],
         dayOfWeek: row[1],
@@ -164,8 +165,8 @@ const getRecurringEventSheetRows = (
         restStartTime: row[4],
         restEndTime: row[5],
         workingStyle: row[6],
-      }),
-    )
+      });
+    })
     .map((row) => {
       if (row.operation === "追加" && row.dayOfWeek && row.startTime && row.endTime) {
         return RegisterRecurringEventRow.parse({

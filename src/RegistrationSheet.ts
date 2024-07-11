@@ -92,5 +92,6 @@ export const getRegistrationRows = (sheet: GoogleAppsScript.Spreadsheet.Sheet): 
         workingStyle,
       });
     });
+  console.log(registrationRows);
   return registrationRows;
 };

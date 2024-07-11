@@ -143,8 +143,9 @@ const getModificationOrDeletionSheetValues = (
   const sheetValues = sheet
     .getRange(9, 1, sheet.getLastRow() - 8, sheet.getLastColumn())
     .getValues()
-    .map((row) =>
-      ModificationOrDeletionSheetRow.parse({
+    .map((row) => {
+      console.log(row);
+      return ModificationOrDeletionSheetRow.parse({
         title: row[0],
         date: row[1],
         startTime: row[2],
@@ -156,8 +157,8 @@ const getModificationOrDeletionSheetValues = (
         newRestEndTime: row[8],
         newWorkingStyle: row[9],
         isDeletionTarget: row[10],
-      }),
-    )
+      });
+    })
     .map((row) => {
       if (row.isDeletionTarget) {
         const startTime = mergeTimeToDate(row.date, row.startTime);

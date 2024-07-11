@@ -144,7 +144,7 @@ const getModificationOrDeletionSheetValues = (
     .getRange(9, 1, sheet.getLastRow() - 8, sheet.getLastColumn())
     .getValues()
     .map((row) => {
-      console.log(row);
+      console.log(row); //NOTE: シート情報をログに出力
       return ModificationOrDeletionSheetRow.parse({
         title: row[0],
         date: row[1],

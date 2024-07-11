@@ -155,7 +155,7 @@ const getRecurringEventSheetRows = (
     .getRange("A9:G13")
     .getValues()
     .map((row) => {
-      console.log(row);
+      console.log(row); //NOTE: シート情報をログに出力
       return RecurringEventSheetRow.parse({
         after: after,
         operation: row[0],

@@ -16,7 +16,7 @@ import {
   insertRecurringEventSheet,
   setValuesRecurringEventSheet,
 } from "./RecurringEventSheet";
-import { getRegistrationRows, insertRegistrationSheet, setValuesRegistrationSheet } from "./RegistrationSheet";
+import { getRegistrationSheetValues, insertRegistrationSheet, setValuesRegistrationSheet } from "./RegistrationSheet";
 import {
   APIResponse,
   DeleteEventRequest,
@@ -88,7 +88,7 @@ export const callRegistration = () => {
   const partTimerProfile = getPartTimerProfile(userEmail);
 
   const sheet = getSheet("registration", spreadsheetUrl);
-  const { comment, sheetValues } = getRegistrationRows(sheet);
+  const { comment, sheetValues } = getRegistrationSheetValues(sheet);
   const registrationInfos = sheetValues.map(({ startTime, endTime, restStartTime, restEndTime, workingStyle }) => {
     const title = createTitleFromEventInfo(
       {

@@ -78,7 +78,7 @@ export const setValuesRegistrationSheet = (sheet: GoogleAppsScript.Spreadsheet.S
   timeCells.setDataValidation(timeRule);
 };
 
-const getRegistrationSheetValues = (
+const getRegistrationRows = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
 ): { comment: string; sheetValues: RegistrationRow[] } => {
   const comment = sheet.getRange("A2").getValue();
@@ -116,10 +116,10 @@ const getRegistrationSheetValues = (
   return { comment, sheetValues };
 };
 
-export const getRegistrationRows = (
+export const getRegistrationSheetValues = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
 ): { comment: string; sheetValues: RegistrationRow[] } => {
-  const { comment, sheetValues } = getRegistrationSheetValues(sheet);
+  const { comment, sheetValues } = getRegistrationRows(sheet);
   return { comment, sheetValues };
 };
 

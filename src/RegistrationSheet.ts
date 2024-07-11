@@ -92,6 +92,6 @@ export const getRegistrationRows = (sheet: GoogleAppsScript.Spreadsheet.Sheet): 
         workingStyle,
       });
     });
-  console.log(registrationRows); //NOTE: シート情報をログに出力
+  console.log(registrationRows); //NOTE: シート情報をログに出力, #54で大幅変更されるので変更予定
   return registrationRows;
 };

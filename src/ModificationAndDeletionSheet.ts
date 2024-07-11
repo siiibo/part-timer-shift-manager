@@ -138,6 +138,18 @@ export const setValuesModificationAndDeletionSheet = (sheet: GoogleAppsScript.Sp
   sheet.setColumnWidth(1, 370);
 };
 
+export const getModificationOrDeletion = (
+  sheet: GoogleAppsScript.Spreadsheet.Sheet,
+): { comment: string; modificationRows: ModificationRow[]; deletionRows: DeletionRow[] } => {
+  const { comment, sheetValues } = getModificationOrDeletionSheetValues(sheet);
+
+  return {
+    comment,
+    modificationRows: sheetValues.filter(isModificationRow),
+    deletionRows: sheetValues.filter(isDeletionRow),
+  };
+};
+
 const getModificationOrDeletionSheetValues = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
 ): { comment: string; sheetValues: (ModificationRow | DeletionRow | NoOperationRow)[] } => {
@@ -196,23 +208,12 @@ const getModificationOrDeletionSheetValues = (
     });
   return { comment, sheetValues };
 };
+
 const isModificationRow = (row: ModificationRow | DeletionRow | NoOperationRow): row is ModificationRow =>
   row.type === "modification";
 const isDeletionRow = (row: ModificationRow | DeletionRow | NoOperationRow): row is DeletionRow =>
   row.type === "deletion";
 
-export const getModificationOrDeletion = (
-  sheet: GoogleAppsScript.Spreadsheet.Sheet,
-): { comment: string; modificationRows: ModificationRow[]; deletionRows: DeletionRow[] } => {
-  const sheetRows = getModificationOrDeletionSheetValues(sheet);
-  const comment = sheetRows.comment;
-  const sheetValues = sheetRows.sheetValues;
-  return {
-    comment,
-    modificationRows: sheetValues.filter(isModificationRow),
-    deletionRows: sheetValues.filter(isDeletionRow),
-  };
-};
 //NOTE: Googleスプレッドシートでは時間のみの入力がDate型として取得される際、日付部分はデフォルトで1899/12/30となるため適切な日付情報に更新する必要がある
 const mergeTimeToDate = (date: Date, time: Date): Date => {
   return set(date, { hours: time.getHours(), minutes: time.getMinutes() });

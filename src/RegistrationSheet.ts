@@ -78,6 +78,13 @@ export const setValuesRegistrationSheet = (sheet: GoogleAppsScript.Spreadsheet.S
   timeCells.setDataValidation(timeRule);
 };
 
+export const getRegistrationSheetValues = (
+  sheet: GoogleAppsScript.Spreadsheet.Sheet,
+): { comment: string; sheetValues: RegistrationRow[] } => {
+  const { comment, sheetValues } = getRegistrationRows(sheet);
+  return { comment, sheetValues };
+};
+
 const getRegistrationRows = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
 ): { comment: string; sheetValues: RegistrationRow[] } => {
@@ -113,13 +120,6 @@ const getRegistrationRows = (
         workingStyle,
       });
     });
-  return { comment, sheetValues };
-};
-
-export const getRegistrationSheetValues = (
-  sheet: GoogleAppsScript.Spreadsheet.Sheet,
-): { comment: string; sheetValues: RegistrationRow[] } => {
-  const { comment, sheetValues } = getRegistrationRows(sheet);
   return { comment, sheetValues };
 };
 

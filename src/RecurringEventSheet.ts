@@ -136,10 +136,7 @@ export const getRecurringEventSheetValues = (
   modificationRows: ModifyRecurringEventRow[];
   deletionRows: DeleteRecurringEventRow[];
 } => {
-  const sheetRows = getRecurringEventSheetRows(sheet);
-  const after = sheetRows.after;
-  const comment = sheetRows.comment;
-  const sheetValues = sheetRows.sheetValues;
+  const { after, comment, sheetValues } = getRecurringEventSheetRows(sheet);
 
   return {
     after: after,

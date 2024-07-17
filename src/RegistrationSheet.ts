@@ -81,13 +81,12 @@ export const setValuesRegistrationSheet = (sheet: GoogleAppsScript.Spreadsheet.S
 export const getRegistrationSheetValues = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
 ): { comment: string; sheetValues: RegistrationRow[] } => {
-  const { comment, sheetValues } = getRegistrationRows(sheet);
+  const comment = sheet.getRange("A2").getValue();
+  const sheetValues = getRegistrationRows(sheet);
   return { comment, sheetValues };
 };
 
-const getRegistrationRows = (
-  sheet: GoogleAppsScript.Spreadsheet.Sheet,
-): { comment: string; sheetValues: RegistrationRow[] } => {
+const getRegistrationRows = (sheet: GoogleAppsScript.Spreadsheet.Sheet): RegistrationRow[] => {
   const comment = sheet.getRange("A2").getValue();
   const sheetValues = sheet
     .getRange(5, 1, sheet.getLastRow() - 4, sheet.getLastColumn())
@@ -120,7 +119,7 @@ const getRegistrationRows = (
         workingStyle,
       });
     });
-  return { comment, sheetValues };
+  return sheetValues;
 };
 
 //NOTE: Googleスプレッドシートでは時間のみの入力がDate型として取得される際、日付部分はデフォルトで1899/12/30となるため適切な日付情報に更新する必要がある

@@ -1,7 +1,7 @@
-import { set } from "date-fns";
 import { z } from "zod";
 
 import { Comment, DateAfterNow, DateOrEmptyString } from "./common.schema";
+import { mergeTimeToDate } from "./date-utils";
 
 const RegistrationSheetRow = z.object({
   comment: Comment,
@@ -125,9 +125,4 @@ const getRegistrationRows = (sheet: GoogleAppsScript.Spreadsheet.Sheet): Registr
       });
     });
   return sheetValues;
-};
-
-//NOTE: Googleスプレッドシートでは時間のみの入力がDate型として取得される際、日付部分はデフォルトで1899/12/30となるため適切な日付情報に更新する必要がある
-const mergeTimeToDate = (date: Date, time: Date): Date => {
-  return set(date, { hours: time.getHours(), minutes: time.getMinutes() });
 };

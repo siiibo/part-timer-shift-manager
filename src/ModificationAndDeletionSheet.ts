@@ -1,7 +1,7 @@
-import { set } from "date-fns";
 import { z } from "zod";
 
 import { Comment, DateAfterNow, DateOrEmptyString } from "./common.schema";
+import { mergeTimeToDate } from "./date-utils";
 
 const ModificationRow = z.object({
   type: z.literal("modification"),
@@ -213,8 +213,3 @@ const isModificationRow = (row: ModificationRow | DeletionRow | NoOperationRow):
   row.type === "modification";
 const isDeletionRow = (row: ModificationRow | DeletionRow | NoOperationRow): row is DeletionRow =>
   row.type === "deletion";
-
-//NOTE: Googleスプレッドシートでは時間のみの入力がDate型として取得される際、日付部分はデフォルトで1899/12/30となるため適切な日付情報に更新する必要がある
-const mergeTimeToDate = (date: Date, time: Date): Date => {
-  return set(date, { hours: time.getHours(), minutes: time.getMinutes() });
-};

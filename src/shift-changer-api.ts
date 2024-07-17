@@ -1,9 +1,10 @@
-import { addWeeks, endOfDay, format, nextDay, previousDay, set, startOfDay, subHours } from "date-fns";
+import { addWeeks, endOfDay, format, nextDay, previousDay, startOfDay, subHours } from "date-fns";
 import { err, ok, Result } from "neverthrow";
 import { z } from "zod";
 
 import { DayOfWeek } from "./common.schema";
 import { getConfig } from "./config";
+import { mergeTimeToDate } from "./date-utils";
 
 export const Event = z.object({
   title: z.string(),
@@ -449,10 +450,6 @@ const getRecurrenceEndDate = (after: Date, dayOfWeek: DayOfWeek): Date => {
 
 const isNotUndefined = <T>(value: T | undefined): value is T => {
   return value !== undefined;
-};
-
-const mergeTimeToDate = (date: Date, time: Date): Date => {
-  return set(date, { hours: time.getHours(), minutes: time.getMinutes() });
 };
 
 const getEndOfDayFormattedAsUTCISO = (date: Date): string => {

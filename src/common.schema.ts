@@ -21,4 +21,4 @@ export const WorkingStyleOrEmptyString = z.preprocess(
 );
 
 //NOTE: min(1)で空文字を許容しないようにしている
-export const CommentString = z.string().min(1, { message: "コメントを記入してください" });
+export const Comment = z.string().min(1, { message: "コメントを記入してください" });

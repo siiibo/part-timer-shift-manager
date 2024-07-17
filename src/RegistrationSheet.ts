@@ -1,10 +1,10 @@
 import { set } from "date-fns";
 import { z } from "zod";
 
-import { CommentString, DateAfterNow, DateOrEmptyString } from "./common.schema";
+import { Comment, DateAfterNow, DateOrEmptyString } from "./common.schema";
 
 const RegistrationSheetRow = z.object({
-  comment: CommentString,
+  comment: Comment,
   date: z.date(),
   startTimeDate: z.date(),
   endTimeDate: z.date(),

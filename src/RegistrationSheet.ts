@@ -80,7 +80,10 @@ export const setValuesRegistrationSheet = (sheet: GoogleAppsScript.Spreadsheet.S
 
 export const getRegistrationSheetValues = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
-): { comment: string; sheetValues: RegistrationRow[] } => {
+): {
+  comment: string;
+  registrationRows: RegistrationRow[];
+} => {
   const sheetRows = getRegistrationRows(sheet);
   const comment = sheetRows[0].comment;
   const sheetValues = sheetRows.map(
@@ -96,7 +99,7 @@ export const getRegistrationSheetValues = (
       });
     },
   );
-  return { comment, sheetValues };
+  return { comment, registrationRows: sheetValues };
 };
 
 const getRegistrationRows = (sheet: GoogleAppsScript.Spreadsheet.Sheet): RegistrationSheetRow[] => {

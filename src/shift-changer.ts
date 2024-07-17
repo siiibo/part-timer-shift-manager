@@ -128,7 +128,7 @@ const createRegistrationMessage = (
 ): string => {
   const messages = registrationInfos.map(createMessageFromEventInfo);
   const { job, lastName } = partTimerProfile;
-  const messageTitle = `${job}${lastName}さんの以下の予定が追加されました。`;
+  const messageTitle = `${job}${lastName}さんの以下の単発シフトが追加されました。`;
   return `${messageTitle}\n${messages.join("\n")}\n\nコメント: ${comment}`;
 };
 

@@ -81,12 +81,25 @@ export const setValuesRegistrationSheet = (sheet: GoogleAppsScript.Spreadsheet.S
 export const getRegistrationSheetValues = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
 ): { comment: string; sheetValues: RegistrationRow[] } => {
-  const comment = sheet.getRange("A2").getValue();
-  const sheetValues = getRegistrationRows(sheet);
+  const sheetRows = getRegistrationRows(sheet);
+  const comment = sheetRows[0].comment;
+  const sheetValues = sheetRows.map(
+    ({ date, startTimeDate, endTimeDate, restStartTime, restEndTime, workingStyle }) => {
+      const startTime = mergeTimeToDate(date, startTimeDate);
+      const endTime = mergeTimeToDate(date, endTimeDate);
+      return RegistrationRow.parse({
+        startTime,
+        endTime,
+        restStartTime,
+        restEndTime,
+        workingStyle,
+      });
+    },
+  );
   return { comment, sheetValues };
 };
 
-const getRegistrationRows = (sheet: GoogleAppsScript.Spreadsheet.Sheet): RegistrationRow[] => {
+const getRegistrationRows = (sheet: GoogleAppsScript.Spreadsheet.Sheet): RegistrationSheetRow[] => {
   const comment = sheet.getRange("A2").getValue();
   const sheetValues = sheet
     .getRange(5, 1, sheet.getLastRow() - 4, sheet.getLastColumn())
@@ -103,17 +116,6 @@ const getRegistrationRows = (sheet: GoogleAppsScript.Spreadsheet.Sheet): Registr
         date,
         startTimeDate,
         endTimeDate,
-        restStartTime,
-        restEndTime,
-        workingStyle,
-      });
-    })
-    .map(({ date, startTimeDate, endTimeDate, restStartTime, restEndTime, workingStyle }) => {
-      const startTime = mergeTimeToDate(date, startTimeDate);
-      const endTime = mergeTimeToDate(date, endTimeDate);
-      return RegistrationRow.parse({
-        startTime,
-        endTime,
         restStartTime,
         restEndTime,
         workingStyle,

@@ -138,10 +138,44 @@ export const setValuesModificationAndDeletionSheet = (sheet: GoogleAppsScript.Sp
   sheet.setColumnWidth(1, 370);
 };
 
-export const getModificationOrDeletion = (
+export const getModificationOrDeletionSheetValues = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
 ): { comment: string; modificationRows: ModificationRow[]; deletionRows: DeletionRow[] } => {
-  const { comment, sheetValues } = getModificationOrDeletionSheetValues(sheet);
+  const sheetRows = getModificationOrDeletionRows(sheet);
+  const comment = sheetRows[0].comment;
+  const sheetValues = sheetRows.map((row) => {
+    if (row.isDeletionTarget) {
+      const startTime = mergeTimeToDate(row.date, row.startTime);
+      const endTime = mergeTimeToDate(row.date, row.endTime);
+      return DeletionRow.parse({
+        type: "deletion",
+        title: row.title,
+        date: startTime,
+        startTime: startTime,
+        endTime: endTime,
+      });
+    } else if (row.newDate && row.newStartTime && row.newEndTime) {
+      const startTime = mergeTimeToDate(row.date, row.startTime);
+      const endTime = mergeTimeToDate(row.date, row.endTime);
+      const newStartTime = mergeTimeToDate(row.newDate, row.newStartTime);
+      const newEndTime = mergeTimeToDate(row.newDate, row.newEndTime);
+      return ModificationRow.parse({
+        type: "modification",
+        title: row.title,
+        startTime: startTime,
+        endTime: endTime,
+        newStartTime: newStartTime,
+        newEndTime: newEndTime,
+        newRestStartTime: row.newRestEndTime,
+        newRestEndTime: row.newRestEndTime,
+        newWorkingStyle: row.newWorkingStyle,
+      });
+    } else {
+      return NoOperationRow.parse({
+        type: "no-operation",
+      });
+    }
+  });
 
   return {
     comment,
@@ -150,9 +184,7 @@ export const getModificationOrDeletion = (
   };
 };
 
-const getModificationOrDeletionSheetValues = (
-  sheet: GoogleAppsScript.Spreadsheet.Sheet,
-): { comment: string; sheetValues: (ModificationRow | DeletionRow | NoOperationRow)[] } => {
+const getModificationOrDeletionRows = (sheet: GoogleAppsScript.Spreadsheet.Sheet): ModificationOrDeletionSheetRow[] => {
   const comment = sheet.getRange("A2").getValue(); //NOTE: 何も入力されていない場合は空文字列が取得される
   const sheetValues = sheet
     .getRange(9, 1, sheet.getLastRow() - 8, sheet.getLastColumn())
@@ -172,41 +204,9 @@ const getModificationOrDeletionSheetValues = (
         newWorkingStyle: row[9],
         isDeletionTarget: row[10],
       }),
-    )
-    .map((row) => {
-      if (row.isDeletionTarget) {
-        const startTime = mergeTimeToDate(row.date, row.startTime);
-        const endTime = mergeTimeToDate(row.date, row.endTime);
-        return DeletionRow.parse({
-          type: "deletion",
-          title: row.title,
-          date: startTime,
-          startTime: startTime,
-          endTime: endTime,
-        });
-      } else if (row.newDate && row.newStartTime && row.newEndTime) {
-        const startTime = mergeTimeToDate(row.date, row.startTime);
-        const endTime = mergeTimeToDate(row.date, row.endTime);
-        const newStartTime = mergeTimeToDate(row.newDate, row.newStartTime);
-        const newEndTime = mergeTimeToDate(row.newDate, row.newEndTime);
-        return ModificationRow.parse({
-          type: "modification",
-          title: row.title,
-          startTime: startTime,
-          endTime: endTime,
-          newStartTime: newStartTime,
-          newEndTime: newEndTime,
-          newRestStartTime: row.newRestEndTime,
-          newRestEndTime: row.newRestEndTime,
-          newWorkingStyle: row.newWorkingStyle,
-        });
-      } else {
-        return NoOperationRow.parse({
-          type: "no-operation",
-        });
-      }
-    });
-  return { comment, sheetValues };
+    );
+
+  return sheetValues;
 };
 
 const isModificationRow = (row: ModificationRow | DeletionRow | NoOperationRow): row is ModificationRow =>

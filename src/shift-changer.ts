@@ -7,7 +7,7 @@ import { getConfig } from "./config";
 import { PartTimerProfile } from "./JobSheet";
 import { getPartTimerProfile } from "./JobSheet";
 import {
-  getModificationOrDeletion,
+  getModificationOrDeletionSheetValues,
   insertModificationAndDeletionSheet,
   setValuesModificationAndDeletionSheet,
 } from "./ModificationAndDeletionSheet";
@@ -186,7 +186,7 @@ export const callModificationAndDeletion = () => {
   const partTimerProfile = getPartTimerProfile(userEmail);
   const sheet = getSheet("modificationAndDeletion", spreadsheetUrl);
 
-  const { comment, modificationRows, deletionRows } = getModificationOrDeletion(sheet);
+  const { comment, modificationRows, deletionRows } = getModificationOrDeletionSheetValues(sheet);
   const modificationInfos = modificationRows.map(
     ({ title, startTime, endTime, newStartTime, newEndTime, newRestStartTime, newRestEndTime, newWorkingStyle }) => {
       const newTitle = createTitleFromEventInfo(

@@ -108,20 +108,14 @@ const getRegistrationRows = (sheet: GoogleAppsScript.Spreadsheet.Sheet): Registr
     .getRange(5, 1, sheet.getLastRow() - 4, sheet.getLastColumn())
     .getValues()
     .map((eventInfo) => {
-      const date = eventInfo[0];
-      const startTimeDate = eventInfo[1];
-      const endTimeDate = eventInfo[2];
-      const restStartTime = eventInfo[3];
-      const restEndTime = eventInfo[4];
-      const workingStyle = eventInfo[5];
       return RegistrationSheetRow.parse({
         comment,
-        date,
-        startTimeDate,
-        endTimeDate,
-        restStartTime,
-        restEndTime,
-        workingStyle,
+        date: eventInfo[0],
+        startTimeDate: eventInfo[1],
+        endTimeDate: eventInfo[2],
+        restStartTime: eventInfo[3],
+        restEndTime: eventInfo[4],
+        workingStyle: eventInfo[5],
       });
     });
   return sheetValues;

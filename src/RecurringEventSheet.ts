@@ -16,8 +16,6 @@ const OperationString = z.preprocess(
 
 const RecurringEventSheetRow = z
   .object({
-    comment: Comment,
-    after: DateAfterNow,
     operation: OperationString,
     dayOfWeek: DayOfWeekOrEmptyString,
     startTime: DateOrEmptyString,
@@ -41,7 +39,7 @@ type RecurringEventSheetRow = z.infer<typeof RecurringEventSheetRow>;
 
 const RegisterRecurringEventRow = z.object({
   type: z.literal("registerRecurringEvent"),
-  after: z.date(),
+  after: DateAfterNow,
   dayOfWeek: DayOfWeek,
   startTime: z.date(),
   endTime: z.date(),
@@ -53,7 +51,7 @@ type RegisterRecurringEventRow = z.infer<typeof RegisterRecurringEventRow>;
 
 const ModifyRecurringEventRow = z.object({
   type: z.literal("modifyRecurringEvent"),
-  after: z.date(),
+  after: DateAfterNow,
   dayOfWeek: DayOfWeek,
   startTime: z.date(),
   endTime: z.date(),
@@ -65,7 +63,7 @@ type ModifyRecurringEventRow = z.infer<typeof ModifyRecurringEventRow>;
 
 const DeleteRecurringEventRow = z.object({
   type: z.literal("deleteRecurringEvent"),
-  after: z.date(),
+  after: DateAfterNow,
   dayOfWeek: DayOfWeek,
 });
 type DeleteRecurringEventRow = z.infer<typeof DeleteRecurringEventRow>;
@@ -137,13 +135,13 @@ export const getRecurringEventSheetValues = (
   deletionRows: DeleteRecurringEventRow[];
 } => {
   const sheetRows = getRecurringEventSheetRows(sheet);
-  const after = sheetRows[0].after;
-  const comment = sheetRows[0].comment;
+  const after = sheet.getRange("A5").getValue();
+  const comment = sheet.getRange("A2").getValue();
   const sheetValues = sheetRows.map((row) => {
     if (row.operation === "追加" && row.dayOfWeek && row.startTime && row.endTime) {
       return RegisterRecurringEventRow.parse({
         type: "registerRecurringEvent",
-        after: row.after,
+        after: after,
         dayOfWeek: row.dayOfWeek,
         startTime: row.startTime,
         endTime: row.endTime,
@@ -154,7 +152,7 @@ export const getRecurringEventSheetValues = (
     } else if (row.operation === "時間変更" && row.dayOfWeek && row.startTime && row.endTime) {
       return ModifyRecurringEventRow.parse({
         type: "modifyRecurringEvent",
-        after: row.after,
+        after: after,
         dayOfWeek: row.dayOfWeek,
         startTime: row.startTime,
         endTime: row.endTime,
@@ -165,7 +163,7 @@ export const getRecurringEventSheetValues = (
     } else if (row.operation === "消去") {
       return DeleteRecurringEventRow.parse({
         type: "deleteRecurringEvent",
-        after: row.after,
+        after: after,
         dayOfWeek: row.dayOfWeek,
       });
     } else {
@@ -185,15 +183,11 @@ export const getRecurringEventSheetValues = (
 };
 
 const getRecurringEventSheetRows = (sheet: GoogleAppsScript.Spreadsheet.Sheet): RecurringEventSheetRow[] => {
-  const after = sheet.getRange("A5").getValue();
-  const comment = sheet.getRange("A2").getValue();
   const sheetRows = sheet
     .getRange("A9:G13")
     .getValues()
     .map((row) =>
       RecurringEventSheetRow.parse({
-        after: after,
-        comment: comment,
         operation: row[0],
         dayOfWeek: row[1],
         startTime: row[2],

@@ -27,7 +27,6 @@ type DeletionRow = z.infer<typeof DeletionRow>;
 
 const ModificationOrDeletionSheetRow = z
   .object({
-    comment: Comment,
     title: z.string(),
     date: z.date(),
     startTime: z.date(),
@@ -140,9 +139,9 @@ export const setValuesModificationAndDeletionSheet = (sheet: GoogleAppsScript.Sp
 
 export const getModificationOrDeletionSheetValues = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
-): { comment: string; modificationRows: ModificationRow[]; deletionRows: DeletionRow[] } => {
+): { comment: Comment; modificationRows: ModificationRow[]; deletionRows: DeletionRow[] } => {
   const sheetRows = getModificationOrDeletionRows(sheet);
-  const comment = sheetRows[0].comment;
+  const comment = sheet.getRange("A2").getValue();
   const sheetValues = sheetRows.map((row) => {
     if (row.isDeletionTarget) {
       const startTime = mergeTimeToDate(row.date, row.startTime);
@@ -185,13 +184,11 @@ export const getModificationOrDeletionSheetValues = (
 };
 
 const getModificationOrDeletionRows = (sheet: GoogleAppsScript.Spreadsheet.Sheet): ModificationOrDeletionSheetRow[] => {
-  const comment = sheet.getRange("A2").getValue(); //NOTE: 何も入力されていない場合は空文字列が取得される
   const sheetValues = sheet
     .getRange(9, 1, sheet.getLastRow() - 8, sheet.getLastColumn())
     .getValues()
     .map((row) =>
       ModificationOrDeletionSheetRow.parse({
-        comment: comment,
         title: row[0],
         date: row[1],
         startTime: row[2],

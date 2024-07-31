@@ -4,7 +4,6 @@ import { Comment, DateAfterNow, DateOrEmptyString } from "./common.schema";
 import { mergeTimeToDate } from "./date-utils";
 
 const RegistrationSheetRow = z.object({
-  comment: Comment,
   date: z.date(),
   startTimeDate: z.date(),
   endTimeDate: z.date(),
@@ -85,7 +84,7 @@ export const getRegistrationSheetValues = (
   registrationRows: RegistrationRow[];
 } => {
   const sheetRows = getRegistrationRows(sheet);
-  const comment = sheetRows[0].comment;
+  const comment = sheet.getRange("A2").getValue();
   const sheetValues = sheetRows.map(
     ({ date, startTimeDate, endTimeDate, restStartTime, restEndTime, workingStyle }) => {
       const startTime = mergeTimeToDate(date, startTimeDate);
@@ -103,13 +102,11 @@ export const getRegistrationSheetValues = (
 };
 
 const getRegistrationRows = (sheet: GoogleAppsScript.Spreadsheet.Sheet): RegistrationSheetRow[] => {
-  const comment = sheet.getRange("A2").getValue();
   const sheetValues = sheet
     .getRange(5, 1, sheet.getLastRow() - 4, sheet.getLastColumn())
     .getValues()
     .map((eventInfo) => {
       return RegistrationSheetRow.parse({
-        comment,
         date: eventInfo[0],
         startTimeDate: eventInfo[1],
         endTimeDate: eventInfo[2],

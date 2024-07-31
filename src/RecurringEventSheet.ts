@@ -131,7 +131,7 @@ export const getRecurringEventSheetValues = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
 ): {
   after: Date;
-  comment: string;
+  comment: Comment;
   registrationRows: RegisterRecurringEventRow[];
   modificationRows: ModifyRecurringEventRow[];
   deletionRows: DeleteRecurringEventRow[];

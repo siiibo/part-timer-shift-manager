@@ -72,6 +72,15 @@ type NoOperationRow = {
   type: "no-operation";
 };
 
+const RecurringEventSheetValues = z.object({
+  after: z.date(),
+  comment: Comment,
+  registrationRows: z.array(RegisterRecurringEventRow),
+  modificationRows: z.array(ModifyRecurringEventRow),
+  deletionRows: z.array(DeleteRecurringEventRow),
+});
+type RecurringEventSheetValues = z.infer<typeof RecurringEventSheetValues>;
+
 export const insertRecurringEventSheet = () => {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   let sheet;
@@ -173,13 +182,13 @@ export const getRecurringEventSheetValues = (
     }
   });
 
-  return {
+  return RecurringEventSheetValues.parse({
     after: after,
     comment: comment,
     registrationRows: sheetValues.filter(isRegistrationRow),
     modificationRows: sheetValues.filter(isModificationRow),
     deletionRows: sheetValues.filter(isDeletionRow),
-  };
+  });
 };
 
 const getRecurringEventSheetRows = (sheet: GoogleAppsScript.Spreadsheet.Sheet): RecurringEventSheetRow[] => {

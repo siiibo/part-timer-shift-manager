@@ -57,6 +57,12 @@ const NoOperationRow = z.object({
 });
 type NoOperationRow = z.infer<typeof NoOperationRow>;
 
+const ModificationOrDeletionSheetValues = z.object({
+  comment: Comment,
+  modificationRows: z.array(ModificationRow),
+  deletionRows: z.array(DeletionRow),
+});
+
 export const insertModificationAndDeletionSheet = () => {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   let sheet;
@@ -142,11 +148,11 @@ export const getModificationOrDeletionSheetValues = (
 ): { comment: Comment; modificationRows: ModificationRow[]; deletionRows: DeletionRow[] } => {
   const { modificationRows, deletionRows } = getModificationOrDeletionRows(sheet);
   const comment = sheet.getRange("A2").getValue();
-  return {
+  return ModificationOrDeletionSheetValues.parse({
     comment,
     modificationRows,
     deletionRows,
-  };
+  });
 };
 
 const getModificationOrDeletionRows = (

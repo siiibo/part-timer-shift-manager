@@ -140,50 +140,18 @@ export const setValuesModificationAndDeletionSheet = (sheet: GoogleAppsScript.Sp
 export const getModificationOrDeletionSheetValues = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
 ): { comment: Comment; modificationRows: ModificationRow[]; deletionRows: DeletionRow[] } => {
-  const sheetRows = getModificationOrDeletionRows(sheet);
+  const { modificationRows, deletionRows } = getModificationOrDeletionRows(sheet);
   const comment = sheet.getRange("A2").getValue();
-  const sheetValues = sheetRows.map((row) => {
-    if (row.isDeletionTarget) {
-      const startTime = mergeTimeToDate(row.date, row.startTime);
-      const endTime = mergeTimeToDate(row.date, row.endTime);
-      return DeletionRow.parse({
-        type: "deletion",
-        title: row.title,
-        date: startTime,
-        startTime: startTime,
-        endTime: endTime,
-      });
-    } else if (row.newDate && row.newStartTime && row.newEndTime) {
-      const startTime = mergeTimeToDate(row.date, row.startTime);
-      const endTime = mergeTimeToDate(row.date, row.endTime);
-      const newStartTime = mergeTimeToDate(row.newDate, row.newStartTime);
-      const newEndTime = mergeTimeToDate(row.newDate, row.newEndTime);
-      return ModificationRow.parse({
-        type: "modification",
-        title: row.title,
-        startTime: startTime,
-        endTime: endTime,
-        newStartTime: newStartTime,
-        newEndTime: newEndTime,
-        newRestStartTime: row.newRestEndTime,
-        newRestEndTime: row.newRestEndTime,
-        newWorkingStyle: row.newWorkingStyle,
-      });
-    } else {
-      return NoOperationRow.parse({
-        type: "no-operation",
-      });
-    }
-  });
-
   return {
     comment,
-    modificationRows: sheetValues.filter(isModificationRow),
-    deletionRows: sheetValues.filter(isDeletionRow),
+    modificationRows,
+    deletionRows,
   };
 };
 
-const getModificationOrDeletionRows = (sheet: GoogleAppsScript.Spreadsheet.Sheet): ModificationOrDeletionSheetRow[] => {
+const getModificationOrDeletionRows = (
+  sheet: GoogleAppsScript.Spreadsheet.Sheet,
+): { modificationRows: ModificationRow[]; deletionRows: DeletionRow[] } => {
   const sheetValues = sheet
     .getRange(9, 1, sheet.getLastRow() - 8, sheet.getLastColumn())
     .getValues()
@@ -201,9 +169,44 @@ const getModificationOrDeletionRows = (sheet: GoogleAppsScript.Spreadsheet.Sheet
         newWorkingStyle: row[9],
         isDeletionTarget: row[10],
       }),
-    );
-
-  return sheetValues;
+    )
+    .map((row) => {
+      if (row.isDeletionTarget) {
+        const startTime = mergeTimeToDate(row.date, row.startTime);
+        const endTime = mergeTimeToDate(row.date, row.endTime);
+        return DeletionRow.parse({
+          type: "deletion",
+          title: row.title,
+          date: startTime,
+          startTime: startTime,
+          endTime: endTime,
+        });
+      } else if (row.newDate && row.newStartTime && row.newEndTime) {
+        const startTime = mergeTimeToDate(row.date, row.startTime);
+        const endTime = mergeTimeToDate(row.date, row.endTime);
+        const newStartTime = mergeTimeToDate(row.newDate, row.newStartTime);
+        const newEndTime = mergeTimeToDate(row.newDate, row.newEndTime);
+        return ModificationRow.parse({
+          type: "modification",
+          title: row.title,
+          startTime: startTime,
+          endTime: endTime,
+          newStartTime: newStartTime,
+          newEndTime: newEndTime,
+          newRestStartTime: row.newRestEndTime,
+          newRestEndTime: row.newRestEndTime,
+          newWorkingStyle: row.newWorkingStyle,
+        });
+      } else {
+        return NoOperationRow.parse({
+          type: "no-operation",
+        });
+      }
+    });
+  return {
+    modificationRows: sheetValues.filter(isModificationRow),
+    deletionRows: sheetValues.filter(isDeletionRow),
+  };
 };
 
 const isModificationRow = (row: ModificationRow | DeletionRow | NoOperationRow): row is ModificationRow =>

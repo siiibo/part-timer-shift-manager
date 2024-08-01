@@ -34,6 +34,12 @@ const RegistrationRow = z
   );
 type RegistrationRow = z.infer<typeof RegistrationRow>;
 
+const RegistrationSheetValues = z.object({
+  comment: Comment,
+  registrationRows: z.array(RegistrationRow),
+});
+type RegistrationSheetValues = z.infer<typeof RegistrationSheetValues>;
+
 export const insertRegistrationSheet = () => {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   let sheet;
@@ -85,7 +91,7 @@ export const getRegistrationSheetValues = (
 } => {
   const sheetRows = getRegistrationRows(sheet);
   const comment = sheet.getRange("A2").getValue();
-  return { comment, registrationRows: sheetRows };
+  return RegistrationSheetValues.parse({ comment, registrationRows: sheetRows });
 };
 
 const getRegistrationRows = (sheet: GoogleAppsScript.Spreadsheet.Sheet): RegistrationRow[] => {

@@ -85,23 +85,10 @@ export const getRegistrationSheetValues = (
 } => {
   const sheetRows = getRegistrationRows(sheet);
   const comment = sheet.getRange("A2").getValue();
-  const sheetValues = sheetRows.map(
-    ({ date, startTimeDate, endTimeDate, restStartTime, restEndTime, workingStyle }) => {
-      const startTime = mergeTimeToDate(date, startTimeDate);
-      const endTime = mergeTimeToDate(date, endTimeDate);
-      return RegistrationRow.parse({
-        startTime,
-        endTime,
-        restStartTime,
-        restEndTime,
-        workingStyle,
-      });
-    },
-  );
-  return { comment, registrationRows: sheetValues };
+  return { comment, registrationRows: sheetRows };
 };
 
-const getRegistrationRows = (sheet: GoogleAppsScript.Spreadsheet.Sheet): RegistrationSheetRow[] => {
+const getRegistrationRows = (sheet: GoogleAppsScript.Spreadsheet.Sheet): RegistrationRow[] => {
   const sheetValues = sheet
     .getRange(5, 1, sheet.getLastRow() - 4, sheet.getLastColumn())
     .getValues()
@@ -113,6 +100,17 @@ const getRegistrationRows = (sheet: GoogleAppsScript.Spreadsheet.Sheet): Registr
         restStartTime: eventInfo[3],
         restEndTime: eventInfo[4],
         workingStyle: eventInfo[5],
+      });
+    })
+    .map(({ date, startTimeDate, endTimeDate, restStartTime, restEndTime, workingStyle }) => {
+      const startTime = mergeTimeToDate(date, startTimeDate);
+      const endTime = mergeTimeToDate(date, endTimeDate);
+      return RegistrationRow.parse({
+        startTime,
+        endTime,
+        restStartTime,
+        restEndTime,
+        workingStyle,
       });
     });
   return sheetValues;

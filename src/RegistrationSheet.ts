@@ -5,8 +5,8 @@ import { mergeTimeToDate } from "./date-utils";
 
 const RegistrationSheetRow = z.object({
   date: z.date(),
-  startTimeDate: z.date(),
-  endTimeDate: z.date(),
+  startTime: z.date(),
+  endTime: z.date(),
   restStartTime: DateOrEmptyString,
   restEndTime: DateOrEmptyString,
   workingStyle: z.literal("出社").or(z.literal("リモート")),
@@ -101,19 +101,19 @@ const getRegistrationRows = (sheet: GoogleAppsScript.Spreadsheet.Sheet): Registr
     .map((eventInfo) => {
       return RegistrationSheetRow.parse({
         date: eventInfo[0],
-        startTimeDate: eventInfo[1],
-        endTimeDate: eventInfo[2],
+        startTime: eventInfo[1],
+        endTime: eventInfo[2],
         restStartTime: eventInfo[3],
         restEndTime: eventInfo[4],
         workingStyle: eventInfo[5],
       });
     })
-    .map(({ date, startTimeDate, endTimeDate, restStartTime, restEndTime, workingStyle }) => {
-      const startTime = mergeTimeToDate(date, startTimeDate);
-      const endTime = mergeTimeToDate(date, endTimeDate);
+    .map(({ date, startTime, endTime, restStartTime, restEndTime, workingStyle }) => {
+      const mergeStartTime = mergeTimeToDate(date, startTime);
+      const mergeEndTime = mergeTimeToDate(date, endTime);
       return RegistrationRow.parse({
-        startTime,
-        endTime,
+        startTime: mergeStartTime,
+        endTime: mergeEndTime,
         restStartTime,
         restEndTime,
         workingStyle,

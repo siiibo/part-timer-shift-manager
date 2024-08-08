@@ -28,14 +28,9 @@ const RegistrationSheetRow = z
       message: "休憩時間の開始時間が終了時間よりも前になるようにしてください",
     },
   )
-  .refine(
-    (data) => {
-      return data.startTime < new Date() || data.endTime < new Date();
-    },
-    {
-      message: "過去の時間にシフト変更はできません",
-    },
-  );
+  .refine((data) => data.startTime < new Date() || data.endTime < new Date(), {
+    message: "過去の時間にシフト変更はできません",
+  });
 type RegistrationSheetRow = z.infer<typeof RegistrationSheetRow>;
 
 const RegistrationSheetValues = z.object({

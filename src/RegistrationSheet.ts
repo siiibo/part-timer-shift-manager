@@ -1,26 +1,22 @@
 import { z } from "zod";
 
-import { Comment, DateAfterNow, DateOrEmptyString } from "./common.schema";
+import { Comment, DateOrEmptyString } from "./common.schema";
 import { mergeTimeToDate } from "./date-utils";
 
-const RegistrationSheetRow = z.object({
-  date: z.date(),
-  startTime: z.date(),
-  endTime: z.date(),
-  restStartTime: DateOrEmptyString,
-  restEndTime: DateOrEmptyString,
-  workingStyle: z.literal("出社").or(z.literal("リモート")),
-});
-type RegistrationSheetRow = z.infer<typeof RegistrationSheetRow>;
-
-const RegistrationRow = z
+const RegistrationSheetRow = z
   .object({
-    startTime: DateAfterNow,
-    endTime: DateAfterNow,
-    restStartTime: z.date().optional(),
-    restEndTime: z.date().optional(),
+    date: z.date(),
+    startTime: z.date(),
+    endTime: z.date(),
+    restStartTime: DateOrEmptyString,
+    restEndTime: DateOrEmptyString,
     workingStyle: z.literal("出社").or(z.literal("リモート")),
   })
+  .transform((row) => ({
+    ...row,
+    startTime: mergeTimeToDate(row.date, row.startTime),
+    endTime: mergeTimeToDate(row.date, row.endTime),
+  }))
   .refine(
     (data) => {
       if (data.restStartTime && data.restEndTime) {
@@ -31,12 +27,23 @@ const RegistrationRow = z
     {
       message: "休憩時間の開始時間が終了時間よりも前になるようにしてください",
     },
+  )
+  .refine(
+    (data) => {
+      if (data.startTime < new Date() || data.endTime < new Date()) {
+        return false;
+      }
+      return true;
+    },
+    {
+      message: "過去の時間にシフト変更はできません",
+    },
   );
-type RegistrationRow = z.infer<typeof RegistrationRow>;
+type RegistrationSheetRow = z.infer<typeof RegistrationSheetRow>;
 
 const RegistrationSheetValues = z.object({
   comment: Comment,
-  registrationRows: z.array(RegistrationRow),
+  registrationRows: z.array(RegistrationSheetRow),
 });
 type RegistrationSheetValues = z.infer<typeof RegistrationSheetValues>;
 
@@ -87,14 +94,14 @@ export const getRegistrationSheetValues = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
 ): {
   comment: Comment;
-  registrationRows: RegistrationRow[];
+  registrationRows: RegistrationSheetRow[];
 } => {
   const sheetRows = getRegistrationRows(sheet);
   const comment = sheet.getRange("A2").getValue();
   return RegistrationSheetValues.parse({ comment, registrationRows: sheetRows });
 };
 
-const getRegistrationRows = (sheet: GoogleAppsScript.Spreadsheet.Sheet): RegistrationRow[] => {
+const getRegistrationRows = (sheet: GoogleAppsScript.Spreadsheet.Sheet): RegistrationSheetRow[] => {
   const sheetValues = sheet
     .getRange(5, 1, sheet.getLastRow() - 4, sheet.getLastColumn())
     .getValues()
@@ -106,17 +113,6 @@ const getRegistrationRows = (sheet: GoogleAppsScript.Spreadsheet.Sheet): Registr
         restStartTime: eventInfo[3],
         restEndTime: eventInfo[4],
         workingStyle: eventInfo[5],
-      });
-    })
-    .map(({ date, startTime, endTime, restStartTime, restEndTime, workingStyle }) => {
-      const mergeStartTime = mergeTimeToDate(date, startTime);
-      const mergeEndTime = mergeTimeToDate(date, endTime);
-      return RegistrationRow.parse({
-        startTime: mergeStartTime,
-        endTime: mergeEndTime,
-        restStartTime,
-        restEndTime,
-        workingStyle,
       });
     });
   return sheetValues;

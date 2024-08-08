@@ -69,14 +69,13 @@ type NoOperationRow = {
   type: "no-operation";
 };
 
-const RecurringEventSheetValues = z.object({
-  after: DateAfterNow,
-  comment: Comment,
-  registrationRows: z.array(RegisterRecurringEventRow),
-  modificationRows: z.array(ModifyRecurringEventRow),
-  deletionRows: z.array(DeleteRecurringEventRow),
-});
-type RecurringEventSheetValues = z.infer<typeof RecurringEventSheetValues>;
+type RecurringEventSheetValues = {
+  after: DateAfterNow;
+  comment: Comment;
+  registrationRows: RegisterRecurringEventRow[];
+  modificationRows: ModifyRecurringEventRow[];
+  deletionRows: DeleteRecurringEventRow[];
+};
 
 export const insertRecurringEventSheet = () => {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
@@ -131,18 +130,10 @@ export const setValuesRecurringEventSheet = (sheet: GoogleAppsScript.Spreadsheet
   sheet.setColumnWidth(2, 150);
 };
 
-export const getRecurringEventSheetValues = (
-  sheet: GoogleAppsScript.Spreadsheet.Sheet,
-): {
-  after: Date;
-  comment: Comment;
-  registrationRows: RegisterRecurringEventRow[];
-  modificationRows: ModifyRecurringEventRow[];
-  deletionRows: DeleteRecurringEventRow[];
-} => {
+export const getRecurringEventSheetValues = (sheet: GoogleAppsScript.Spreadsheet.Sheet): RecurringEventSheetValues => {
   const sheetRows = getRecurringEventSheetRows(sheet);
-  const after = sheet.getRange("A5").getValue();
-  const comment = sheet.getRange("A2").getValue();
+  const after = DateAfterNow.parse(sheet.getRange("A5").getValue());
+  const comment = Comment.parse(sheet.getRange("A2").getValue());
   const sheetValues = sheetRows.map((row) => {
     if (row.operation === "追加" && row.dayOfWeek && row.startTime && row.endTime) {
       return RegisterRecurringEventRow.parse({
@@ -176,13 +167,13 @@ export const getRecurringEventSheetValues = (
     }
   });
 
-  return RecurringEventSheetValues.parse({
+  return {
     after: after,
     comment: comment,
     registrationRows: sheetValues.filter(isRegistrationRow),
     modificationRows: sheetValues.filter(isModificationRow),
     deletionRows: sheetValues.filter(isDeletionRow),
-  });
+  };
 };
 
 const getRecurringEventSheetRows = (sheet: GoogleAppsScript.Spreadsheet.Sheet): RecurringEventSheetRow[] => {

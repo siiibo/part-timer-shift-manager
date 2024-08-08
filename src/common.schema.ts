@@ -14,6 +14,7 @@ export const DateOrEmptyString = z.preprocess((val) => (val === "" ? undefined :
 export const DayOfWeekOrEmptyString = z.preprocess((val) => (val === "" ? undefined : val), DayOfWeek.optional());
 
 export const DateAfterNow = z.date().min(new Date(), { message: "過去の時間にシフト変更はできません" });
+export type DateAfterNow = z.infer<typeof DateAfterNow>;
 
 export const WorkingStyleOrEmptyString = z.preprocess(
   (val) => (val === "" ? undefined : val),

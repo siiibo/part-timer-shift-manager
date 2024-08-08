@@ -57,11 +57,11 @@ const NoOperationRow = z.object({
 });
 type NoOperationRow = z.infer<typeof NoOperationRow>;
 
-const ModificationOrDeletionSheetValues = z.object({
-  comment: Comment,
-  modificationRows: z.array(ModificationRow),
-  deletionRows: z.array(DeletionRow),
-});
+type ModificationOrDeletionSheetValues = {
+  comment: Comment;
+  modificationRows: ModificationRow[];
+  deletionRows: DeletionRow[];
+};
 
 export const insertModificationAndDeletionSheet = () => {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
@@ -145,14 +145,14 @@ export const setValuesModificationAndDeletionSheet = (sheet: GoogleAppsScript.Sp
 
 export const getModificationOrDeletionSheetValues = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
-): { comment: Comment; modificationRows: ModificationRow[]; deletionRows: DeletionRow[] } => {
+): ModificationOrDeletionSheetValues => {
   const { modificationRows, deletionRows } = getModificationOrDeletionRows(sheet);
-  const comment = sheet.getRange("A2").getValue();
-  return ModificationOrDeletionSheetValues.parse({
+  const comment = Comment.parse(sheet.getRange("A2").getValue());
+  return {
     comment,
     modificationRows,
     deletionRows,
-  });
+  };
 };
 
 const getModificationOrDeletionRows = (

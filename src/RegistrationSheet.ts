@@ -30,10 +30,7 @@ const RegistrationSheetRow = z
   )
   .refine(
     (data) => {
-      if (data.startTime < new Date() || data.endTime < new Date()) {
-        return false;
-      }
-      return true;
+      return data.startTime < new Date() || data.endTime < new Date();
     },
     {
       message: "過去の時間にシフト変更はできません",

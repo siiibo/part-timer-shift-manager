@@ -39,7 +39,6 @@ type RecurringEventSheetRow = z.infer<typeof RecurringEventSheetRow>;
 
 const RegisterRecurringEventRow = z.object({
   type: z.literal("registerRecurringEvent"),
-  after: DateAfterNow,
   dayOfWeek: DayOfWeek,
   startTime: z.date(),
   endTime: z.date(),
@@ -51,7 +50,6 @@ type RegisterRecurringEventRow = z.infer<typeof RegisterRecurringEventRow>;
 
 const ModifyRecurringEventRow = z.object({
   type: z.literal("modifyRecurringEvent"),
-  after: DateAfterNow,
   dayOfWeek: DayOfWeek,
   startTime: z.date(),
   endTime: z.date(),
@@ -63,7 +61,6 @@ type ModifyRecurringEventRow = z.infer<typeof ModifyRecurringEventRow>;
 
 const DeleteRecurringEventRow = z.object({
   type: z.literal("deleteRecurringEvent"),
-  after: DateAfterNow,
   dayOfWeek: DayOfWeek,
 });
 type DeleteRecurringEventRow = z.infer<typeof DeleteRecurringEventRow>;
@@ -73,7 +70,7 @@ type NoOperationRow = {
 };
 
 const RecurringEventSheetValues = z.object({
-  after: z.date(),
+  after: DateAfterNow,
   comment: Comment,
   registrationRows: z.array(RegisterRecurringEventRow),
   modificationRows: z.array(ModifyRecurringEventRow),
@@ -150,7 +147,6 @@ export const getRecurringEventSheetValues = (
     if (row.operation === "追加" && row.dayOfWeek && row.startTime && row.endTime) {
       return RegisterRecurringEventRow.parse({
         type: "registerRecurringEvent",
-        after: after,
         dayOfWeek: row.dayOfWeek,
         startTime: row.startTime,
         endTime: row.endTime,
@@ -161,7 +157,6 @@ export const getRecurringEventSheetValues = (
     } else if (row.operation === "時間変更" && row.dayOfWeek && row.startTime && row.endTime) {
       return ModifyRecurringEventRow.parse({
         type: "modifyRecurringEvent",
-        after: after,
         dayOfWeek: row.dayOfWeek,
         startTime: row.startTime,
         endTime: row.endTime,
@@ -172,7 +167,6 @@ export const getRecurringEventSheetValues = (
     } else if (row.operation === "消去") {
       return DeleteRecurringEventRow.parse({
         type: "deleteRecurringEvent",
-        after: after,
         dayOfWeek: row.dayOfWeek,
       });
     } else {

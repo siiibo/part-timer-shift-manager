@@ -147,7 +147,6 @@ export const getModificationOrDeletionSheetValues = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
 ): ModificationOrDeletionSheetValues => {
   const { modificationRows, deletionRows } = getModificationOrDeletionRows(sheet);
-  console.log({ modificationRows, deletionRows }); //NOTE: ユーザの入力値を確認するためのログ
   const comment = Comment.parse(sheet.getRange("A2").getValue());
   return {
     comment,
@@ -162,8 +161,9 @@ const getModificationOrDeletionRows = (
   const sheetValues = sheet
     .getRange(9, 1, sheet.getLastRow() - 8, sheet.getLastColumn())
     .getValues()
-    .map((row) =>
-      ModificationOrDeletionSheetRow.parse({
+    .map((row) => {
+      console.log(row); //NOTE: ユーザの入力値を確認するためのログ
+      return ModificationOrDeletionSheetRow.parse({
         //TODO: 2度parseしているので、1度にまとめる
         title: row[0],
         date: row[1],
@@ -176,8 +176,8 @@ const getModificationOrDeletionRows = (
         newRestEndTime: row[8],
         newWorkingStyle: row[9],
         isDeletionTarget: row[10],
-      }),
-    )
+      });
+    })
     .map((row) => {
       if (row.isDeletionTarget) {
         const startTime = mergeTimeToDate(row.date, row.startTime);

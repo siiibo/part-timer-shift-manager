@@ -163,6 +163,7 @@ const getModificationOrDeletionRows = (
     .getValues()
     .map((row) =>
       ModificationOrDeletionSheetRow.parse({
+        //TODO: 2度parseしているので、1度にまとめる
         title: row[0],
         date: row[1],
         startTime: row[2],

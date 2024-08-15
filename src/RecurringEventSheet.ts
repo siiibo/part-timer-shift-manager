@@ -182,6 +182,7 @@ const getRecurringEventSheetRows = (sheet: GoogleAppsScript.Spreadsheet.Sheet): 
     .getValues()
     .map((row) =>
       RecurringEventSheetRow.parse({
+        //TODO: 2度parseしているので、1度にまとめる
         operation: row[0],
         dayOfWeek: row[1],
         startTime: row[2],

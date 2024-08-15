@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import {
+  Comment,
   DateAfterNow,
   DateOrEmptyString,
   DayOfWeek,
@@ -15,7 +16,6 @@ const OperationString = z.preprocess(
 
 const RecurringEventSheetRow = z
   .object({
-    after: DateAfterNow,
     operation: OperationString,
     dayOfWeek: DayOfWeekOrEmptyString,
     startTime: DateOrEmptyString,
@@ -39,7 +39,6 @@ type RecurringEventSheetRow = z.infer<typeof RecurringEventSheetRow>;
 
 const RegisterRecurringEventRow = z.object({
   type: z.literal("registerRecurringEvent"),
-  after: z.date(),
   dayOfWeek: DayOfWeek,
   startTime: z.date(),
   endTime: z.date(),
@@ -51,7 +50,6 @@ type RegisterRecurringEventRow = z.infer<typeof RegisterRecurringEventRow>;
 
 const ModifyRecurringEventRow = z.object({
   type: z.literal("modifyRecurringEvent"),
-  after: z.date(),
   dayOfWeek: DayOfWeek,
   startTime: z.date(),
   endTime: z.date(),
@@ -63,13 +61,20 @@ type ModifyRecurringEventRow = z.infer<typeof ModifyRecurringEventRow>;
 
 const DeleteRecurringEventRow = z.object({
   type: z.literal("deleteRecurringEvent"),
-  after: z.date(),
   dayOfWeek: DayOfWeek,
 });
 type DeleteRecurringEventRow = z.infer<typeof DeleteRecurringEventRow>;
 
 type NoOperationRow = {
   type: "no-operation";
+};
+
+type RecurringEventSheetValues = {
+  after: DateAfterNow;
+  comment: Comment;
+  registrationRows: RegisterRecurringEventRow[];
+  modificationRows: ModifyRecurringEventRow[];
+  deletionRows: DeleteRecurringEventRow[];
 };
 
 export const insertRecurringEventSheet = () => {
@@ -125,38 +130,59 @@ export const setValuesRecurringEventSheet = (sheet: GoogleAppsScript.Spreadsheet
   sheet.setColumnWidth(2, 150);
 };
 
-export const getRecurringEventSheetValues = (
-  sheet: GoogleAppsScript.Spreadsheet.Sheet,
-): {
-  after: Date;
-  comment: string | undefined;
-  registrationRows: RegisterRecurringEventRow[];
-  modificationRows: ModifyRecurringEventRow[];
-  deletionRows: DeleteRecurringEventRow[];
-} => {
+export const getRecurringEventSheetValues = (sheet: GoogleAppsScript.Spreadsheet.Sheet): RecurringEventSheetValues => {
   const sheetRows = getRecurringEventSheetRows(sheet);
-  const after = sheet.getRange("A5").getValue();
-  const comment = sheet.getRange("A2").getValue(); //NOTE: 何も入力されていない場合は空文字列が取得される
+  const after = DateAfterNow.parse(sheet.getRange("A5").getValue());
+  const comment = Comment.parse(sheet.getRange("A2").getValue());
+  const sheetValues = sheetRows.map((row) => {
+    if (row.operation === "追加" && row.dayOfWeek && row.startTime && row.endTime) {
+      return RegisterRecurringEventRow.parse({
+        type: "registerRecurringEvent",
+        dayOfWeek: row.dayOfWeek,
+        startTime: row.startTime,
+        endTime: row.endTime,
+        restStartTime: row.restStartTime,
+        restEndTime: row.restEndTime,
+        workingStyle: row.workingStyle,
+      });
+    } else if (row.operation === "時間変更" && row.dayOfWeek && row.startTime && row.endTime) {
+      return ModifyRecurringEventRow.parse({
+        type: "modifyRecurringEvent",
+        dayOfWeek: row.dayOfWeek,
+        startTime: row.startTime,
+        endTime: row.endTime,
+        restStartTime: row.restStartTime,
+        restEndTime: row.restEndTime,
+        workingStyle: row.workingStyle,
+      });
+    } else if (row.operation === "消去") {
+      return DeleteRecurringEventRow.parse({
+        type: "deleteRecurringEvent",
+        dayOfWeek: row.dayOfWeek,
+      });
+    } else {
+      return {
+        type: "no-operation",
+      } satisfies NoOperationRow;
+    }
+  });
 
   return {
     after: after,
     comment: comment,
-    registrationRows: sheetRows.filter(isRegistrationRow),
-    modificationRows: sheetRows.filter(isModificationRow),
-    deletionRows: sheetRows.filter(isDeletionRow),
+    registrationRows: sheetValues.filter(isRegistrationRow),
+    modificationRows: sheetValues.filter(isModificationRow),
+    deletionRows: sheetValues.filter(isDeletionRow),
   };
 };
 
-const getRecurringEventSheetRows = (
-  sheet: GoogleAppsScript.Spreadsheet.Sheet,
-): (RegisterRecurringEventRow | ModifyRecurringEventRow | DeleteRecurringEventRow | NoOperationRow)[] => {
-  const after = sheet.getRange("A5").getValue();
-  const sheetValues = sheet
+const getRecurringEventSheetRows = (sheet: GoogleAppsScript.Spreadsheet.Sheet): RecurringEventSheetRow[] => {
+  const sheetRows = sheet
     .getRange("A9:G13")
     .getValues()
     .map((row) =>
       RecurringEventSheetRow.parse({
-        after: after,
+        //TODO: 2度parseしているので、1度にまとめる
         operation: row[0],
         dayOfWeek: row[1],
         startTime: row[2],
@@ -165,43 +191,8 @@ const getRecurringEventSheetRows = (
         restEndTime: row[5],
         workingStyle: row[6],
       }),
-    )
-    .map((row) => {
-      if (row.operation === "追加" && row.dayOfWeek && row.startTime && row.endTime) {
-        return RegisterRecurringEventRow.parse({
-          type: "registerRecurringEvent",
-          after: row.after,
-          dayOfWeek: row.dayOfWeek,
-          startTime: row.startTime,
-          endTime: row.endTime,
-          restStartTime: row.restStartTime,
-          restEndTime: row.restEndTime,
-          workingStyle: row.workingStyle,
-        });
-      } else if (row.operation === "時間変更" && row.dayOfWeek && row.startTime && row.endTime) {
-        return ModifyRecurringEventRow.parse({
-          type: "modifyRecurringEvent",
-          after: row.after,
-          dayOfWeek: row.dayOfWeek,
-          startTime: row.startTime,
-          endTime: row.endTime,
-          restStartTime: row.restStartTime,
-          restEndTime: row.restEndTime,
-          workingStyle: row.workingStyle,
-        });
-      } else if (row.operation === "消去") {
-        return DeleteRecurringEventRow.parse({
-          type: "deleteRecurringEvent",
-          after: row.after,
-          dayOfWeek: row.dayOfWeek,
-        });
-      } else {
-        return {
-          type: "no-operation",
-        } satisfies NoOperationRow;
-      }
-    });
-  return sheetValues;
+    );
+  return sheetRows;
 };
 
 const isRegistrationRow = (

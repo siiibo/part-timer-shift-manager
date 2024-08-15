@@ -7,7 +7,7 @@ import { getConfig } from "./config";
 import { PartTimerProfile } from "./JobSheet";
 import { getPartTimerProfile } from "./JobSheet";
 import {
-  getModificationOrDeletion,
+  getModificationOrDeletionSheetValues,
   insertModificationAndDeletionSheet,
   setValuesModificationAndDeletionSheet,
 } from "./ModificationAndDeletionSheet";
@@ -16,7 +16,7 @@ import {
   insertRecurringEventSheet,
   setValuesRecurringEventSheet,
 } from "./RecurringEventSheet";
-import { getRegistrationRows, insertRegistrationSheet, setValuesRegistrationSheet } from "./RegistrationSheet";
+import { getRegistrationSheetValues, insertRegistrationSheet, setValuesRegistrationSheet } from "./RegistrationSheet";
 import {
   APIResponse,
   DeleteEventRequest,
@@ -88,8 +88,7 @@ export const callRegistration = () => {
   const partTimerProfile = getPartTimerProfile(userEmail);
 
   const sheet = getSheet("registration", spreadsheetUrl);
-  const comment = sheet.getRange("A2").getValue();
-  const registrationRows = getRegistrationRows(sheet);
+  const { comment, registrationRows } = getRegistrationSheetValues(sheet);
   const registrationInfos = registrationRows.map(({ startTime, endTime, restStartTime, restEndTime, workingStyle }) => {
     const title = createTitleFromEventInfo(
       {
@@ -130,9 +129,7 @@ const createRegistrationMessage = (
   const messages = registrationInfos.map(createMessageFromEventInfo);
   const { job, lastName } = partTimerProfile;
   const messageTitle = `${job}${lastName}さんの以下の単発シフトが追加されました。`;
-  return comment
-    ? `${messageTitle}\n${messages.join("\n")}\n\nコメント: ${comment}`
-    : `${messageTitle}\n${messages.join("\n")}`;
+  return `${messageTitle}\n${messages.join("\n")}\n\nコメント: ${comment}`;
 };
 
 export const callShowEvents = () => {
@@ -188,9 +185,8 @@ export const callModificationAndDeletion = () => {
   const client = getSlackClient(SLACK_ACCESS_TOKEN);
   const partTimerProfile = getPartTimerProfile(userEmail);
   const sheet = getSheet("modificationAndDeletion", spreadsheetUrl);
-  const comment = sheet.getRange("A2").getValue();
 
-  const { modificationRows, deletionRows } = getModificationOrDeletion(sheet);
+  const { comment, modificationRows, deletionRows } = getModificationOrDeletionSheetValues(sheet);
   const modificationInfos = modificationRows.map(
     ({ title, startTime, endTime, newStartTime, newEndTime, newRestStartTime, newRestEndTime, newWorkingStyle }) => {
       const newTitle = createTitleFromEventInfo(
@@ -249,10 +245,8 @@ export const callModificationAndDeletion = () => {
   const modificationAndDeletionMessageToNotify = [
     createModificationMessage(modificationInfos, partTimerProfile),
     createDeletionMessage(deletionRows, partTimerProfile),
-    comment ? `コメント: ${comment}` : undefined,
-  ]
-    .filter(Boolean)
-    .join("\n---\n");
+    `コメント: ${comment}`,
+  ].join("\n---\n");
 
   postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, modificationAndDeletionMessageToNotify, partTimerProfile);
   sheet.clear();
@@ -468,7 +462,7 @@ const createMessageForRecurringEvent = (
   registerEventStrings: string,
   modifyEventStrings: string,
   deleteEventStrings: string,
-  comment: string | undefined,
+  comment: string,
 ): string => {
   const message = [
     `${job}${lastName}さんが${format(after, "yyyy/MM/dd")}以降の固定シフトを変更しました`,
@@ -477,7 +471,7 @@ const createMessageForRecurringEvent = (
     deleteEventStrings,
   ].join("\n");
 
-  return comment ? `${message}\n---\nコメント: ${comment}` : message;
+  return `${message}\n---\nコメント: ${comment}`;
 };
 
 const getSlackClient = (slackToken: string): SlackClient => {

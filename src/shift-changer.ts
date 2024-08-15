@@ -114,22 +114,11 @@ export const callRegistration = () => {
   };
   const { API_URL, SLACK_CHANNEL_TO_POST } = getConfig();
   UrlFetchApp.fetch(API_URL, options);
-  const messageToNotify = createRegistrationMessage(registrationInfos, comment, partTimerProfile);
+  const messageToNotify = [createMessage(partTimerProfile, registrationInfos), `コメント: ${comment}`].join("\n---\n");
   postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, messageToNotify, partTimerProfile);
   sheet.clear();
   SpreadsheetApp.flush();
   setValuesRegistrationSheet(sheet);
-};
-
-const createRegistrationMessage = (
-  registrationInfos: Event[],
-  comment: string,
-  partTimerProfile: PartTimerProfile,
-): string => {
-  const messages = registrationInfos.map(createMessageFromEventInfo);
-  const { job, lastName } = partTimerProfile;
-  const messageTitle = `${job}${lastName}さんの以下の単発シフトが追加されました。`;
-  return `${messageTitle}\n${messages.join("\n")}\n\nコメント: ${comment}`;
 };
 
 export const callShowEvents = () => {
@@ -243,8 +232,7 @@ export const callModificationAndDeletion = () => {
 
   const { SLACK_CHANNEL_TO_POST } = getConfig();
   const modificationAndDeletionMessageToNotify = [
-    createModificationMessage(modificationInfos, partTimerProfile),
-    createDeletionMessage(deletionRows, partTimerProfile),
+    createMessage(partTimerProfile, deletionRows, modificationInfos),
     `コメント: ${comment}`,
   ].join("\n---\n");
 
@@ -254,27 +242,45 @@ export const callModificationAndDeletion = () => {
   setValuesModificationAndDeletionSheet(sheet);
 };
 
-const createModificationMessage = (
-  modificationInfos: {
-    previousEvent: Event;
-    newEvent: Event;
-  }[],
+const createMessage = (
   partTimerProfile: PartTimerProfile,
-): string | undefined => {
-  const messages = modificationInfos.map(({ previousEvent, newEvent }) => {
-    return `${createMessageFromEventInfo(previousEvent)} → ${createMessageFromEventInfo(newEvent)}`;
-  });
-  if (messages.length == 0) return;
+  registrationInfos?: Event[],
+  modificationInfos?: {
+    previousEvent: {
+      title: string;
+      date: Date;
+      startTime: Date;
+      endTime: Date;
+    };
+    newEvent: {
+      title: string;
+      date: Date;
+      startTime: Date;
+      endTime: Date;
+    };
+  }[],
+  deletionInfos?: Event[],
+): string => {
   const { job, lastName } = partTimerProfile;
-  const messageTitle = `${job}${lastName}さんの以下の単発シフトが変更されました。`;
-  return `${messageTitle}\n${messages.join("\n\n")}`;
-};
-const createDeletionMessage = (deletionInfos: Event[], partTimerProfile: PartTimerProfile): string | undefined => {
-  const messages = deletionInfos.map(createMessageFromEventInfo);
-  if (messages.length == 0) return;
-  const { job, lastName } = partTimerProfile;
-  const messageTitle = `${job}${lastName}さんの以下の単発シフトが削除されました。`;
-  return `${messageTitle}\n${messages.join("\n")}`;
+  const message: string[] = [`${job}${lastName}さんが以下の単発シフトを変更しました`];
+  if (registrationInfos) {
+    const messages = registrationInfos.map(createMessageFromEventInfo);
+    const messageTitle = "[追加]";
+    message.push(`${messageTitle}\n${messages.join("\n")}`);
+  }
+  if (modificationInfos) {
+    const messages = modificationInfos.map(({ previousEvent, newEvent }) => {
+      return `${createMessageFromEventInfo(previousEvent)} → ${createMessageFromEventInfo(newEvent)}`;
+    });
+    const messageTitle = "[変更]";
+    message.push(`${messageTitle}\n${messages.join("\n")}`);
+  }
+  if (deletionInfos) {
+    const messages = deletionInfos.map(createMessageFromEventInfo);
+    const messageTitle = "[消去]";
+    message.push(`${messageTitle}\n${messages.join("\n")}`);
+  }
+  return message.join("\n");
 };
 
 export const callRecurringEvent = () => {

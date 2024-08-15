@@ -1,4 +1,4 @@
-import { getDate, getMonth, isWeekend } from "date-fns";
+import { getDate, getMonth, isWeekend, set } from "date-fns";
 
 const isHoliday = (day: Date): boolean => {
   const calendarId = "ja.japanese#holiday@group.v.calendar.google.com";
@@ -22,4 +22,9 @@ export const isBankHoliday = (date: Date): boolean => {
     return true;
   }
   return false;
+};
+
+//NOTE: Googleスプレッドシートでは時間のみの入力がDate型として取得される際、日付部分はデフォルトで1899/12/30となるため適切な日付情報に更新する必要がある
+export const mergeTimeToDate = (date: Date, time: Date): Date => {
+  return set(date, { hours: time.getHours(), minutes: time.getMinutes() });
 };

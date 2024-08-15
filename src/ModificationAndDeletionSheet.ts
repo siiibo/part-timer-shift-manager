@@ -1,7 +1,7 @@
-import { set } from "date-fns";
 import { z } from "zod";
 
-import { DateAfterNow, DateOrEmptyString } from "./common.schema";
+import { Comment, DateAfterNow, DateOrEmptyString } from "./common.schema";
+import { mergeTimeToDate } from "./date-utils";
 
 const ModificationRow = z.object({
   type: z.literal("modification"),
@@ -56,6 +56,12 @@ const NoOperationRow = z.object({
   type: z.literal("no-operation"),
 });
 type NoOperationRow = z.infer<typeof NoOperationRow>;
+
+type ModificationOrDeletionSheetValues = {
+  comment: Comment;
+  modificationRows: ModificationRow[];
+  deletionRows: DeletionRow[];
+};
 
 export const insertModificationAndDeletionSheet = () => {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
@@ -137,15 +143,27 @@ export const setValuesModificationAndDeletionSheet = (sheet: GoogleAppsScript.Sp
   sheet.setColumnWidth(1, 370);
 };
 
-const getModificationOrDeletionSheetValues = (
+export const getModificationOrDeletionSheetValues = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
-): (ModificationRow | DeletionRow | NoOperationRow)[] => {
+): ModificationOrDeletionSheetValues => {
+  const { modificationRows, deletionRows } = getModificationOrDeletionRows(sheet);
+  const comment = Comment.parse(sheet.getRange("A2").getValue());
+  return {
+    comment,
+    modificationRows,
+    deletionRows,
+  };
+};
+
+const getModificationOrDeletionRows = (
+  sheet: GoogleAppsScript.Spreadsheet.Sheet,
+): { modificationRows: ModificationRow[]; deletionRows: DeletionRow[] } => {
   const sheetValues = sheet
     .getRange(9, 1, sheet.getLastRow() - 8, sheet.getLastColumn())
     .getValues()
-    .map((row) => {
-      console.log(row); //NOTE: シート情報をログに出力
-      return ModificationOrDeletionSheetRow.parse({
+    .map((row) =>
+      ModificationOrDeletionSheetRow.parse({
+        //TODO: 2度parseしているので、1度にまとめる
         title: row[0],
         date: row[1],
         startTime: row[2],
@@ -157,8 +175,8 @@ const getModificationOrDeletionSheetValues = (
         newRestEndTime: row[8],
         newWorkingStyle: row[9],
         isDeletionTarget: row[10],
-      });
-    })
+      }),
+    )
     .map((row) => {
       if (row.isDeletionTarget) {
         const startTime = mergeTimeToDate(row.date, row.startTime);
@@ -192,23 +210,13 @@ const getModificationOrDeletionSheetValues = (
         });
       }
     });
-  return sheetValues;
-};
-const isModificationRow = (row: ModificationRow | DeletionRow | NoOperationRow): row is ModificationRow =>
-  row.type === "modification";
-const isDeletionRow = (row: ModificationRow | DeletionRow | NoOperationRow): row is DeletionRow =>
-  row.type === "deletion";
-
-export const getModificationOrDeletion = (
-  sheet: GoogleAppsScript.Spreadsheet.Sheet,
-): { modificationRows: ModificationRow[]; deletionRows: DeletionRow[] } => {
-  const sheetValues = getModificationOrDeletionSheetValues(sheet);
   return {
     modificationRows: sheetValues.filter(isModificationRow),
     deletionRows: sheetValues.filter(isDeletionRow),
   };
 };
-//NOTE: Googleスプレッドシートでは時間のみの入力がDate型として取得される際、日付部分はデフォルトで1899/12/30となるため適切な日付情報に更新する必要がある
-const mergeTimeToDate = (date: Date, time: Date): Date => {
-  return set(date, { hours: time.getHours(), minutes: time.getMinutes() });
-};
+
+const isModificationRow = (row: ModificationRow | DeletionRow | NoOperationRow): row is ModificationRow =>
+  row.type === "modification";
+const isDeletionRow = (row: ModificationRow | DeletionRow | NoOperationRow): row is DeletionRow =>
+  row.type === "deletion";

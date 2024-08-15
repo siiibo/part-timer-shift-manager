@@ -14,8 +14,13 @@ export const DateOrEmptyString = z.preprocess((val) => (val === "" ? undefined :
 export const DayOfWeekOrEmptyString = z.preprocess((val) => (val === "" ? undefined : val), DayOfWeek.optional());
 
 export const DateAfterNow = z.date().min(new Date(), { message: "過去の時間にシフト変更はできません" });
+export type DateAfterNow = z.infer<typeof DateAfterNow>;
 
 export const WorkingStyleOrEmptyString = z.preprocess(
   (val) => (val === "" ? undefined : val),
   z.literal("出社").or(z.literal("リモート")).optional(),
 );
+
+//NOTE: min(1)で空文字を許容しないようにしている
+export const Comment = z.string().min(1, { message: "コメントを記入してください" });
+export type Comment = z.infer<typeof Comment>;

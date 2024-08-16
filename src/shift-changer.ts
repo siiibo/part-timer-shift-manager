@@ -187,10 +187,9 @@ export const callModificationAndDeletion = () => {
         partTimerProfile,
       );
       return {
-        previousEvent: { title, date: startTime, startTime, endTime },
+        previousEvent: { title, startTime, endTime },
         newEvent: {
           title: newTitle,
-          date: newStartTime,
           startTime: newStartTime,
           endTime: newEndTime,
         },
@@ -244,22 +243,9 @@ export const callModificationAndDeletion = () => {
 
 const createMessage = (
   partTimerProfile: PartTimerProfile,
-  registrationInfos?: Event[],
-  modificationInfos?: {
-    previousEvent: {
-      title: string;
-      date: Date;
-      startTime: Date;
-      endTime: Date;
-    };
-    newEvent: {
-      title: string;
-      date: Date;
-      startTime: Date;
-      endTime: Date;
-    };
-  }[],
-  deletionInfos?: Event[],
+  registrationInfos?: RegisterEventRequest["events"],
+  modificationInfos?: ModifyEventRequest["events"],
+  deletionInfos?: DeleteEventRequest["events"],
 ): string => {
   const { job, lastName } = partTimerProfile;
   const message: string[] = [`${job}${lastName}さんが以下の単発シフトを変更しました`];

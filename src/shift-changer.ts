@@ -89,7 +89,7 @@ export const callRegistration = () => {
 
   const sheet = getSheet("registration", spreadsheetUrl);
   const { comment, registrationRows } = getRegistrationSheetValues(sheet);
-  console.info(`registration:${registrationRows}`); //NOTE: シート内容を確認するためのログ
+  console.info(registrationRows); //NOTE: シート内容を確認するためのログ
   const registrationInfos = registrationRows.map(({ startTime, endTime, restStartTime, restEndTime, workingStyle }) => {
     const title = createTitleFromEventInfo(
       {
@@ -188,7 +188,7 @@ export const callModificationAndDeletion = () => {
   const sheet = getSheet("modificationAndDeletion", spreadsheetUrl);
 
   const { comment, modificationRows, deletionRows } = getModificationOrDeletionSheetValues(sheet);
-  console.info(`modification:${modificationRows}, deletion:${deletionRows}`); //NOTE: シート内容を確認するためのログ
+  console.info(modificationRows, deletionRows); //NOTE: シート内容を確認するためのログ
   const modificationInfos = modificationRows.map(
     ({ title, startTime, endTime, newStartTime, newEndTime, newRestStartTime, newRestEndTime, newWorkingStyle }) => {
       const newTitle = createTitleFromEventInfo(
@@ -287,9 +287,7 @@ export const callRecurringEvent = () => {
   const spreadsheetUrl = SpreadsheetApp.getActiveSpreadsheet().getUrl();
   const sheet = getSheet("recurringEvent", spreadsheetUrl);
   const { after, comment, registrationRows, modificationRows, deletionRows } = getRecurringEventSheetValues(sheet);
-  console.info(
-    `recurringRegistration:${registrationRows}, recurringModification:${modificationRows}, recurringDeletion:${deletionRows}`,
-  ); //NOTE: シート内容を確認するためのログ
+  console.info(registrationRows, modificationRows, deletionRows); //NOTE: シート内容を確認するためのログ
   const userEmail = Session.getActiveUser().getEmail();
   const partTimerProfile = getPartTimerProfile(userEmail);
 

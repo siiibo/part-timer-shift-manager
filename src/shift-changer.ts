@@ -1,5 +1,6 @@
 import { GasWebClient as SlackClient } from "@hi-se/web-api";
 import { format } from "date-fns";
+import { z } from "zod";
 
 import { deleteHolidayShift } from "./autoDeleteHolidayEvent";
 import { DayOfWeek } from "./common.schema";
@@ -28,6 +29,27 @@ import {
   RegisterRecurringEventRequest,
   ShowEventRequest,
 } from "./shift-changer-api";
+
+const CreateMessageSchema = z.union([
+  z.object({
+    type: z.literal("registerEvent"),
+    eventInfos: z.array(Event),
+  }),
+  z.object({
+    type: z.literal("modifyEvent"),
+    eventInfos: z
+      .object({
+        previousEvent: Event,
+        newEvent: Event,
+      })
+      .array(),
+  }),
+  z.object({
+    type: z.literal("deleteEvent"),
+    eventInfos: z.array(Event),
+  }),
+]);
+type CreateMessageSchema = z.infer<typeof CreateMessageSchema>;
 
 type SheetType = "registration" | "modificationAndDeletion" | "recurringEvent";
 
@@ -114,7 +136,10 @@ export const callRegistration = () => {
   };
   const { API_URL, SLACK_CHANNEL_TO_POST } = getConfig();
   UrlFetchApp.fetch(API_URL, options);
-  const messageToNotify = [createMessage(partTimerProfile, registrationInfos), `コメント: ${comment}`].join("\n---\n");
+  const messageToNotify = [
+    createMessage(partTimerProfile, { type: "registerEvent", eventInfos: registrationInfos }),
+    `コメント: ${comment}`,
+  ].join("\n---\n");
   postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, messageToNotify, partTimerProfile);
   sheet.clear();
   SpreadsheetApp.flush();
@@ -231,7 +256,15 @@ export const callModificationAndDeletion = () => {
 
   const { SLACK_CHANNEL_TO_POST } = getConfig();
   const modificationAndDeletionMessageToNotify = [
-    createMessage(partTimerProfile, deletionRows, modificationInfos),
+    createMessage(partTimerProfile, { type: "modifyEvent", eventInfos: modificationInfos }),
+    createMessage(partTimerProfile, {
+      type: "deleteEvent",
+      eventInfos: deletionRows.map(({ title, startTime, endTime }) => ({
+        title,
+        startTime,
+        endTime,
+      })),
+    }),
     `コメント: ${comment}`,
   ].join("\n---\n");
 
@@ -241,28 +274,23 @@ export const callModificationAndDeletion = () => {
   setValuesModificationAndDeletionSheet(sheet);
 };
 
-const createMessage = (
-  partTimerProfile: PartTimerProfile,
-  registrationInfos?: RegisterEventRequest["events"],
-  modificationInfos?: ModifyEventRequest["events"],
-  deletionInfos?: DeleteEventRequest["events"],
-): string => {
+const createMessage = (partTimerProfile: PartTimerProfile, messageInfos: CreateMessageSchema): string => {
   const { job, lastName } = partTimerProfile;
   const message: string[] = [`${job}${lastName}さんが以下の単発シフトを変更しました`];
-  if (registrationInfos) {
-    const messages = registrationInfos.map(createMessageFromEventInfo);
+  if (messageInfos.type === "registerEvent") {
+    const messages = messageInfos.eventInfos.map(createMessageFromEventInfo);
     const messageTitle = "[追加]";
     message.push(`${messageTitle}\n${messages.join("\n")}`);
   }
-  if (modificationInfos) {
-    const messages = modificationInfos.map(({ previousEvent, newEvent }) => {
+  if (messageInfos.type === "modifyEvent") {
+    const messages = messageInfos.eventInfos.map(({ previousEvent, newEvent }) => {
       return `${createMessageFromEventInfo(previousEvent)} → ${createMessageFromEventInfo(newEvent)}`;
     });
     const messageTitle = "[変更]";
     message.push(`${messageTitle}\n${messages.join("\n")}`);
   }
-  if (deletionInfos) {
-    const messages = deletionInfos.map(createMessageFromEventInfo);
+  if (messageInfos.type === "deleteEvent") {
+    const messages = messageInfos.eventInfos.map(createMessageFromEventInfo);
     const messageTitle = "[消去]";
     message.push(`${messageTitle}\n${messages.join("\n")}`);
   }

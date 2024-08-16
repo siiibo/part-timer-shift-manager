@@ -132,6 +132,7 @@ export const setValuesRecurringEventSheet = (sheet: GoogleAppsScript.Spreadsheet
 
 export const getRecurringEventSheetValues = (sheet: GoogleAppsScript.Spreadsheet.Sheet): RecurringEventSheetValues => {
   const sheetRows = getRecurringEventSheetRows(sheet);
+  console.log(sheetRows); //NOTE: シートの内容を確認するためのログ
   const after = DateAfterNow.parse(sheet.getRange("A5").getValue());
   const comment = Comment.parse(sheet.getRange("A2").getValue());
   const sheetValues = sheetRows.map((row) => {
@@ -180,9 +181,8 @@ const getRecurringEventSheetRows = (sheet: GoogleAppsScript.Spreadsheet.Sheet): 
   const sheetRows = sheet
     .getRange("A9:G13")
     .getValues()
-    .map((row) => {
-      console.log(row); //NOTE: ユーザの入力値を確認するためのログ
-      return RecurringEventSheetRow.parse({
+    .map((row) =>
+      RecurringEventSheetRow.parse({
         //TODO: 2度parseしているので、1度にまとめる
         operation: row[0],
         dayOfWeek: row[1],
@@ -191,8 +191,8 @@ const getRecurringEventSheetRows = (sheet: GoogleAppsScript.Spreadsheet.Sheet): 
         restStartTime: row[4],
         restEndTime: row[5],
         workingStyle: row[6],
-      });
-    });
+      }),
+    );
   return sheetRows;
 };
 

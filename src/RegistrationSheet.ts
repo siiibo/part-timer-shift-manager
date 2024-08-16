@@ -81,6 +81,7 @@ export const getRegistrationSheetValues = (
   registrationRows: RegistrationSheetRow[];
 } => {
   const sheetRows = getRegistrationRows(sheet);
+  console.log(sheetRows); //NOTE: シート内容を確認するためのログ
   const comment = sheet.getRange("A2").getValue();
   return RegistrationSheetValues.parse({ comment, registrationRows: sheetRows });
 };
@@ -89,16 +90,15 @@ const getRegistrationRows = (sheet: GoogleAppsScript.Spreadsheet.Sheet): Registr
   const sheetValues = sheet
     .getRange(5, 1, sheet.getLastRow() - 4, sheet.getLastColumn())
     .getValues()
-    .map((row) => {
-      console.log(row); //NOTE: ユーザの入力値を確認するためのログ
-      return RegistrationSheetRow.parse({
+    .map((row) =>
+      RegistrationSheetRow.parse({
         date: row[0],
         startTime: row[1],
         endTime: row[2],
         restStartTime: row[3],
         restEndTime: row[4],
         workingStyle: row[5],
-      });
-    });
+      }),
+    );
   return sheetValues;
 };

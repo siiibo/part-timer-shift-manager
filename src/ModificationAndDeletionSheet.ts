@@ -147,7 +147,6 @@ export const getModificationOrDeletionSheetValues = (
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
 ): ModificationOrDeletionSheetValues => {
   const { modificationRows, deletionRows } = getModificationOrDeletionRows(sheet);
-  console.log(modificationRows, deletionRows); //NOTE: シート内容を確認するためのログ
   const comment = Comment.parse(sheet.getRange("A2").getValue());
   return {
     comment,

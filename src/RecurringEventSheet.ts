@@ -132,7 +132,6 @@ export const setValuesRecurringEventSheet = (sheet: GoogleAppsScript.Spreadsheet
 
 export const getRecurringEventSheetValues = (sheet: GoogleAppsScript.Spreadsheet.Sheet): RecurringEventSheetValues => {
   const sheetRows = getRecurringEventSheetRows(sheet);
-  console.log(sheetRows); //NOTE: シートの内容を確認するためのログ
   const after = DateAfterNow.parse(sheet.getRange("A5").getValue());
   const comment = Comment.parse(sheet.getRange("A2").getValue());
   const sheetValues = sheetRows.map((row) => {

@@ -81,7 +81,6 @@ export const getRegistrationSheetValues = (
   registrationRows: RegistrationSheetRow[];
 } => {
   const sheetRows = getRegistrationRows(sheet);
-  console.log(sheetRows); //NOTE: シート内容を確認するためのログ
   const comment = sheet.getRange("A2").getValue();
   return RegistrationSheetValues.parse({ comment, registrationRows: sheetRows });
 };

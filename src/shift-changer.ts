@@ -490,7 +490,7 @@ const createMessageForRecurringEvent = (
   comment: string,
 ): string => {
   const message = [
-    `${job}${lastName}さんが${format(after, "yyyy/MM/dd")}以降の固定シフトを変更しました`,
+    `🔄${job}${lastName}さんが${format(after, "yyyy/MM/dd")}以降の固定シフトを変更しました🔄`,
     registerEventStrings,
     modifyEventStrings,
     deleteEventStrings,

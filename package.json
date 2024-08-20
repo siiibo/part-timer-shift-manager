@@ -5,11 +5,11 @@
   "main": "build/index.js",
   "private": true,
   "scripts": {
-    "open:prod": "cross-env clasp_config_project=.clasp.prod.json yarn clasp open",
-    "open:dev": "cross-env clasp_config_project=.clasp.dev.json yarn clasp open",
+    "open:prod": "cross-env clasp_config_project=.clasp.prod.json pnpm clasp open",
+    "open:dev": "cross-env clasp_config_project=.clasp.dev.json pnpm clasp open",
     "build": "node build.js",
-    "buildpush:prod": "yarn run build && cross-env clasp_config_project=.clasp.prod.json clasp push --force",
-    "buildpush:dev": " yarn run build && cross-env clasp_config_project=.clasp.dev.json clasp push --force",
+    "buildpush:prod": "pnpm build && cross-env clasp_config_project=.clasp.prod.json clasp push --force",
+    "buildpush:dev": "pnpm build && cross-env clasp_config_project=.clasp.dev.json clasp push --force",
     "postinstall": "mkdir -p build && cp appsscript.json build/appsscript.json && husky"
   },
   "dependencies": {

@@ -253,7 +253,7 @@ export const callModificationAndDeletion = () => {
     "---",
     `コメント: ${comment}`,
   ]
-    .filter((message) => message !== "")
+    .filter(Boolean)
     .join("\n");
 
   postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, modificationAndDeletionMessageToNotify, partTimerProfile);
@@ -262,8 +262,8 @@ export const callModificationAndDeletion = () => {
   setValuesModificationAndDeletionSheet(sheet);
 };
 
-const createModificationMessage = (eventInfos: { previousEvent: Event; newEvent: Event }[]) => {
-  if (eventInfos.length === 0) return "";
+const createModificationMessage = (eventInfos: { previousEvent: Event; newEvent: Event }[]): string | undefined => {
+  if (eventInfos.length === 0) return;
   const messages = eventInfos.map(({ previousEvent, newEvent }) => {
     return `${createMessageFromEventInfo(previousEvent)} → ${createMessageFromEventInfo(newEvent)}`;
   });
@@ -271,8 +271,8 @@ const createModificationMessage = (eventInfos: { previousEvent: Event; newEvent:
   return `${messageTitle}\n${messages.join("\n")}`;
 };
 
-const createDeletionMessage = (eventInfos: Event[]) => {
-  if (eventInfos.length === 0) return "";
+const createDeletionMessage = (eventInfos: Event[]): string | undefined => {
+  if (eventInfos.length === 0) return;
   const messages = eventInfos.map(createMessageFromEventInfo);
   const messageTitle = "[消去]";
   return `${messageTitle}\n${messages.join("\n")}`;

@@ -137,7 +137,7 @@ export const callRegistration = () => {
   UrlFetchApp.fetch(API_URL, options);
   const { job, lastName } = partTimerProfile;
   const messageToNotify = [
-    `${job}${lastName}さんが以下の単発シフトを変更しました`,
+    `${job}${lastName}さんが以下の単発シフトを追加しました`,
     createMessage({ type: "registerEvent", eventInfos: registrationInfos }),
     "---",
     `コメント: ${comment}`,

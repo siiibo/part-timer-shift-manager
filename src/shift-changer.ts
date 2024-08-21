@@ -139,7 +139,7 @@ export const callRegistration = () => {
   UrlFetchApp.fetch(API_URL, options);
   const { job, lastName } = partTimerProfile;
   const messageToNotify = [
-    `${job}${lastName}さんが以下の単発シフトを追加しました`,
+    `${job}${lastName}さんが以下の単発シフトを変更しました`,
     createMessage({ type: "registerEvent", eventInfos: registrationInfos }),
     "---",
     `コメント: ${comment}`,
@@ -227,6 +227,10 @@ export const callModificationAndDeletion = () => {
     },
   );
 
+  const deleteInfos = deletionRows.map(({ title, startTime, endTime }) => {
+    return { title, startTime, endTime };
+  });
+
   const { API_URL } = getConfig();
   const basePayload = { apiId: "shift-changer", userEmail: userEmail } as const;
   if (modificationInfos.length > 0) {
@@ -242,10 +246,7 @@ export const callModificationAndDeletion = () => {
     };
     UrlFetchApp.fetch(API_URL, options);
   }
-  if (deletionRows.length > 0) {
-    const deleteInfos = deletionRows.map(({ title, startTime, endTime }) => {
-      return { title, startTime, endTime };
-    });
+  if (deleteInfos.length > 0) {
     const payload = JSON.stringify({
       ...basePayload,
       operationType: "deleteEvent",
@@ -264,14 +265,7 @@ export const callModificationAndDeletion = () => {
   const modificationAndDeletionMessageToNotify = [
     `${job}${lastName}さんが以下の単発シフトを変更しました`,
     createMessage({ type: "modifyEvent", eventInfos: modificationInfos }),
-    createMessage({
-      type: "deleteEvent",
-      eventInfos: deletionRows.map(({ title, startTime, endTime }) => ({
-        title,
-        startTime,
-        endTime,
-      })),
-    }),
+    createMessage({ type: "deleteEvent", eventInfos: deleteInfos }),
     "---",
     `コメント: ${comment}`,
   ].join("\n");

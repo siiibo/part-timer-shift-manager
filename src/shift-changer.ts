@@ -137,10 +137,13 @@ export const callRegistration = () => {
   };
   const { API_URL, SLACK_CHANNEL_TO_POST } = getConfig();
   UrlFetchApp.fetch(API_URL, options);
+  const { job, lastName } = partTimerProfile;
   const messageToNotify = [
-    createMessage(partTimerProfile, { type: "registerEvent", eventInfos: registrationInfos }),
+    `${job}${lastName}さんが以下の単発シフトを追加しました`,
+    createMessage({ type: "registerEvent", eventInfos: registrationInfos }),
+    "---",
     `コメント: ${comment}`,
-  ].join("\n---\n");
+  ].join("\n");
   postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, messageToNotify, partTimerProfile);
   sheet.clear();
   SpreadsheetApp.flush();
@@ -257,9 +260,11 @@ export const callModificationAndDeletion = () => {
   }
 
   const { SLACK_CHANNEL_TO_POST } = getConfig();
+  const { job, lastName } = partTimerProfile;
   const modificationAndDeletionMessageToNotify = [
-    createMessage(partTimerProfile, { type: "modifyEvent", eventInfos: modificationInfos }),
-    createMessage(partTimerProfile, {
+    `${job}${lastName}さんが以下の単発シフトを変更しました`,
+    createMessage({ type: "modifyEvent", eventInfos: modificationInfos }),
+    createMessage({
       type: "deleteEvent",
       eventInfos: deletionRows.map(({ title, startTime, endTime }) => ({
         title,
@@ -267,8 +272,9 @@ export const callModificationAndDeletion = () => {
         endTime,
       })),
     }),
+    "---",
     `コメント: ${comment}`,
-  ].join("\n---\n");
+  ].join("\n");
 
   postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, modificationAndDeletionMessageToNotify, partTimerProfile);
   sheet.clear();
@@ -276,27 +282,24 @@ export const callModificationAndDeletion = () => {
   setValuesModificationAndDeletionSheet(sheet);
 };
 
-const createMessage = (partTimerProfile: PartTimerProfile, messageInfos: CreateMessageSchema): string => {
-  const { job, lastName } = partTimerProfile;
-  const message: string[] = [`${job}${lastName}さんが以下の単発シフトを変更しました`];
+const createMessage = (messageInfos: CreateMessageSchema) => {
   if (messageInfos.type === "registerEvent") {
     const messages = messageInfos.eventInfos.map(createMessageFromEventInfo);
     const messageTitle = "[追加]";
-    message.push(`${messageTitle}\n${messages.join("\n")}`);
+    return `${messageTitle}\n${messages.join("\n")}`;
   }
   if (messageInfos.type === "modifyEvent") {
     const messages = messageInfos.eventInfos.map(({ previousEvent, newEvent }) => {
       return `${createMessageFromEventInfo(previousEvent)} → ${createMessageFromEventInfo(newEvent)}`;
     });
     const messageTitle = "[変更]";
-    message.push(`${messageTitle}\n${messages.join("\n")}`);
+    return `${messageTitle}\n${messages.join("\n")}`;
   }
   if (messageInfos.type === "deleteEvent") {
     const messages = messageInfos.eventInfos.map(createMessageFromEventInfo);
     const messageTitle = "[消去]";
-    message.push(`${messageTitle}\n${messages.join("\n")}`);
+    return `${messageTitle}\n${messages.join("\n")}`;
   }
-  return message.join("\n");
 };
 
 export const callRecurringEvent = () => {
@@ -422,6 +425,7 @@ export const callRecurringEvent = () => {
   // ref: https://github.com/siiibo/part-timer-shift-manager/pull/53#discussion_r1665084529
   deleteHolidayShift();
 };
+
 const createMessageForRegisterRecurringEvent = (
   registrationInfos: { title: string; dayOfWeek: DayOfWeek; startTime: Date; endTime: Date }[],
 ): string => {
@@ -545,8 +549,8 @@ const createMessageFromEventInfo = (eventInfo: Event) => {
   const startTime = format(eventInfo.startTime, "HH:mm");
   const endTime = format(eventInfo.endTime, "HH:mm");
   if (restStartTime === undefined || restEndTime === undefined)
-    return `${date}: ${emojiWorkingStyle} ${startTime}~${endTime}`;
-  else return `${date}: ${emojiWorkingStyle} ${startTime}~${endTime} (休憩: ${restStartTime}~${restEndTime})`;
+    return `• ${date}: ${emojiWorkingStyle} ${startTime}~${endTime}`;
+  else return `• ${date}: ${emojiWorkingStyle} ${startTime}~${endTime} (休憩: ${restStartTime}~${restEndTime})`;
 };
 const getEventInfoFromTitle = (
   title: string,

@@ -10,7 +10,8 @@
     "build": "node build.js",
     "buildpush:prod": "pnpm build && cross-env clasp_config_project=.clasp.prod.json clasp push --force",
     "buildpush:dev": "pnpm build && cross-env clasp_config_project=.clasp.dev.json clasp push --force",
-    "postinstall": "mkdir -p build && cp appsscript.json build/appsscript.json && husky"
+    "postinstall": "mkdir -p build && cp appsscript.json build/appsscript.json && husky",
+    "preinstall": "npx only-allow pnpm"
   },
   "dependencies": {
     "@hi-se/web-api": "https://gitpkg.now.sh/hi-se/node-slack-sdk/packages/web-api?ab078b145617d511327a8f74fe34f1d4695ff893",

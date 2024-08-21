@@ -1,6 +1,5 @@
 import { GasWebClient as SlackClient } from "@hi-se/web-api";
 import { format } from "date-fns";
-import { z } from "zod";
 
 import { deleteHolidayShift } from "./autoDeleteHolidayEvent";
 import { DayOfWeek } from "./common.schema";
@@ -30,26 +29,25 @@ import {
   ShowEventRequest,
 } from "./shift-changer-api";
 
-const CreateMessageSchema = z.union([
-  z.object({
-    type: z.literal("registerEvent"),
-    eventInfos: z.array(Event),
-  }),
-  z.object({
-    type: z.literal("modifyEvent"),
-    eventInfos: z
-      .object({
-        previousEvent: Event,
-        newEvent: Event,
-      })
-      .array(),
-  }),
-  z.object({
-    type: z.literal("deleteEvent"),
-    eventInfos: z.array(Event),
-  }),
-]);
-type CreateMessageSchema = z.infer<typeof CreateMessageSchema>;
+type RegisterEventMessage = {
+  type: "registerEvent";
+  eventInfos: Event[];
+};
+
+type ModifyEventMessage = {
+  type: "modifyEvent";
+  eventInfos: {
+    previousEvent: Event;
+    newEvent: Event;
+  }[];
+};
+
+type DeleteEventMessage = {
+  type: "deleteEvent";
+  eventInfos: Event[];
+};
+
+type CreateMessageSchema = RegisterEventMessage | ModifyEventMessage | DeleteEventMessage;
 
 type SheetType = "registration" | "modificationAndDeletion" | "recurringEvent";
 

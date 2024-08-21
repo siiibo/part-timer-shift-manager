@@ -29,26 +29,6 @@ import {
   ShowEventRequest,
 } from "./shift-changer-api";
 
-type RegisterEventMessage = {
-  type: "registerEvent";
-  eventInfos: Event[];
-};
-
-type ModifyEventMessage = {
-  type: "modifyEvent";
-  eventInfos: {
-    previousEvent: Event;
-    newEvent: Event;
-  }[];
-};
-
-type DeleteEventMessage = {
-  type: "deleteEvent";
-  eventInfos: Event[];
-};
-
-type CreateMessageSchema = RegisterEventMessage | ModifyEventMessage | DeleteEventMessage;
-
 type SheetType = "registration" | "modificationAndDeletion" | "recurringEvent";
 
 export const initShiftChanger = () => {
@@ -138,7 +118,7 @@ export const callRegistration = () => {
   const { job, lastName } = partTimerProfile;
   const messageToNotify = [
     `${job}${lastName}さんが以下の単発シフトを追加しました`,
-    createMessage({ type: "registerEvent", eventInfos: registrationInfos }),
+    createRegistrationMessage(registrationInfos),
     "---",
     `コメント: ${comment}`,
   ].join("\n");
@@ -146,6 +126,12 @@ export const callRegistration = () => {
   sheet.clear();
   SpreadsheetApp.flush();
   setValuesRegistrationSheet(sheet);
+};
+
+const createRegistrationMessage = (eventInfos: Event[]) => {
+  const messages = eventInfos.map(createMessageFromEventInfo);
+  const messageTitle = "[追加]";
+  return `${messageTitle}\n${messages.join("\n")}`;
 };
 
 export const callShowEvents = () => {
@@ -262,11 +248,13 @@ export const callModificationAndDeletion = () => {
   const { job, lastName } = partTimerProfile;
   const modificationAndDeletionMessageToNotify = [
     `${job}${lastName}さんが以下の単発シフトを変更しました`,
-    createMessage({ type: "modifyEvent", eventInfos: modificationInfos }),
-    createMessage({ type: "deleteEvent", eventInfos: deleteInfos }),
+    createModificationMessage(modificationInfos),
+    createDeletionMessage(deleteInfos),
     "---",
     `コメント: ${comment}`,
-  ].join("\n");
+  ]
+    .filter((message) => message !== "")
+    .join("\n");
 
   postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, modificationAndDeletionMessageToNotify, partTimerProfile);
   sheet.clear();
@@ -274,24 +262,20 @@ export const callModificationAndDeletion = () => {
   setValuesModificationAndDeletionSheet(sheet);
 };
 
-const createMessage = (messageInfos: CreateMessageSchema) => {
-  if (messageInfos.type === "registerEvent") {
-    const messages = messageInfos.eventInfos.map(createMessageFromEventInfo);
-    const messageTitle = "[追加]";
-    return `${messageTitle}\n${messages.join("\n")}`;
-  }
-  if (messageInfos.type === "modifyEvent") {
-    const messages = messageInfos.eventInfos.map(({ previousEvent, newEvent }) => {
-      return `${createMessageFromEventInfo(previousEvent)} → ${createMessageFromEventInfo(newEvent)}`;
-    });
-    const messageTitle = "[変更]";
-    return `${messageTitle}\n${messages.join("\n")}`;
-  }
-  if (messageInfos.type === "deleteEvent") {
-    const messages = messageInfos.eventInfos.map(createMessageFromEventInfo);
-    const messageTitle = "[消去]";
-    return `${messageTitle}\n${messages.join("\n")}`;
-  }
+const createModificationMessage = (eventInfos: { previousEvent: Event; newEvent: Event }[]) => {
+  if (eventInfos.length === 0) return "";
+  const messages = eventInfos.map(({ previousEvent, newEvent }) => {
+    return `${createMessageFromEventInfo(previousEvent)} → ${createMessageFromEventInfo(newEvent)}`;
+  });
+  const messageTitle = "[変更]";
+  return `${messageTitle}\n${messages.join("\n")}`;
+};
+
+const createDeletionMessage = (eventInfos: Event[]) => {
+  if (eventInfos.length === 0) return "";
+  const messages = eventInfos.map(createMessageFromEventInfo);
+  const messageTitle = "[消去]";
+  return `${messageTitle}\n${messages.join("\n")}`;
 };
 
 export const callRecurringEvent = () => {

@@ -22,8 +22,10 @@ jobs:
             node_modules
       - uses: actions/setup-node@v3
         with:
-          node-version: 18
-      - run: pnpm install
+          node-version: 20
+          cache: "pnpm"
+      - name: Install dependencies
+        run: pnpm install
       - name: Create ~/.clasprc.json
         run: |
           cat <<-EOS > ~/.clasprc.json

@@ -264,8 +264,8 @@ const createRegistrationMessage = (eventInfos: Event[]): string => {
   return `${messageTitle}\n${messages.join("\n")}`;
 };
 
-const createModificationMessage = (eventInfos: { previousEvent: Event; newEvent: Event }[]): string | undefined => {
-  if (eventInfos.length === 0) return;
+const createModificationMessage = (eventInfos: { previousEvent: Event; newEvent: Event }[]): string => {
+  if (eventInfos.length === 0) return "";
   const messages = eventInfos.map(({ previousEvent, newEvent }) => {
     return `${createMessageFromEventInfo(previousEvent)} → ${createMessageFromEventInfo(newEvent)}`;
   });
@@ -273,8 +273,8 @@ const createModificationMessage = (eventInfos: { previousEvent: Event; newEvent:
   return `${messageTitle}\n${messages.join("\n")}`;
 };
 
-const createDeletionMessage = (eventInfos: Event[]): string | undefined => {
-  if (eventInfos.length === 0) return;
+const createDeletionMessage = (eventInfos: Event[]): string => {
+  if (eventInfos.length === 0) return "";
   const messages = eventInfos.map(createMessageFromEventInfo);
   const messageTitle = "[消去]";
   return `${messageTitle}\n${messages.join("\n")}`;
@@ -473,9 +473,9 @@ const createMessageForRecurringEvent = (
 ): string => {
   const recurringMessageToNotify = `
     ${job}${lastName}さんが${format(after, "yyyy/MM/dd")}以降の固定シフトを変更しました
-    registerEventStrings,
-    modifyEventStrings,
-    deleteEventStrings,
+    ${registerEventStrings}
+    ${modifyEventStrings}
+    ${deleteEventStrings}
   `.trim();
 
   return `${recurringMessageToNotify}\n---\nコメント: ${comment}`;

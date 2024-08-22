@@ -128,12 +128,6 @@ export const callRegistration = () => {
   setValuesRegistrationSheet(sheet);
 };
 
-const createRegistrationMessage = (eventInfos: Event[]) => {
-  const messages = eventInfos.map(createMessageFromEventInfo);
-  const messageTitle = "[追加]";
-  return `${messageTitle}\n${messages.join("\n")}`;
-};
-
 export const callShowEvents = () => {
   const userEmail = Session.getActiveUser().getEmail();
   const spreadsheetUrl = SpreadsheetApp.getActiveSpreadsheet().getUrl();
@@ -260,6 +254,12 @@ export const callModificationAndDeletion = () => {
   sheet.clear();
   SpreadsheetApp.flush();
   setValuesModificationAndDeletionSheet(sheet);
+};
+
+const createRegistrationMessage = (eventInfos: Event[]): string => {
+  const messages = eventInfos.map(createMessageFromEventInfo);
+  const messageTitle = "[追加]";
+  return `${messageTitle}\n${messages.join("\n")}`;
 };
 
 const createModificationMessage = (eventInfos: { previousEvent: Event; newEvent: Event }[]): string | undefined => {

@@ -116,12 +116,12 @@ export const callRegistration = () => {
   const { API_URL, SLACK_CHANNEL_TO_POST } = getConfig();
   UrlFetchApp.fetch(API_URL, options);
   const { job, lastName } = partTimerProfile;
-  const messageToNotify = `
-  ${job}${lastName}さんが以下の単発シフトを追加しました
-  ${createRegistrationMessage(registrationInfos)}
-  ---
-  コメント: ${comment}
-`.trim();
+  const messageToNotify = [
+    `${job}${lastName}さんが以下の単発シフトを追加しました`,
+    createRegistrationMessage(registrationInfos),
+    "---",
+    `コメント: ${comment}`,
+  ].join("\n");
   postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, messageToNotify, partTimerProfile);
   sheet.clear();
   SpreadsheetApp.flush();
@@ -244,13 +244,15 @@ export const callModificationAndDeletion = () => {
 
   const { SLACK_CHANNEL_TO_POST } = getConfig();
   const { job, lastName } = partTimerProfile;
-  const modificationAndDeletionMessageToNotify = `
-  ${job}${lastName}さんが以下の単発シフトを変更しました
-  ${createModificationMessage(modificationInfos)}
-  ${createDeletionMessage(deletionInfos)}
-  ---
-  コメント: ${comment}
-`.trim();
+  const modificationAndDeletionMessageToNotify = [
+    `${job}${lastName}さんが以下の単発シフトを変更しました`,
+    createModificationMessage(modificationInfos),
+    createDeletionMessage(deletionInfos),
+    "---",
+    `コメント: ${comment}`,
+  ]
+    .filter(Boolean)
+    .join("\n");
 
   postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, modificationAndDeletionMessageToNotify, partTimerProfile);
   sheet.clear();
@@ -264,8 +266,8 @@ const createRegistrationMessage = (eventInfos: Event[]): string => {
   return `${messageTitle}\n${messages.join("\n")}`;
 };
 
-const createModificationMessage = (eventInfos: { previousEvent: Event; newEvent: Event }[]): string => {
-  if (eventInfos.length === 0) return "";
+const createModificationMessage = (eventInfos: { previousEvent: Event; newEvent: Event }[]): string | undefined => {
+  if (eventInfos.length === 0) return;
   const messages = eventInfos.map(({ previousEvent, newEvent }) => {
     return `${createMessageFromEventInfo(previousEvent)} → ${createMessageFromEventInfo(newEvent)}`;
   });
@@ -273,8 +275,8 @@ const createModificationMessage = (eventInfos: { previousEvent: Event; newEvent:
   return `${messageTitle}\n${messages.join("\n")}`;
 };
 
-const createDeletionMessage = (eventInfos: Event[]): string => {
-  if (eventInfos.length === 0) return "";
+const createDeletionMessage = (eventInfos: Event[]): string | undefined => {
+  if (eventInfos.length === 0) return;
   const messages = eventInfos.map(createMessageFromEventInfo);
   const messageTitle = "[消去]";
   return `${messageTitle}\n${messages.join("\n")}`;

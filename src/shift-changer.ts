@@ -183,6 +183,10 @@ export const callModificationAndDeletion = () => {
   const sheet = getSheet("modificationAndDeletion", spreadsheetUrl);
 
   const { comment, modificationRows, deletionRows } = getModificationOrDeletionSheetValues(sheet);
+  if (modificationRows.length === 0 && deletionRows.length === 0) {
+    throw new Error("変更・削除する予定がありません。");
+  }
+
   console.info(`modification: ${JSON.stringify(modificationRows)},deletion: ${JSON.stringify(deletionRows)}`); //NOTE: シート内容を確認するためのログ
   const modificationInfos = modificationRows.map(
     ({ title, startTime, endTime, newStartTime, newEndTime, newRestStartTime, newRestEndTime, newWorkingStyle }) => {

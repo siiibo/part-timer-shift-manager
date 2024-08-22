@@ -205,7 +205,7 @@ export const callModificationAndDeletion = () => {
     },
   );
 
-  const deleteInfos = deletionRows.map(({ title, startTime, endTime }) => {
+  const deletionInfos = deletionRows.map(({ title, startTime, endTime }) => {
     return { title, startTime, endTime };
   });
 
@@ -224,11 +224,11 @@ export const callModificationAndDeletion = () => {
     };
     UrlFetchApp.fetch(API_URL, options);
   }
-  if (deleteInfos.length > 0) {
+  if (deletionInfos.length > 0) {
     const payload = JSON.stringify({
       ...basePayload,
       operationType: "deleteEvent",
-      events: deleteInfos,
+      events: deletionInfos,
     } satisfies DeleteEventRequest);
     const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
       method: "post",
@@ -243,7 +243,7 @@ export const callModificationAndDeletion = () => {
   const modificationAndDeletionMessageToNotify = [
     `${job}${lastName}さんが以下の単発シフトを変更しました`,
     createModificationMessage(modificationInfos),
-    createDeletionMessage(deleteInfos),
+    createDeletionMessage(deletionInfos),
     "---",
     `コメント: ${comment}`,
   ]

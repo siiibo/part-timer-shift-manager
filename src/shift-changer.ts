@@ -471,14 +471,14 @@ const createMessageForRecurringEvent = (
   deleteEventStrings: string,
   comment: string,
 ): string => {
-  const recurringMessageToNotify = `
-    ${job}${lastName}さんが${format(after, "yyyy/MM/dd")}以降の固定シフトを変更しました
-    ${registerEventStrings}
-    ${modifyEventStrings}
-    ${deleteEventStrings}
-  `.trim();
+  const message = [
+    `${job}${lastName}さんが${format(after, "yyyy/MM/dd")}以降の固定シフトを変更しました`,
+    registerEventStrings,
+    modifyEventStrings,
+    deleteEventStrings,
+  ].join("\n");
 
-  return `${recurringMessageToNotify}\n---\nコメント: ${comment}`;
+  return `${message}\n---\nコメント: ${comment}`;
 };
 
 const getSlackClient = (slackToken: string): SlackClient => {

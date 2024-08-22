@@ -116,12 +116,12 @@ export const callRegistration = () => {
   const { API_URL, SLACK_CHANNEL_TO_POST } = getConfig();
   UrlFetchApp.fetch(API_URL, options);
   const { job, lastName } = partTimerProfile;
-  const messageToNotify = [
-    `${job}${lastName}さんが以下の単発シフトを追加しました`,
-    createRegistrationMessage(registrationInfos),
-    "---",
-    `コメント: ${comment}`,
-  ].join("\n");
+  const messageToNotify = `
+  ${job}${lastName}さんが以下の単発シフトを追加しました
+  ${createRegistrationMessage(registrationInfos)}
+  ---
+  コメント: ${comment}
+`.trim();
   postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, messageToNotify, partTimerProfile);
   sheet.clear();
   SpreadsheetApp.flush();
@@ -244,15 +244,13 @@ export const callModificationAndDeletion = () => {
 
   const { SLACK_CHANNEL_TO_POST } = getConfig();
   const { job, lastName } = partTimerProfile;
-  const modificationAndDeletionMessageToNotify = [
-    `${job}${lastName}さんが以下の単発シフトを変更しました`,
-    createModificationMessage(modificationInfos),
-    createDeletionMessage(deletionInfos),
-    "---",
-    `コメント: ${comment}`,
-  ]
-    .filter(Boolean)
-    .join("\n");
+  const modificationAndDeletionMessageToNotify = `
+  ${job}${lastName}さんが以下の単発シフトを変更しました
+  ${createModificationMessage(modificationInfos)}
+  ${createDeletionMessage(deletionInfos)}
+  ---
+  コメント: ${comment}
+`.trim();
 
   postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, modificationAndDeletionMessageToNotify, partTimerProfile);
   sheet.clear();
@@ -473,14 +471,14 @@ const createMessageForRecurringEvent = (
   deleteEventStrings: string,
   comment: string,
 ): string => {
-  const message = [
-    `${job}${lastName}さんが${format(after, "yyyy/MM/dd")}以降の固定シフトを変更しました`,
+  const recurringMessageToNotify = `
+    ${job}${lastName}さんが${format(after, "yyyy/MM/dd")}以降の固定シフトを変更しました
     registerEventStrings,
     modifyEventStrings,
     deleteEventStrings,
-  ].join("\n");
+  `.trim();
 
-  return `${message}\n---\nコメント: ${comment}`;
+  return `${recurringMessageToNotify}\n---\nコメント: ${comment}`;
 };
 
 const getSlackClient = (slackToken: string): SlackClient => {

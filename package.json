@@ -8,9 +8,9 @@
     "open:prod": "cross-env clasp_config_project=.clasp.prod.json pnpm clasp open",
     "open:dev": "cross-env clasp_config_project=.clasp.dev.json pnpm clasp open",
     "build": "node build.js",
-    "buildpush:prod": "pnpm build && cross-env clasp_config_project=.clasp.prod.json clasp push --force",
-    "buildpush:dev": "pnpm build && cross-env clasp_config_project=.clasp.dev.json clasp push --force",
-    "postinstall": "mkdir -p build && cp appsscript.json build/appsscript.json && husky",
+    "prepush":"mkdir -p build && cp appsscript.json build/appsscript.json && husky",
+    "buildpush:prod": "pnpm build && pnpm prepush && cross-env clasp_config_project=.clasp.prod.json clasp push --force",
+    "buildpush:dev": "pnpm build && pnpm prepush && cross-env clasp_config_project=.clasp.dev.json clasp push --force",
     "preinstall": "npx only-allow pnpm"
   },
   "dependencies": {

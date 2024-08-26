@@ -263,13 +263,13 @@ export const callModificationAndDeletion = () => {
 const createRegistrationMessage = (eventInfos: Event[]): string => {
   const messages = eventInfos.map(createMessageFromEventInfo);
   const messageTitle = "[追加]";
-  return `${messageTitle}\n${messages.join("\n")}`;
+  return `• ${messageTitle}\n${messages.join("\n")}`;
 };
 
 const createModificationMessage = (eventInfos: { previousEvent: Event; newEvent: Event }[]): string | undefined => {
   if (eventInfos.length === 0) return;
   const messages = eventInfos.map(({ previousEvent, newEvent }) => {
-    return `${createMessageFromEventInfo(previousEvent)} → ${createMessageFromEventInfo(newEvent)}`;
+    return `• ${createMessageFromEventInfo(previousEvent)} → ${createMessageFromEventInfo(newEvent)}`;
   });
   const messageTitle = "[変更]";
   return `${messageTitle}\n${messages.join("\n")}`;
@@ -279,7 +279,7 @@ const createDeletionMessage = (eventInfos: Event[]): string | undefined => {
   if (eventInfos.length === 0) return;
   const messages = eventInfos.map(createMessageFromEventInfo);
   const messageTitle = "[消去]";
-  return `${messageTitle}\n${messages.join("\n")}`;
+  return `• ${messageTitle}\n${messages.join("\n")}`;
 };
 
 export const callRecurringEvent = () => {
@@ -529,8 +529,8 @@ const createMessageFromEventInfo = (eventInfo: Event) => {
   const startTime = format(eventInfo.startTime, "HH:mm");
   const endTime = format(eventInfo.endTime, "HH:mm");
   if (restStartTime === undefined || restEndTime === undefined)
-    return `• ${date}: ${emojiWorkingStyle} ${startTime}~${endTime}`;
-  else return `• ${date}: ${emojiWorkingStyle} ${startTime}~${endTime} (休憩: ${restStartTime}~${restEndTime})`;
+    return `${date}: ${emojiWorkingStyle} ${startTime}~${endTime}`;
+  else return `${date}: ${emojiWorkingStyle} ${startTime}~${endTime} (休憩: ${restStartTime}~${restEndTime})`;
 };
 const getEventInfoFromTitle = (
   title: string,

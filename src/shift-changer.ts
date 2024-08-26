@@ -262,7 +262,7 @@ export const callModificationAndDeletion = () => {
 
 const createRegistrationMessage = (eventInfos: Event[]): string => {
   const messages = eventInfos.map(createMessageFromEventInfo);
-  const messageTitle = "[ 追加 ]"; //TODO: 後で修正
+  const messageTitle = "[追加]";
   return `• ${messageTitle}\n${messages.join("\n")}`;
 };
 

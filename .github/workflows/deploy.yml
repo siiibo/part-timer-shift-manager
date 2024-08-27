@@ -15,11 +15,6 @@ jobs:
       clasp_config_project: ${{ github.workspace }}/.clasp.prod.json
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/cache@v3
-        with:
-          key: v1-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}
-          path: |
-            node_modules
       - uses: actions/setup-node@v3
         with:
           node-version: 20

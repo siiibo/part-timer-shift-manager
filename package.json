@@ -5,8 +5,8 @@
   "main": "build/index.js",
   "private": true,
   "scripts": {
-    "open:prod": "cross-env clasp_config_project=.clasp.prod.json pnpm clasp open",
-    "open:dev": "cross-env clasp_config_project=.clasp.dev.json pnpm clasp open",
+    "open:prod": "cross-env clasp_config_project=.clasp.prod.json clasp open",
+    "open:dev": "cross-env clasp_config_project=.clasp.dev.json clasp open",
     "build": "node build.js",
     "prepush": "mkdir -p build && cp appsscript.json build/appsscript.json && husky",
     "buildpush:prod": "pnpm build && pnpm prepush && cross-env clasp_config_project=.clasp.prod.json clasp push --force",

@@ -15,8 +15,10 @@ jobs:
       clasp_config_project: ${{ github.workspace }}/.clasp.prod.json
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
       - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v3
         with:
           node-version: 20
           cache: "pnpm"

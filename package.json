@@ -12,7 +12,7 @@
     "buildpush:prod": "pnpm build && pnpm prepush && cross-env clasp_config_project=.clasp.prod.json clasp push --force",
     "buildpush:dev": "pnpm build && pnpm prepush && cross-env clasp_config_project=.clasp.dev.json clasp push --force",
     "lint": "eslint src/**/*",
-    "lint-fix": "pnpm lint --fix",
+    "lint-fix": "pnpm lint --fix && prettier --write src/**/*",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {

@@ -263,7 +263,8 @@ export const callModificationAndDeletion = () => {
 const createRegistrationMessage = (eventInfos: Event[]): string => {
   const messages = eventInfos.map(createMessageFromEventInfo);
   const messageTitle = "[追加]";
-  return `• ${messageTitle}\n${messages.join("\n")}`;
+  const formattedMessages = messages.map((message) => `• ${message}`).join("\n");
+  return `${messageTitle}\n${formattedMessages}`;
 };
 
 const createModificationMessage = (eventInfos: { previousEvent: Event; newEvent: Event }[]): string | undefined => {
@@ -279,7 +280,8 @@ const createDeletionMessage = (eventInfos: Event[]): string | undefined => {
   if (eventInfos.length === 0) return;
   const messages = eventInfos.map(createMessageFromEventInfo);
   const messageTitle = "[消去]";
-  return `• ${messageTitle}\n${messages.join("\n")}`;
+  const formattedMessages = messages.map((message) => `• ${message}`).join("\n");
+  return `${messageTitle}\n${formattedMessages}`;
 };
 
 export const callRecurringEvent = () => {

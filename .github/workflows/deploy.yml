@@ -15,15 +15,12 @@ jobs:
       clasp_config_project: ${{ github.workspace }}/.clasp.prod.json
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/cache@v3
-        with:
-          key: v1-${{ hashFiles('yarn.lock') }}-${{ github.sha }}
-          path: |
-            node_modules
       - uses: actions/setup-node@v3
         with:
-          node-version: 18
-      - run: yarn
+          node-version: 20
+          cache: "pnpm"
+      - name: Install dependencies
+        run: pnpm install
       - name: Create ~/.clasprc.json
         run: |
           cat <<-EOS > ~/.clasprc.json
@@ -52,8 +49,8 @@ jobs:
           }
           EOS
       - name: Build & Push
-        run: yarn run buildpush:prod
+        run: pnpm run buildpush:prod
       - name: Deploy
         run: |
           FIRST_LINE=$(echo "${{ github.event.head_commit.message }}" | awk 'NR==1{print $0}')
-          yarn clasp deploy -i ${{ secrets.DEPLOYMENT_ID }} --description "$FIRST_LINE"
+          pnpm clasp deploy -i ${{ secrets.DEPLOYMENT_ID }} --description "$FIRST_LINE"

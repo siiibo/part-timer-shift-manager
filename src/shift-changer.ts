@@ -115,22 +115,17 @@ export const callRegistration = () => {
   };
   const { API_URL, SLACK_CHANNEL_TO_POST } = getConfig();
   UrlFetchApp.fetch(API_URL, options);
-  const messageToNotify = createRegistrationMessage(registrationInfos, comment, partTimerProfile);
+  const { job, lastName } = partTimerProfile;
+  const messageToNotify = [
+    `${job}${lastName}さんが以下の単発シフトを変更しました`,
+    createRegistrationMessage(registrationInfos),
+    "---",
+    `コメント: ${comment}`,
+  ].join("\n");
   postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, messageToNotify, partTimerProfile);
   sheet.clear();
   SpreadsheetApp.flush();
   setValuesRegistrationSheet(sheet);
-};
-
-const createRegistrationMessage = (
-  registrationInfos: Event[],
-  comment: string,
-  partTimerProfile: PartTimerProfile,
-): string => {
-  const messages = registrationInfos.map(createMessageFromEventInfo);
-  const { job, lastName } = partTimerProfile;
-  const messageTitle = `${job}${lastName}さんの以下の単発シフトが追加されました。`;
-  return `${messageTitle}\n${messages.join("\n")}\n\nコメント: ${comment}`;
 };
 
 export const callShowEvents = () => {
@@ -188,6 +183,10 @@ export const callModificationAndDeletion = () => {
   const sheet = getSheet("modificationAndDeletion", spreadsheetUrl);
 
   const { comment, modificationRows, deletionRows } = getModificationOrDeletionSheetValues(sheet);
+  if (modificationRows.length === 0 && deletionRows.length === 0) {
+    throw new Error("変更・削除する予定がありません。");
+  }
+
   console.info(`modification: ${JSON.stringify(modificationRows)},deletion: ${JSON.stringify(deletionRows)}`); //NOTE: シート内容を確認するためのログ
   const modificationInfos = modificationRows.map(
     ({ title, startTime, endTime, newStartTime, newEndTime, newRestStartTime, newRestEndTime, newWorkingStyle }) => {
@@ -200,16 +199,19 @@ export const callModificationAndDeletion = () => {
         partTimerProfile,
       );
       return {
-        previousEvent: { title, date: startTime, startTime, endTime },
+        previousEvent: { title, startTime, endTime },
         newEvent: {
           title: newTitle,
-          date: newStartTime,
           startTime: newStartTime,
           endTime: newEndTime,
         },
       };
     },
   );
+
+  const deletionInfos = deletionRows.map(({ title, startTime, endTime }) => {
+    return { title, startTime, endTime };
+  });
 
   const { API_URL } = getConfig();
   const basePayload = { apiId: "shift-changer", userEmail: userEmail } as const;
@@ -226,14 +228,11 @@ export const callModificationAndDeletion = () => {
     };
     UrlFetchApp.fetch(API_URL, options);
   }
-  if (deletionRows.length > 0) {
-    const deleteInfos = deletionRows.map(({ title, startTime, endTime }) => {
-      return { title, startTime, endTime };
-    });
+  if (deletionInfos.length > 0) {
     const payload = JSON.stringify({
       ...basePayload,
       operationType: "deleteEvent",
-      events: deleteInfos,
+      events: deletionInfos,
     } satisfies DeleteEventRequest);
     const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
       method: "post",
@@ -244,11 +243,16 @@ export const callModificationAndDeletion = () => {
   }
 
   const { SLACK_CHANNEL_TO_POST } = getConfig();
+  const { job, lastName } = partTimerProfile;
   const modificationAndDeletionMessageToNotify = [
-    createModificationMessage(modificationInfos, partTimerProfile),
-    createDeletionMessage(deletionRows, partTimerProfile),
+    `${job}${lastName}さんが以下の単発シフトを変更しました`,
+    createModificationMessage(modificationInfos),
+    createDeletionMessage(deletionInfos),
+    "---",
     `コメント: ${comment}`,
-  ].join("\n---\n");
+  ]
+    .filter(Boolean)
+    .join("\n");
 
   postMessageToSlackChannel(client, SLACK_CHANNEL_TO_POST, modificationAndDeletionMessageToNotify, partTimerProfile);
   sheet.clear();
@@ -256,27 +260,28 @@ export const callModificationAndDeletion = () => {
   setValuesModificationAndDeletionSheet(sheet);
 };
 
-const createModificationMessage = (
-  modificationInfos: {
-    previousEvent: Event;
-    newEvent: Event;
-  }[],
-  partTimerProfile: PartTimerProfile,
-): string | undefined => {
-  const messages = modificationInfos.map(({ previousEvent, newEvent }) => {
-    return `${createMessageFromEventInfo(previousEvent)} → ${createMessageFromEventInfo(newEvent)}`;
-  });
-  if (messages.length == 0) return;
-  const { job, lastName } = partTimerProfile;
-  const messageTitle = `${job}${lastName}さんの以下の単発シフトが変更されました。`;
-  return `${messageTitle}\n${messages.join("\n\n")}`;
+const createRegistrationMessage = (eventInfos: Event[]): string => {
+  const messages = eventInfos.map(createMessageFromEventInfo);
+  const messageTitle = "[追加]";
+  const formattedMessages = messages.map((message) => `• ${message}`).join("\n");
+  return `${messageTitle}\n${formattedMessages}`;
 };
-const createDeletionMessage = (deletionInfos: Event[], partTimerProfile: PartTimerProfile): string | undefined => {
-  const messages = deletionInfos.map(createMessageFromEventInfo);
-  if (messages.length == 0) return;
-  const { job, lastName } = partTimerProfile;
-  const messageTitle = `${job}${lastName}さんの以下の単発シフトが削除されました。`;
+
+const createModificationMessage = (eventInfos: { previousEvent: Event; newEvent: Event }[]): string | undefined => {
+  if (eventInfos.length === 0) return;
+  const messages = eventInfos.map(({ previousEvent, newEvent }) => {
+    return `• ${createMessageFromEventInfo(previousEvent)} → ${createMessageFromEventInfo(newEvent)}`;
+  });
+  const messageTitle = "[変更]";
   return `${messageTitle}\n${messages.join("\n")}`;
+};
+
+const createDeletionMessage = (eventInfos: Event[]): string | undefined => {
+  if (eventInfos.length === 0) return;
+  const messages = eventInfos.map(createMessageFromEventInfo);
+  const messageTitle = "[消去]";
+  const formattedMessages = messages.map((message) => `• ${message}`).join("\n");
+  return `${messageTitle}\n${formattedMessages}`;
 };
 
 export const callRecurringEvent = () => {
@@ -402,6 +407,7 @@ export const callRecurringEvent = () => {
   // ref: https://github.com/siiibo/part-timer-shift-manager/pull/53#discussion_r1665084529
   deleteHolidayShift();
 };
+
 const createMessageForRegisterRecurringEvent = (
   registrationInfos: { title: string; dayOfWeek: DayOfWeek; startTime: Date; endTime: Date }[],
 ): string => {

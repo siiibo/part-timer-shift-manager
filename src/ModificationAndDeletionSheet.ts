@@ -19,7 +19,6 @@ type ModificationRow = z.infer<typeof ModificationRow>;
 const DeletionRow = z.object({
   type: z.literal("deletion"),
   title: z.string(),
-  date: DateAfterNow, //TODO: 日付情報だけの変数dateを消去する
   startTime: DateAfterNow,
   endTime: DateAfterNow,
 });
@@ -184,7 +183,6 @@ const getModificationOrDeletionRows = (
         return DeletionRow.parse({
           type: "deletion",
           title: row.title,
-          date: startTime,
           startTime: startTime,
           endTime: endTime,
         });

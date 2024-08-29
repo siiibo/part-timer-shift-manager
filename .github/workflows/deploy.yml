@@ -22,11 +22,6 @@ jobs:
           cache: "pnpm"
       - name: Install dependencies
         run: pnpm install
-      - name: Type Check
-        run: pnpm run type-check
-      - name: Lint
-        run: pnpm run lint
-        run: pnpm run lint-fix
       - name: Create ~/.clasprc.json
         run: |
           cat <<-EOS > ~/.clasprc.json

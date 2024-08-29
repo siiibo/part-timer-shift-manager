@@ -7,6 +7,10 @@ on:
       - "**.md"
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   type-check:
     name: type-check
@@ -23,7 +27,6 @@ jobs:
         run: pnpm install
       - name: Type check
         run: pnpm run type-check
-
   lint:
     name: lint
     runs-on: ubuntu-latest

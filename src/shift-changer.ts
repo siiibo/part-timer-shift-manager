@@ -1,4 +1,4 @@
-import { GasWebClient as SlackClient } from "@hi-se/web-api";
+import { GasSlackClient as SlackClient } from "@hi-se/gas-slack";
 import { format } from "date-fns";
 
 import { deleteHolidayShift } from "./autoDeleteHolidayEvent";
@@ -565,7 +565,7 @@ const postMessageToSlackChannel = (
   });
 };
 const getManagerSlackIds = (managerEmails: string[], client: SlackClient): string[] => {
-  const slackMembers = client.users.list().members ?? [];
+  const slackMembers = client.users.list({}).members ?? [];
 
   const managerSlackIds = managerEmails
     .map((email) => {

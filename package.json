@@ -10,10 +10,13 @@
     "build": "node build.js",
     "prepush": "mkdir -p build && cp appsscript.json build/appsscript.json && husky",
     "buildpush:prod": "pnpm build && pnpm prepush && cross-env clasp_config_project=.clasp.prod.json clasp push --force",
-    "buildpush:dev": "pnpm build && pnpm prepush && cross-env clasp_config_project=.clasp.dev.json clasp push --force"
+    "buildpush:dev": "pnpm build && pnpm prepush && cross-env clasp_config_project=.clasp.dev.json clasp push --force",
+    "lint": "eslint src/**/*",
+    "lint-fix": "pnpm lint --fix && prettier --write src/**/*",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@hi-se/web-api": "https://gitpkg.now.sh/hi-se/node-slack-sdk/packages/web-api?ab078b145617d511327a8f74fe34f1d4695ff893",
+    "@hi-se/gas-slack": "https://gitpkg.vercel.app/hi-se/gas-slack?main",
     "date-fns": "^3.2.0",
     "husky": "^9.0.6",
     "lint-staged": "^15.2.0",

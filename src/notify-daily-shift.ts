@@ -1,4 +1,4 @@
-import { GasWebClient as SlackClient } from "@hi-se/web-api";
+import { GasSlackClient as SlackClient } from "@hi-se/gas-slack";
 import { set } from "date-fns";
 
 import { getConfig } from "./config";

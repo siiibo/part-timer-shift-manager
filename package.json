@@ -24,6 +24,10 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
+    "@babel/core": "^7.25.2",
+    "@babel/plugin-transform-runtime": "^7.25.4",
+    "@babel/preset-env": "^7.25.4",
+    "@babel/preset-typescript": "^7.24.7",
     "@google/clasp": "^2.4.2",
     "@types/google-apps-script": "^1.0.76",
     "@typescript-eslint/eslint-plugin": "^6.19.0",
@@ -35,6 +39,7 @@
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-import": "^2.29.0",
     "prettier": "3.2.4",
+    "rollup": "^4.21.2",
     "typescript": "^5.3.3"
   },
   "lint-staged": {

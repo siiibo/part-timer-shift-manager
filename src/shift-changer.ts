@@ -166,7 +166,9 @@ export const callShowEvents = () => {
   if (sheet.getLastRow() > 8) {
     sheet.getRange(9, 1, sheet.getLastRow() - 8, sheet.getLastColumn()).clearContent();
   }
-
+  if (!eventInfos[0]) {
+    throw new Error("no events");
+  }
   sheet.getRange(9, 1, eventInfos.length, eventInfos[0].length).setValues(eventInfos);
 };
 
@@ -448,6 +450,7 @@ const createMessageForModifyRecurringEvent = (
     }
   });
   const messages = beforeMessages.map((message, index) => {
+    if (!afterModificationInfos[index]?.dayOfWeek) return;
     return `• ${afterModificationInfos[index].dayOfWeek}: ${message} → ${afterMessages[index]}`;
   });
   return `[変更]\n${messages.join("\n")}`;

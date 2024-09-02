@@ -450,8 +450,7 @@ const createMessageForModifyRecurringEvent = (
     }
   });
   const messages = beforeMessages.map((message, index) => {
-    if (!afterModificationInfos[index]?.dayOfWeek) return;
-    return `• ${afterModificationInfos[index].dayOfWeek}: ${message} → ${afterMessages[index]}`;
+    return `• ${afterModificationInfos[index]?.dayOfWeek}: ${message} → ${afterMessages[index]}`;
   });
   return `[変更]\n${messages.join("\n")}`;
 };

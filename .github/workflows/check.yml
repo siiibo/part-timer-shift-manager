@@ -2,10 +2,7 @@ name: Check
 on:
   workflow_dispatch:
   pull_request:
-  push:
-    branches:
-      - main
-
+  workflow_call:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true

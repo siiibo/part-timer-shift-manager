@@ -6,14 +6,12 @@ on:
       - "main"
     paths-ignore:
       - "**.md"
-  workflow_call:
-    inputs:
-      workflow_id: "Check"
-      branch: "main"
-      workflow_dispatch:
   workflow_dispatch:
 jobs:
+  check:
+    users: ./.github/workflows/check.yml
   deploy:
+    needs: [check]
     runs-on: ubuntu-latest
     env:
       clasp_config_project: ${{ github.workspace }}/.clasp.prod.json

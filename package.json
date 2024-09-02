@@ -29,6 +29,10 @@
     "@babel/preset-env": "^7.25.4",
     "@babel/preset-typescript": "^7.24.7",
     "@google/clasp": "^2.4.2",
+    "@rollup/plugin-babel": "^6.0.4",
+    "@rollup/plugin-commonjs": "^26.0.1",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-typescript": "^11.1.6",
     "@types/google-apps-script": "^1.0.76",
     "@typescript-eslint/eslint-plugin": "^6.19.0",
     "@typescript-eslint/parser": "^6.19.0",
@@ -40,6 +44,7 @@
     "eslint-plugin-import": "^2.29.0",
     "prettier": "3.2.4",
     "rollup": "^4.21.2",
+    "rollup-plugin-google-apps-script": "^1.1.13",
     "typescript": "^5.3.3"
   },
   "lint-staged": {

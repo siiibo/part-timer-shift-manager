@@ -20,8 +20,6 @@
     "prettier" //  Make sure to put it last, so it gets the chance to override other configs.
   ],
   "ignorePatterns": [
-    "babel.config.js",
-    "rollup.config.js",
     "build.js"
   ],
   "rules": {

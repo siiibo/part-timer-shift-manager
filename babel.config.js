@@ -1,6 +1,6 @@
+import transformRuntime from "@babel/plugin-transform-runtime";
 import presetEnv from "@babel/preset-env";
 import presetTypescript from "@babel/preset-typescript";
-import transformRuntime from "@babel/plugin-transform-runtime";
 
 export default {
   presets: [

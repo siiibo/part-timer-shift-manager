@@ -6,7 +6,6 @@
     "target": "es2019",
     "allowJs": true,
     "resolveJsonModule": true,
-    "moduleResolution": "node",
     "moduleDetection": "force",
     "isolatedModules": true,
     /* Strictness */
@@ -14,7 +13,7 @@
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
     /* Transpiling with other tools */
-    "module": "esnext",
+    "module": "preserve",
     "noEmit": true,
     /* lib */
     "lib": ["es2022"]

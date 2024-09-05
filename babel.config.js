@@ -7,7 +7,9 @@ export default {
     [
       presetEnv,
       {
-        targets: "> 0.25%, not dead",
+        targets: {
+          esmodules: true,
+        },
       },
     ],
     [presetTypescript],

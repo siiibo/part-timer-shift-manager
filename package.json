@@ -4,10 +4,11 @@
   "description": "",
   "main": "build/index.js",
   "private": true,
+  "type": "module",
   "scripts": {
     "open:prod": "cross-env clasp_config_project=.clasp.prod.json clasp open",
     "open:dev": "cross-env clasp_config_project=.clasp.dev.json clasp open",
-    "build": "node build.js",
+    "build": "rollup -c",
     "prepush": "mkdir -p build && cp appsscript.json build/appsscript.json && husky",
     "buildpush:prod": "pnpm build && pnpm prepush && cross-env clasp_config_project=.clasp.prod.json clasp push --force",
     "buildpush:dev": "pnpm build && pnpm prepush && cross-env clasp_config_project=.clasp.dev.json clasp push --force",
@@ -16,6 +17,7 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@babel/runtime": "^7.25.6",
     "@hi-se/gas-slack": "https://gitpkg.vercel.app/hi-se/gas-slack?main",
     "date-fns": "^3.2.0",
     "husky": "^9.0.6",
@@ -24,7 +26,15 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
+    "@babel/core": "^7.25.2",
+    "@babel/plugin-transform-runtime": "^7.25.4",
+    "@babel/preset-env": "^7.25.4",
+    "@babel/preset-typescript": "^7.24.7",
     "@google/clasp": "^2.4.2",
+    "@rollup/plugin-babel": "^6.0.4",
+    "@rollup/plugin-commonjs": "^26.0.1",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-typescript": "^11.1.6",
     "@types/google-apps-script": "^1.0.76",
     "@typescript-eslint/eslint-plugin": "^6.19.0",
     "@typescript-eslint/parser": "^6.19.0",
@@ -35,6 +45,8 @@
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-import": "^2.29.0",
     "prettier": "3.2.4",
+    "rollup": "^4.21.2",
+    "rollup-plugin-google-apps-script": "^1.1.13",
     "typescript": "^5.5.4"
   },
   "lint-staged": {

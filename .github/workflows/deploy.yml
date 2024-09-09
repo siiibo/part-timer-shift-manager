@@ -8,7 +8,10 @@ on:
       - "**.md"
   workflow_dispatch:
 jobs:
+  check:
+    uses: ./.github/workflows/check.yml
   deploy:
+    needs: check
     runs-on: ubuntu-latest
     env:
       clasp_config_project: ${{ github.workspace }}/.clasp.prod.json

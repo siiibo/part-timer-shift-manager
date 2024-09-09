@@ -22,24 +22,11 @@
       },
       "complexity": {
         "noForEach": "off"
+      },
+      "correctness": {
+        "noUndeclaredVariables": "off"
       }
     }
-  },
-  "javascript": {
-    "globals": [
-      // GASのグローバルAPI
-      "GoogleAppsScript",
-      "CalendarApp",
-      "ScriptApp",
-      "PropertiesService",
-      "SpreadsheetApp",
-      "Utilities",
-      "Calendar",
-      "ContentService",
-      "UrlFetchApp",
-      "Session",
-      "LockService"
-    ]
   },
   "files": {
     "ignore": ["build", "node_modules", ".pnpm-store"]

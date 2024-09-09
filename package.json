@@ -12,8 +12,8 @@
     "prepush": "mkdir -p build && cp appsscript.json build/appsscript.json && husky",
     "buildpush:prod": "pnpm build && pnpm prepush && cross-env clasp_config_project=.clasp.prod.json clasp push --force",
     "buildpush:dev": "pnpm build && pnpm prepush && cross-env clasp_config_project=.clasp.dev.json clasp push --force",
-    "lint": "eslint src/**/*",
-    "lint-fix": "pnpm lint --fix && prettier --write src/**/*",
+    "lint": "biome check",
+    "lint-fix": "biome check --write",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {

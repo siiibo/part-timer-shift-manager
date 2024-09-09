@@ -31,10 +31,17 @@
       "GoogleAppsScript",
       "CalendarApp",
       "ScriptApp",
-      "PropertiesService"
+      "PropertiesService",
+      "SpreadsheetApp",
+      "Utilities",
+      "Calendar",
+      "ContentService",
+      "UrlFetchApp",
+      "Session",
+      "LockService"
     ]
   },
   "files": {
-    "ignore": ["build","node_modules"]
+    "ignore": ["build", "node_modules"]
   }
 }

@@ -6,6 +6,7 @@ import rollupPluginGas from "rollup-plugin-google-apps-script";
 
 const extensions = [".ts", ".js"];
 
+// biome-ignore lint/style/noDefaultExport: 設定ファイルのため許容する
 export default {
   input: "src/index.ts",
   output: {

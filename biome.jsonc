@@ -42,6 +42,6 @@
     ]
   },
   "files": {
-    "ignore": ["build", "node_modules"]
+    "ignore": ["build", "node_modules", ".pnpm-store"]
   }
 }

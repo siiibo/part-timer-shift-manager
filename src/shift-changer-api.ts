@@ -322,7 +322,7 @@ const deleteRecurringEvents = (
 
   const deleteEvents = detailedEventItems
     .map(({ eventDetail, recurrenceEndDate, recurringEventId }) => {
-      if (!eventDetail.start?.dateTime || !eventDetail.end?.dateTime || !eventDetail.summary) {
+      if (!(eventDetail.start?.dateTime && eventDetail.end?.dateTime && eventDetail.summary)) {
         return;
       }
       const untilTimeUTC = getEndOfDayFormattedAsUTCISO(recurrenceEndDate);

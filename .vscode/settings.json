@@ -1,11 +1,7 @@
 {
   "editor.formatOnSave": true,
-  "editor.formatOnPaste": false,
-  "editor.formatOnType": false,
+  "editor.defaultFormatter": "biomejs.biome",
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": true
-  },
-  "eslint.format.enable": true,
-  "files.insertFinalNewline": true,
-  "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "quickfix.biome": "explicit"
+  }
 }

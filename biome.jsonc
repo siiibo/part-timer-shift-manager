@@ -35,6 +35,6 @@
     ]
   },
   "files": {
-    "ignore": ["build"]
+    "ignore": ["build","node_modules"]
   }
 }

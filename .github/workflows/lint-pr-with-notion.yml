@@ -13,23 +13,12 @@ env:
   TZ: "Asia/Tokyo"
 
 jobs:
-  lint-and-link-pr-with-notion:
+  lint-pr-with-notion:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: write
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Link PR with Notion
-        uses: siiibo/link-pr-with-notion@main
-        with:
-          NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
-          NOTION_DATABASE_TASKS_ID: ${{ secrets.NOTION_DATABASE_TASKS_ID }}
-          NOTION_DATABASE_SPRINTS_ID: ${{ secrets.NOTION_DATABASE_SPRINTS_ID }}
-          NOTION_PROJECT_ID: ${{ secrets.NOTION_PROJECT_ID }}
-          NOTION_TASK_ASSIGNEES: ${{ secrets.NOTION_TASK_ASSIGNEES }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Lint PR Title
         id: lint-pr-title
         uses: amannn/action-semantic-pull-request@v5

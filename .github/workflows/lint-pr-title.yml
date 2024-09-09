@@ -1,4 +1,4 @@
-name: Lint & Link PR with Notion
+name: Lint pr title
 on:
   pull_request:
     types:
@@ -13,7 +13,7 @@ env:
   TZ: "Asia/Tokyo"
 
 jobs:
-  lint-pr-with-notion:
+  lint-pr-title:
     runs-on: ubuntu-latest
     permissions:
       contents: read

@@ -1,35 +1,40 @@
 {
-    // NOTE: 設定の詳細については https://www.notion.so/siiibo/f8eb138a573a4fb0902b68ecc7d50822 を参照
-    "$schema": "https://biomejs.dev/schemas/1.8.3/schema.json",
-    "organizeImports": {
-      "enabled": true
-    },
-    "formatter": {
-      "enabled": true,
-      "indentStyle": "space",
-      "indentWidth": 2,
-      "lineWidth": 120
-    },
-    "linter": {
-      "enabled": true,
-      "rules": {
-        "all": true,
-        "style": {
-          "useNamingConvention": "off"
-        },
-        "suspicious": {
-          "noShadowRestrictedNames": "off"
-        },
-        "complexity": {
-          "noForEach": "off"
-        }
+  // NOTE: 設定の詳細については https://www.notion.so/siiibo/f8eb138a573a4fb0902b68ecc7d50822 を参照
+  "$schema": "https://biomejs.dev/schemas/1.8.3/schema.json",
+  "organizeImports": {
+    "enabled": true
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 120
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "all": true,
+      "style": {
+        "useNamingConvention": "off"
+      },
+      "suspicious": {
+        "noShadowRestrictedNames": "off"
+      },
+      "complexity": {
+        "noForEach": "off"
       }
-    },
-    "javascript": {
-      "globals": []
-    },
-    "files": {
-      "ignore": []
     }
+  },
+  "javascript": {
+    "globals": [
+      // GASのグローバルAPI
+      "GoogleAppsScript",
+      "CalendarApp",
+      "ScriptApp",
+      "PropertiesService"
+    ]
+  },
+  "files": {
+    "ignore": ["build"]
   }
-  
+}

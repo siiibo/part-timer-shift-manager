@@ -49,7 +49,6 @@ const ModificationOrDeletionSheetRow = z
       message: "休憩時間の開始時間が終了時間よりも前になるようにしてください",
     },
   );
-type ModificationOrDeletionSheetRow = z.infer<typeof ModificationOrDeletionSheetRow>;
 
 const NoOperationRow = z.object({
   type: z.literal("no-operation"),
@@ -64,13 +63,13 @@ type ModificationOrDeletionSheetValues = {
 
 export const insertModificationAndDeletionSheet = () => {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-  let sheet;
+  let sheet: GoogleAppsScript.Spreadsheet.Sheet;
   try {
-    sheet = spreadsheet.insertSheet(`単発シフト変更・削除`, 0);
+    sheet = spreadsheet.insertSheet("単発シフト変更・削除", 0);
   } catch {
     throw new Error("既存の「単発シフト変更・削除」シートを使用してください");
   }
-  sheet.addDeveloperMetadata(`part-timer-shift-manager-modificationAndDeletion`);
+  sheet.addDeveloperMetadata("part-timer-shift-manager-modificationAndDeletion");
   setValuesModificationAndDeletionSheet(sheet);
 };
 
@@ -186,7 +185,8 @@ const getModificationOrDeletionRows = (
           startTime: startTime,
           endTime: endTime,
         });
-      } else if (row.newDate && row.newStartTime && row.newEndTime) {
+      }
+      if (row.newDate && row.newStartTime && row.newEndTime) {
         const startTime = mergeTimeToDate(row.date, row.startTime);
         const endTime = mergeTimeToDate(row.date, row.endTime);
         const newStartTime = mergeTimeToDate(row.newDate, row.newStartTime);
@@ -202,11 +202,10 @@ const getModificationOrDeletionRows = (
           newRestEndTime: row.newRestEndTime,
           newWorkingStyle: row.newWorkingStyle,
         });
-      } else {
-        return NoOperationRow.parse({
-          type: "no-operation",
-        });
       }
+      return NoOperationRow.parse({
+        type: "no-operation",
+      });
     });
   return {
     modificationRows: sheetValues.filter(isModificationRow),

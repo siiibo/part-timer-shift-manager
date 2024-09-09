@@ -9,7 +9,9 @@ export type PartTimerProfile = {
 export const getPartTimerProfile = (userEmail: string): PartTimerProfile => {
   const { JOB_SHEET_URL } = getConfig();
   const sheet = SpreadsheetApp.openByUrl(JOB_SHEET_URL).getSheetByName("シート1");
-  if (!sheet) throw new Error("SHEET is not defined");
+  if (!sheet) {
+    throw new Error("SHEET is not defined");
+  }
   const partTimerProfiles = sheet
     .getRange(1, 1, sheet.getLastRow(), sheet.getLastColumn())
     .getValues()
@@ -24,7 +26,9 @@ export const getPartTimerProfile = (userEmail: string): PartTimerProfile => {
   const partTimerProfile = partTimerProfiles.find(({ email }) => {
     return email === userEmail;
   });
-  if (partTimerProfile === undefined) throw new Error("no part timer information for the email");
+  if (partTimerProfile === undefined) {
+    throw new Error("no part timer information for the email");
+  }
 
   return partTimerProfile;
 };

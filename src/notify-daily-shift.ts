@@ -25,8 +25,12 @@ export function notifyDailyShift() {
   const calendar = CalendarApp.getCalendarById(CALENDAR_ID);
 
   const now = new Date();
-  if (isBankHoliday(now)) return;
-  if (!checkTime(now)) throw new Error(`設定時刻に誤りがあります.\nANNOUNCE_HOUR: ${ANNOUNCE_HOUR}\nnow: ${now}`);
+  if (isBankHoliday(now)) {
+    return;
+  }
+  if (!checkTime(now)) {
+    throw new Error(`設定時刻に誤りがあります.\nANNOUNCE_HOUR: ${ANNOUNCE_HOUR}\nnow: ${now}`);
+  }
 
   const targetDate = new Date();
   const announceTime = set(targetDate, { hours: ANNOUNCE_HOUR, minutes: 0, seconds: 0, milliseconds: 0 });
@@ -41,11 +45,11 @@ export function notifyDailyShift() {
 }
 
 function getNotificationString(events: GoogleAppsScript.Calendar.CalendarEvent[]): string {
-  return !events.length
-    ? "今日の予定はありません"
-    : events.map(getNotificationStringForEvent).join("\n") +
-        "\n\n" +
-        ":calendar: 勤務開始時に<https://calendar.google.com/calendar|カレンダー>に予定が入っていないか確認しましょう！";
+  return events.length
+    ? `${events.map(getNotificationStringForEvent).join("\n")}
+
+:calendar: 勤務開始時に<https://calendar.google.com/calendar|カレンダー>に予定が入っていないか確認しましょう！`
+    : "今日の予定はありません";
 }
 
 function getNotificationStringForEvent(event: GoogleAppsScript.Calendar.CalendarEvent): string {

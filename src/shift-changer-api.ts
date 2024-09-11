@@ -1,5 +1,5 @@
 import { addWeeks, endOfDay, format, nextDay, previousDay, startOfDay, subHours } from "date-fns";
-import { err, ok, Result } from "neverthrow";
+import { type Result, err, ok } from "neverthrow";
 import { z } from "zod";
 
 import { DayOfWeek } from "./common.schema";
@@ -200,7 +200,9 @@ const modifyEvent = (
   const newTitle = eventInfo.newEvent.title;
   const [newStartDate, newEndDate] = [eventInfo.newEvent.startTime, eventInfo.newEvent.endTime];
   const event = calendar.getEvents(startDate, endDate).find((event) => isEventGuest(event, userEmail));
-  if (!event) return;
+  if (!event) {
+    return;
+  }
   event.setTime(newStartDate, newEndDate);
   event.setTitle(newTitle);
 };
@@ -214,7 +216,9 @@ const deleteEvents = (deleteInfos: Event[], userEmail: string): Result<string, n
 const deleteEvent = (eventInfo: Event, calendar: GoogleAppsScript.Calendar.Calendar, userEmail: string) => {
   const [startDate, endDate] = [eventInfo.startTime, eventInfo.endTime];
   const event = calendar.getEvents(startDate, endDate).find((event) => isEventGuest(event, userEmail));
-  if (!event) return;
+  if (!event) {
+    return;
+  }
   event.deleteEvent();
 };
 
@@ -307,7 +311,9 @@ const deleteRecurringEvents = (
       return recurringEventId ? { recurringEventId, recurrenceEndDate } : undefined;
     })
     .filter(isNotUndefined);
-  if (eventItems.length === 0) return err("消去するイベントの取得に失敗しました");
+  if (eventItems.length === 0) {
+    return err("消去するイベントの取得に失敗しました");
+  }
 
   const detailedEventItems = eventItems.map(({ recurringEventId, recurrenceEndDate }) => {
     const eventDetail = advancedCalendar.get(calendarId, recurringEventId);
@@ -316,8 +322,9 @@ const deleteRecurringEvents = (
 
   const deleteEvents = detailedEventItems
     .map(({ eventDetail, recurrenceEndDate, recurringEventId }) => {
-      if (!eventDetail.start?.dateTime || !eventDetail.end?.dateTime || !eventDetail.summary) return;
-
+      if (!(eventDetail.start?.dateTime && eventDetail.end?.dateTime && eventDetail.summary)) {
+        return;
+      }
       const untilTimeUTC = getEndOfDayFormattedAsUTCISO(recurrenceEndDate);
       const data = {
         summary: eventDetail.summary,
@@ -330,7 +337,7 @@ const deleteRecurringEvents = (
           dateTime: eventDetail.end.dateTime,
           timeZone: "Asia/Tokyo",
         },
-        recurrence: ["RRULE:FREQ=WEEKLY;UNTIL=" + untilTimeUTC],
+        recurrence: [`RRULE:FREQ=WEEKLY;UNTIL=${untilTimeUTC}`],
       };
       advancedCalendar.update(data, calendarId, recurringEventId);
       return {
@@ -390,7 +397,9 @@ const convertDayOfWeekJapaneseToNumber = (dayOfWeek: DayOfWeek) => {
 
 const getRecurrenceStartDate = (after: Date, dayOfWeek: DayOfWeek): Date => {
   const targetDayOfWeek = convertDayOfWeekJapaneseToNumber(dayOfWeek);
-  if (after.getDay() === targetDayOfWeek) return after;
+  if (after.getDay() === targetDayOfWeek) {
+    return after;
+  }
   const nextDate = nextDay(after, targetDayOfWeek);
 
   return nextDate;
@@ -415,6 +424,8 @@ const getEndOfDayFormattedAsUTCISO = (date: Date): string => {
 
 const getAdvancedCalendar = () => {
   const advancedCalendar = Calendar.Events;
-  if (advancedCalendar === undefined) throw new Error("カレンダーの取得に失敗しました");
+  if (advancedCalendar === undefined) {
+    throw new Error("カレンダーの取得に失敗しました");
+  }
   return advancedCalendar;
 };

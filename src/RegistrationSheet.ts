@@ -29,17 +29,16 @@ const RegistrationSheetValues = z.object({
   comment: Comment,
   registrationRows: z.array(RegistrationSheetRow),
 });
-type RegistrationSheetValues = z.infer<typeof RegistrationSheetValues>;
 
 export const insertRegistrationSheet = () => {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-  let sheet;
+  let sheet: GoogleAppsScript.Spreadsheet.Sheet;
   try {
-    sheet = spreadsheet.insertSheet(`単発シフト登録`, 0);
+    sheet = spreadsheet.insertSheet("単発シフト登録", 0);
   } catch {
     throw new Error("既存の「単発シフト登録」シートを使用してください");
   }
-  sheet.addDeveloperMetadata(`part-timer-shift-manager-registration`);
+  sheet.addDeveloperMetadata("part-timer-shift-manager-registration");
   setValuesRegistrationSheet(sheet);
 };
 

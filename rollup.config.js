@@ -6,6 +6,7 @@ import rollupPluginGas from "rollup-plugin-google-apps-script";
 
 const extensions = [".ts", ".js"];
 
+// biome-ignore lint/style/noDefaultExport: 設定ファイルのため許容する
 export default {
   input: "src/index.ts",
   output: {
@@ -13,7 +14,9 @@ export default {
     format: "cjs",
   },
   onwarn(warning, warn) {
-    if (warning.code === "THIS_IS_UNDEFINED") return;
+    if (warning.code === "THIS_IS_UNDEFINED") {
+      return;
+    }
     warn(warning);
   },
   plugins: [

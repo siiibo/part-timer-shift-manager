@@ -79,13 +79,13 @@ type RecurringEventSheetValues = {
 
 export const insertRecurringEventSheet = () => {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-  let sheet;
+  let sheet: GoogleAppsScript.Spreadsheet.Sheet;
   try {
-    sheet = spreadsheet.insertSheet(`固定シフト`, 0);
+    sheet = spreadsheet.insertSheet("固定シフト", 0);
   } catch {
     throw new Error("既存の「固定シフト」シートを使用してください");
   }
-  sheet.addDeveloperMetadata(`part-timer-shift-manager-recurringEvent`);
+  sheet.addDeveloperMetadata("part-timer-shift-manager-recurringEvent");
   setValuesRecurringEventSheet(sheet);
 };
 
@@ -145,7 +145,8 @@ export const getRecurringEventSheetValues = (sheet: GoogleAppsScript.Spreadsheet
         restEndTime: row.restEndTime,
         workingStyle: row.workingStyle,
       });
-    } else if (row.operation === "時間変更" && row.dayOfWeek && row.startTime && row.endTime) {
+    }
+    if (row.operation === "時間変更" && row.dayOfWeek && row.startTime && row.endTime) {
       return ModifyRecurringEventRow.parse({
         type: "modifyRecurringEvent",
         dayOfWeek: row.dayOfWeek,
@@ -155,16 +156,16 @@ export const getRecurringEventSheetValues = (sheet: GoogleAppsScript.Spreadsheet
         restEndTime: row.restEndTime,
         workingStyle: row.workingStyle,
       });
-    } else if (row.operation === "消去") {
+    }
+    if (row.operation === "消去") {
       return DeleteRecurringEventRow.parse({
         type: "deleteRecurringEvent",
         dayOfWeek: row.dayOfWeek,
       });
-    } else {
-      return {
-        type: "no-operation",
-      } satisfies NoOperationRow;
     }
+    return {
+      type: "no-operation",
+    } satisfies NoOperationRow;
   });
 
   return {

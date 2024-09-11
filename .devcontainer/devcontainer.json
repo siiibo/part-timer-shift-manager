@@ -23,7 +23,8 @@
         "eamodio.gitlens",
         "mhutchie.git-graph",
         "GitHub.vscode-pull-request-github",
-        "oderwat.indent-rainbow"
+        "oderwat.indent-rainbow",
+        "biomejs.biome"
       ]
     }
   }

@@ -1,10 +1,7 @@
 import { GasSlackClient as SlackClient } from "@hi-se/gas-slack";
 import { format } from "date-fns";
 
-import { deleteHolidayShift } from "./autoDeleteHolidayEvent";
-import { DayOfWeek } from "./common.schema";
-import { getConfig } from "./config";
-import { PartTimerProfile } from "./JobSheet";
+import type { PartTimerProfile } from "./JobSheet";
 import { getPartTimerProfile } from "./JobSheet";
 import {
   getModificationOrDeletionSheetValues,
@@ -17,16 +14,19 @@ import {
   setValuesRecurringEventSheet,
 } from "./RecurringEventSheet";
 import { getRegistrationSheetValues, insertRegistrationSheet, setValuesRegistrationSheet } from "./RegistrationSheet";
+import { deleteHolidayShift } from "./autoDeleteHolidayEvent";
+import type { DayOfWeek } from "./common.schema";
+import { getConfig } from "./config";
 import {
   APIResponse,
-  DeleteEventRequest,
-  DeleteRecurringEventRequest,
-  Event,
-  ModifyEventRequest,
-  ModifyRecurringEventRequest,
-  RegisterEventRequest,
-  RegisterRecurringEventRequest,
-  ShowEventRequest,
+  type DeleteEventRequest,
+  type DeleteRecurringEventRequest,
+  type Event,
+  type ModifyEventRequest,
+  type ModifyRecurringEventRequest,
+  type RegisterEventRequest,
+  type RegisterRecurringEventRequest,
+  type ShowEventRequest,
 } from "./shift-changer-api";
 
 type SheetType = "registration" | "modificationAndDeletion" | "recurringEvent";
@@ -133,7 +133,9 @@ export const callShowEvents = () => {
   const spreadsheetUrl = SpreadsheetApp.getActiveSpreadsheet().getUrl();
   const sheet = getSheet("modificationAndDeletion", spreadsheetUrl);
   const startDate: Date = sheet.getRange("A5").getValue();
-  if (!startDate) throw new Error("日付を指定してください。");
+  if (!startDate) {
+    throw new Error("日付を指定してください。");
+  }
 
   const basePayload = { apiId: "shift-changer", userEmail: userEmail } as const;
   const payload = JSON.stringify({
@@ -270,7 +272,9 @@ const createRegistrationMessage = (eventInfos: Event[]): string => {
 };
 
 const createModificationMessage = (eventInfos: { previousEvent: Event; newEvent: Event }[]): string | undefined => {
-  if (eventInfos.length === 0) return;
+  if (eventInfos.length === 0) {
+    return;
+  }
   const messages = eventInfos.map(({ previousEvent, newEvent }) => {
     return `• ${createMessageFromEventInfo(previousEvent)} → ${createMessageFromEventInfo(newEvent)}`;
   });
@@ -279,7 +283,9 @@ const createModificationMessage = (eventInfos: { previousEvent: Event; newEvent:
 };
 
 const createDeletionMessage = (eventInfos: Event[]): string | undefined => {
-  if (eventInfos.length === 0) return;
+  if (eventInfos.length === 0) {
+    return;
+  }
   const messages = eventInfos.map(createMessageFromEventInfo);
   const messageTitle = "[消去]";
   const formattedMessages = messages.map((message) => `• ${message}`).join("\n");
@@ -300,7 +306,7 @@ export const callRecurringEvent = () => {
   const userEmail = Session.getActiveUser().getEmail();
   const partTimerProfile = getPartTimerProfile(userEmail);
 
-  if (registrationRows.length == 0 && modificationRows.length == 0 && deletionRows.length == 0) {
+  if (registrationRows.length === 0 && modificationRows.length === 0 && deletionRows.length === 0) {
     throw new Error("追加・変更・削除する予定がありません。");
   }
 
@@ -413,15 +419,16 @@ export const callRecurringEvent = () => {
 const createMessageForRegisterRecurringEvent = (
   registrationInfos: { title: string; dayOfWeek: DayOfWeek; startTime: Date; endTime: Date }[],
 ): string => {
-  if (registrationInfos.length === 0) return "";
+  if (registrationInfos.length === 0) {
+    return "";
+  }
   const messages = registrationInfos.map(({ title, dayOfWeek, startTime, endTime }) => {
     const { workingStyle, restStartTime, restEndTime } = getEventInfoFromTitle(title);
     const emojiWorkingStyle = workingStyle === "出社" ? ":shussha:" : workingStyle === "リモート" ? ":remote:" : "";
     if (restStartTime === undefined || restEndTime === undefined) {
       return `• ${dayOfWeek}: ${emojiWorkingStyle} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
-    } else {
-      return `• ${dayOfWeek}: ${emojiWorkingStyle} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} (休憩: ${restStartTime}~${restEndTime})`;
     }
+    return `• ${dayOfWeek}: ${emojiWorkingStyle} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} (休憩: ${restStartTime}~${restEndTime})`;
   });
 
   return `[追加]\n${messages.join("\n")}`;
@@ -436,18 +443,16 @@ const createMessageForModifyRecurringEvent = (
     const emojiWorkingStyle = workingStyle === "出社" ? ":shussha:" : workingStyle === "リモート" ? ":remote:" : "";
     if (restStartTime === undefined || restEndTime === undefined) {
       return `${emojiWorkingStyle} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
-    } else {
-      return `${emojiWorkingStyle} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} (休憩: ${restStartTime}~${restEndTime})`;
     }
+    return `${emojiWorkingStyle} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} (休憩: ${restStartTime}~${restEndTime})`;
   });
   const afterMessages = afterModificationInfos.map(({ title, startTime, endTime }) => {
     const { workingStyle, restStartTime, restEndTime } = getEventInfoFromTitle(title);
     const emojiWorkingStyle = workingStyle === "出社" ? ":shussha:" : workingStyle === "リモート" ? ":remote:" : "";
     if (restStartTime === undefined || restEndTime === undefined) {
       return `${emojiWorkingStyle} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
-    } else {
-      return `${emojiWorkingStyle} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} (休憩: ${restStartTime}~${restEndTime})`;
     }
+    return `${emojiWorkingStyle} ${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} (休憩: ${restStartTime}~${restEndTime})`;
   });
   const messages = beforeMessages.map((message, index) => {
     return `• ${afterModificationInfos[index]?.dayOfWeek}: ${message} → ${afterMessages[index]}`;
@@ -461,9 +466,8 @@ const createMessageForDeleteRecurringEvent = (deleteEvens: Event[], deletionInfo
     const emojiWorkingStyle = workingStyle === "出社" ? ":shussha:" : workingStyle === "リモート" ? ":remote:" : "";
     if (restStartTime === undefined || restEndTime === undefined) {
       return `• ${deletionInfos[index]}: ${emojiWorkingStyle}${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")}`;
-    } else {
-      return `• ${deletionInfos[index]}: ${emojiWorkingStyle}${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} (休憩: ${restStartTime}~${restEndTime})`;
     }
+    return `• ${deletionInfos[index]}: ${emojiWorkingStyle}${format(startTime, "HH:mm")}~${format(endTime, "HH:mm")} (休憩: ${restStartTime}~${restEndTime})`;
   });
 
   return `[消去]\n${message.join("\n")}`;
@@ -498,7 +502,9 @@ const getSheet = (sheetType: SheetType, spreadsheetUrl: string): GoogleAppsScrip
       sheet.getDeveloperMetadata().some((metaData) => metaData.getKey() === `part-timer-shift-manager-${sheetType}`),
     );
 
-  if (!sheet) throw new Error("SHEET is not defined");
+  if (!sheet) {
+    throw new Error("SHEET is not defined");
+  }
 
   return sheet;
 };
@@ -520,10 +526,9 @@ const createTitleFromEventInfo = (
   if (restStartTime === undefined || restEndTime === undefined) {
     const title = `【${workingStyle}】${job}${lastName}さん`;
     return title;
-  } else {
-    const title = `【${workingStyle}】${job}${lastName}さん (休憩: ${restStartTime}~${restEndTime})`;
-    return title;
   }
+  const title = `【${workingStyle}】${job}${lastName}さん (休憩: ${restStartTime}~${restEndTime})`;
+  return title;
 };
 
 const createMessageFromEventInfo = (eventInfo: Event) => {
@@ -532,9 +537,10 @@ const createMessageFromEventInfo = (eventInfo: Event) => {
   const emojiWorkingStyle = workingStyle === "出社" ? ":shussha:" : workingStyle === "リモート" ? ":remote:" : "";
   const startTime = format(eventInfo.startTime, "HH:mm");
   const endTime = format(eventInfo.endTime, "HH:mm");
-  if (restStartTime === undefined || restEndTime === undefined)
+  if (restStartTime === undefined || restEndTime === undefined) {
     return `${date}: ${emojiWorkingStyle} ${startTime}~${endTime}`;
-  else return `${date}: ${emojiWorkingStyle} ${startTime}~${endTime} (休憩: ${restStartTime}~${restEndTime})`;
+  }
+  return `${date}: ${emojiWorkingStyle} ${startTime}~${endTime} (休憩: ${restStartTime}~${restEndTime})`;
 };
 const getEventInfoFromTitle = (
   title: string,
@@ -574,7 +580,9 @@ const getManagerSlackIds = (managerEmails: string[], client: SlackClient): strin
       const member = slackMembers.find((slackMember) => {
         return slackMember.profile?.email === email;
       });
-      if (member === undefined) throw new Error("The manager email is not in the slack members");
+      if (member === undefined) {
+        throw new Error("The manager email is not in the slack members");
+      }
       return member.id;
     })
     .filter((id): id is string => id !== undefined);

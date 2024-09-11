@@ -12,12 +12,13 @@
     "prepush": "mkdir -p build && cp appsscript.json build/appsscript.json && husky",
     "buildpush:prod": "pnpm build && pnpm prepush && cross-env clasp_config_project=.clasp.prod.json clasp push --force",
     "buildpush:dev": "pnpm build && pnpm prepush && cross-env clasp_config_project=.clasp.dev.json clasp push --force",
-    "lint": "eslint src/**/*",
-    "lint-fix": "pnpm lint --fix && prettier --write src/**/*",
+    "lint": "biome check",
+    "lint-fix": "biome check --write",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@babel/runtime": "^7.25.6",
+    "@biomejs/biome": "^1.8.3",
     "@hi-se/gas-slack": "https://gitpkg.vercel.app/hi-se/gas-slack?main",
     "date-fns": "^3.6.0",
     "husky": "^9.1.5",
@@ -36,24 +37,15 @@
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-typescript": "^11.1.6",
     "@types/google-apps-script": "^1.0.83",
-    "@typescript-eslint/eslint-plugin": "^6.21.0",
-    "@typescript-eslint/parser": "^6.21.0",
     "cross-env": "^7.0.3",
     "esbuild": "^0.19.12",
     "esbuild-gas-plugin": "^0.8.0",
-    "eslint": "^8.57.0",
-    "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-import": "^2.30.0",
-    "prettier": "3.2.4",
     "rollup": "^4.21.2",
     "rollup-plugin-google-apps-script": "^1.1.13",
     "typescript": "^5.5.4"
   },
   "lint-staged": {
-    "*.{js,ts}": [
-      "prettier --write",
-      "eslint --fix"
-    ]
+    "*.{js,ts}": ["biome check --write"]
   },
   "packageManager": "pnpm@9.9.0+sha512.60c18acd138bff695d339be6ad13f7e936eea6745660d4cc4a776d5247c540d0edee1a563695c183a66eb917ef88f2b4feb1fc25f32a7adcadc7aaf3438e99c1"
 }

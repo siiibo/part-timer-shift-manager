@@ -1,8 +1,8 @@
-import { deleteHolidayShift, initDeleteHolidayShift } from "./autoDeleteHolidayEvent";
 import { insertModificationAndDeletionSheet } from "./ModificationAndDeletionSheet";
-import { initNotifyDailyShift, notifyDailyShift } from "./notify-daily-shift";
 import { insertRecurringEventSheet } from "./RecurringEventSheet";
 import { insertRegistrationSheet } from "./RegistrationSheet";
+import { deleteHolidayShift, initDeleteHolidayShift } from "./autoDeleteHolidayEvent";
+import { initNotifyDailyShift, notifyDailyShift } from "./notify-daily-shift";
 import {
   callModificationAndDeletion,
   callRecurringEvent,
@@ -17,7 +17,7 @@ import { doGet, doPost } from "./shift-changer-api";
  * @file GASエディタから実行できる関数を定義する
  */
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 declare const global: any;
 global.initShiftChanger = initShiftChanger;
 global.initNotifyDailyShift = initNotifyDailyShift;

@@ -23,7 +23,7 @@
     "date-fns": "^3.6.0",
     "husky": "^9.1.5",
     "lint-staged": "^15.2.10",
-    "neverthrow": "^6.2.2",
+    "neverthrow": "^8.0.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {

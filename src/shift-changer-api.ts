@@ -300,7 +300,7 @@ const deleteRecurringEvents = (
       let events: GoogleAppsScript.Calendar.Schema.Event[] = [];
       let recurrenceEndDate = getRecurrenceEndDate(after, dayOfWeek);
       //NOTE: この箇所で4週間前までのイベント検証を行う
-      for (let a = 0; a < 4; a++) {
+      for (let weekOffset = 0; weekOffset < 4; weekOffset++) {
         events =
           advancedCalendar.list(calendarId, {
             timeMin: startOfDay(recurrenceEndDate).toISOString(),

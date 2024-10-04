@@ -1,4 +1,4 @@
-import { addWeeks, endOfDay, format, nextDay, previousDay, startOfDay, subHours } from "date-fns";
+import { addWeeks, endOfDay, format, nextDay, previousDay, startOfDay, subHours, subWeeks } from "date-fns";
 import { type Result, err, ok } from "neverthrow";
 import { z } from "zod";
 
@@ -297,16 +297,24 @@ const deleteRecurringEvents = (
   const eventItems = dayOfWeeks
     .map((dayOfWeek) => {
       //NOTE: 仕様的にstartTimeの日付に最初の予定が指定されるため、指定された日付の後で一番近い指定曜日の日付に変更する
-      const recurrenceEndDate = getRecurrenceEndDate(after, dayOfWeek);
-      const events =
-        advancedCalendar.list(calendarId, {
-          timeMin: startOfDay(recurrenceEndDate).toISOString(),
-          timeMax: endOfDay(recurrenceEndDate).toISOString(),
-          singleEvents: true,
-          orderBy: "startTime",
-          maxResults: 1,
-          q: userEmail,
-        }).items ?? [];
+      let events: GoogleAppsScript.Calendar.Schema.Event[] = [];
+      let recurrenceEndDate = getRecurrenceEndDate(after, dayOfWeek);
+      //NOTE: この箇所で4週間前までのイベント検証を行う
+      for (let a = 0; a < 4; a++) {
+        events =
+          advancedCalendar.list(calendarId, {
+            timeMin: startOfDay(recurrenceEndDate).toISOString(),
+            timeMax: endOfDay(recurrenceEndDate).toISOString(),
+            singleEvents: true,
+            orderBy: "startTime",
+            maxResults: 1,
+            q: userEmail,
+          }).items ?? [];
+        if (events.length > 0) {
+          break;
+        }
+        recurrenceEndDate = subWeeks(recurrenceEndDate, 1);
+      }
       const recurringEventId = events[0]?.recurringEventId;
       return recurringEventId ? { recurringEventId, recurrenceEndDate } : undefined;
     })

@@ -1,4 +1,4 @@
-import { addWeeks, endOfDay, format, nextDay, previousDay, startOfDay, subHours, subWeeks } from "date-fns";
+import { addWeeks, endOfDay, format, nextDay, startOfDay, subHours, subWeeks } from "date-fns";
 import { type Result, err, ok } from "neverthrow";
 import { z } from "zod";
 
@@ -294,43 +294,41 @@ const deleteRecurringEvents = (
   const calendarId = getConfig().CALENDAR_ID;
   const advancedCalendar = getAdvancedCalendar();
 
+  const events =
+    advancedCalendar.list(calendarId, {
+      timeMin: startOfDay(subWeeks(after, 4)).toISOString(),
+      timeMax: endOfDay(after).toISOString(),
+      singleEvents: true,
+      orderBy: "startTime",
+      q: userEmail,
+    }).items ?? [];
+
+  const reversedEvents = events.reverse();
   const eventItems = dayOfWeeks
     .map((dayOfWeek) => {
-      //NOTE: 仕様的にstartTimeの日付に最初の予定が指定されるため、指定された日付の後で一番近い指定曜日の日付に変更する
-      const recurrenceEndDate = getRecurrenceEndDate(after, dayOfWeek);
-      //NOTE: この箇所で4週間前までのイベント検証を行う
-      const events =
-        advancedCalendar.list(calendarId, {
-          timeMin: startOfDay(subWeeks(recurrenceEndDate, 4)).toISOString(),
-          timeMax: endOfDay(recurrenceEndDate).toISOString(),
-          singleEvents: true,
-          orderBy: "startTime",
-          q: userEmail,
-        }).items ?? [];
-      const reversedEvents = events.reverse();
       const eventInfo = reversedEvents.find((event) => {
         const eventDayOfWeek = event.start?.dateTime ? new Date(event.start.dateTime).getDay() : undefined;
         return eventDayOfWeek !== undefined && convertDayOfWeekJapaneseToNumber(dayOfWeek) === eventDayOfWeek;
       });
       const recurringEventId = eventInfo?.recurringEventId;
-      return recurringEventId ? { recurringEventId, recurrenceEndDate } : undefined;
+      return recurringEventId ? { recurringEventId, after } : undefined;
     })
     .filter(isNotUndefined);
   if (eventItems.length === 0) {
     return err("消去するイベントの取得に失敗しました");
   }
 
-  const detailedEventItems = eventItems.map(({ recurringEventId, recurrenceEndDate }) => {
+  const detailedEventItems = eventItems.map(({ recurringEventId, after }) => {
     const eventDetail = advancedCalendar.get(calendarId, recurringEventId);
-    return { eventDetail, recurrenceEndDate, recurringEventId };
+    return { eventDetail, after, recurringEventId };
   });
 
   const deleteEvents = detailedEventItems
-    .map(({ eventDetail, recurrenceEndDate, recurringEventId }) => {
+    .map(({ eventDetail, after, recurringEventId }) => {
       if (!(eventDetail.start?.dateTime && eventDetail.end?.dateTime && eventDetail.summary)) {
         return;
       }
-      const untilTimeUTC = getEndOfDayFormattedAsUTCISO(recurrenceEndDate);
+      const untilTimeUTC = getEndOfDayFormattedAsUTCISO(after);
       const data = {
         summary: eventDetail.summary,
         attendees: [{ email: userEmail }],
@@ -408,13 +406,6 @@ const getRecurrenceStartDate = (after: Date, dayOfWeek: DayOfWeek): Date => {
   const nextDate = nextDay(after, targetDayOfWeek);
 
   return nextDate;
-};
-
-const getRecurrenceEndDate = (after: Date, dayOfWeek: DayOfWeek): Date => {
-  const targetDayOfWeek = convertDayOfWeekJapaneseToNumber(dayOfWeek);
-  const previousDate = previousDay(after, targetDayOfWeek);
-
-  return previousDate;
 };
 
 const isNotUndefined = <T>(value: T | undefined): value is T => {

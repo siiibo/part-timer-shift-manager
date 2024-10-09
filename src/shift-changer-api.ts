@@ -303,9 +303,8 @@ const deleteRecurringEvents = (
       q: userEmail,
     }).items ?? [];
 
-  const reversedEvents = events.reverse();
   const recurrenceEndEventIds = dayOfWeeks
-    .map((dayOfWeek) => getRecurrenceEndEventId(reversedEvents, dayOfWeek))
+    .map((dayOfWeek) => getRecurrenceEndEventId(events, dayOfWeek))
     .filter(isNotUndefined);
   if (recurrenceEndEventIds.length === 0) {
     return err("消去するイベントの取得に失敗しました");
@@ -351,7 +350,13 @@ const getRecurrenceEndEventId = (
   dayOfWeek: DayOfWeek,
 ): string | undefined => {
   const targetDayOfWeek = convertDayOfWeekJapaneseToNumber(dayOfWeek);
-  const event = events.find((event) => {
+  //NOTE: 予定の最後から検索するため、逆順にソート
+  const sortedEvents = events.sort((a, b) => {
+    const dayOfWeekA = new Date(a.start?.dateTime ?? "").getDay();
+    const dayOfWeekB = new Date(b.start?.dateTime ?? "").getDay();
+    return dayOfWeekB - dayOfWeekA;
+  });
+  const event = sortedEvents.find((event) => {
     const eventDayOfWeek = event.start?.dateTime ? new Date(event.start.dateTime).getDay() : undefined;
     return eventDayOfWeek !== undefined && targetDayOfWeek === eventDayOfWeek;
   });

@@ -304,27 +304,20 @@ const deleteRecurringEvents = (
     }).items ?? [];
 
   const reversedEvents = events.reverse();
-  const eventItems = dayOfWeeks
-    .map((dayOfWeek) => {
-      const eventInfo = reversedEvents.find((event) => {
-        const eventDayOfWeek = event.start?.dateTime ? new Date(event.start.dateTime).getDay() : undefined;
-        return eventDayOfWeek !== undefined && convertDayOfWeekJapaneseToNumber(dayOfWeek) === eventDayOfWeek;
-      });
-      const recurringEventId = eventInfo?.recurringEventId;
-      return recurringEventId ? { recurringEventId, after } : undefined;
-    })
+  const recurrenceEndEventIds = dayOfWeeks
+    .map((dayOfWeek) => getRecurrenceEndEventId(reversedEvents, dayOfWeek))
     .filter(isNotUndefined);
-  if (eventItems.length === 0) {
+  if (recurrenceEndEventIds.length === 0) {
     return err("消去するイベントの取得に失敗しました");
   }
 
-  const detailedEventItems = eventItems.map(({ recurringEventId, after }) => {
+  const detailedEventItems = recurrenceEndEventIds.map((recurringEventId: string) => {
     const eventDetail = advancedCalendar.get(calendarId, recurringEventId);
-    return { eventDetail, after, recurringEventId };
+    return { eventDetail, recurringEventId };
   });
 
   const deleteEvents = detailedEventItems
-    .map(({ eventDetail, after, recurringEventId }) => {
+    .map(({ eventDetail, recurringEventId }) => {
       if (!(eventDetail.start?.dateTime && eventDetail.end?.dateTime && eventDetail.summary)) {
         return;
       }
@@ -351,6 +344,18 @@ const deleteRecurringEvents = (
     })
     .filter(isNotUndefined);
   return ok(deleteEvents);
+};
+
+const getRecurrenceEndEventId = (
+  events: GoogleAppsScript.Calendar.Schema.Event[],
+  dayOfWeek: DayOfWeek,
+): string | undefined => {
+  const targetDayOfWeek = convertDayOfWeekJapaneseToNumber(dayOfWeek);
+  const event = events.find((event) => {
+    const eventDayOfWeek = event.start?.dateTime ? new Date(event.start.dateTime).getDay() : undefined;
+    return eventDayOfWeek !== undefined && targetDayOfWeek === eventDayOfWeek;
+  });
+  return event?.recurringEventId;
 };
 
 const getCalendar = () => {

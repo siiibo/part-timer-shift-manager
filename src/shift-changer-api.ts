@@ -358,7 +358,7 @@ const getRecurrenceEndEventId = (
   });
   const event = sortedEvents.find((event) => {
     const eventDayOfWeek = event.start?.dateTime ? new Date(event.start.dateTime).getDay() : undefined;
-    return eventDayOfWeek !== undefined && targetDayOfWeek === eventDayOfWeek;
+    return eventDayOfWeek !== undefined && targetDayOfWeek === eventDayOfWeek && event.recurringEventId !== undefined;
   });
   return event?.recurringEventId;
 };

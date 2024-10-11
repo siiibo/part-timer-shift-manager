@@ -352,9 +352,9 @@ const getRecurrenceEndEventId = (
   const targetDayOfWeek = convertDayOfWeekJapaneseToNumber(dayOfWeek);
   //NOTE: 予定の最後から検索するため、逆順にソート
   const sortedEvents = events.sort((a, b) => {
-    const dayOfWeekA = new Date(a.start?.dateTime ?? "").getDay();
-    const dayOfWeekB = new Date(b.start?.dateTime ?? "").getDay();
-    return dayOfWeekB - dayOfWeekA;
+    const dateA = a.start?.dateTime ?? "";
+    const dateB = b.start?.dateTime ?? "";
+    return dateA.localeCompare(dateB);
   });
   const event = sortedEvents.find((event) => {
     const eventDayOfWeek = event.start?.dateTime ? new Date(event.start.dateTime).getDay() : undefined;

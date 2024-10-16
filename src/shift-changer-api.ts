@@ -303,14 +303,17 @@ const deleteRecurringEvents = (
       q: userEmail,
     }).items ?? [];
 
-  const recurrenceEndEventIds = dayOfWeeks
-    .map((dayOfWeek) => getRecurrenceEndEventId(events, dayOfWeek))
-    .filter(isNotUndefined);
-  if (recurrenceEndEventIds.length === 0) {
+  const recurrenceEndEventIds = dayOfWeeks.map((dayOfWeek) => getRecurrenceEndEventId(events, dayOfWeek));
+
+  if (
+    recurrenceEndEventIds.length === 0 ||
+    recurrenceEndEventIds.some((recurrenceEndEventId) => recurrenceEndEventId === undefined)
+  ) {
     return err("消去するイベントの取得に失敗しました");
   }
 
-  const detailedEventItems = recurrenceEndEventIds.map((recurringEventId: string) => {
+  //NOTE: 上のエラーでundefinedが含まれていることが保証されているため、filterでundefinedを除外
+  const detailedEventItems = recurrenceEndEventIds.filter(isNotUndefined).map((recurringEventId: string) => {
     const eventDetail = advancedCalendar.get(calendarId, recurringEventId);
     return { eventDetail, recurringEventId };
   });

@@ -312,10 +312,10 @@ const deleteRecurringEvents = (
     return err("消去するイベントの取得に失敗しました");
   }
 
-  //NOTE: 上のエラーでundefinedが含まれていることが保証されているため、filterでundefinedを除外
-  const detailedEvents = recurrenceEndEventIds.filter(isNotUndefined).map((recurringEventId: string) => {
-    const eventDetail = advancedCalendar.get(calendarId, recurringEventId);
-    return { eventDetail, recurringEventId };
+  // NOTE: 上のエラーでundefinedが含まれていないことが保証されているため、型アサーションを使用
+  const detailedEvents = recurrenceEndEventIds.map((recurringEventId) => {
+    const eventDetail = advancedCalendar.get(calendarId, recurringEventId as string);
+    return { eventDetail, recurringEventId: recurringEventId as string };
   });
 
   const deleteEvents = detailedEvents

@@ -313,12 +313,12 @@ const deleteRecurringEvents = (
   }
 
   //NOTE: 上のエラーでundefinedが含まれていることが保証されているため、filterでundefinedを除外
-  const detailedEventItems = recurrenceEndEventIds.filter(isNotUndefined).map((recurringEventId: string) => {
+  const detailedEvents = recurrenceEndEventIds.filter(isNotUndefined).map((recurringEventId: string) => {
     const eventDetail = advancedCalendar.get(calendarId, recurringEventId);
     return { eventDetail, recurringEventId };
   });
 
-  const deleteEvents = detailedEventItems
+  const deleteEvents = detailedEvents
     .map(({ eventDetail, recurringEventId }) => {
       if (!(eventDetail.start?.dateTime && eventDetail.end?.dateTime && eventDetail.summary)) {
         return;

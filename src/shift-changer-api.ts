@@ -303,13 +303,10 @@ const deleteRecurringEvents = (
       q: userEmail,
     }).items ?? [];
 
-  const recurrenceEndEventIds = dayOfWeeks.map((dayOfWeek) => getRecurrenceEndEventId(events, dayOfWeek));
+  const recurrenceEndEventIds = getRecurrenceEndEventIds(events, dayOfWeeks);
 
-  if (
-    recurrenceEndEventIds.length === 0 ||
-    recurrenceEndEventIds.some((recurrenceEndEventId) => recurrenceEndEventId === undefined)
-  ) {
-    return err("消去するイベントの取得に失敗しました");
+  if (recurrenceEndEventIds === undefined) {
+    return err("削除対象の予定が見つかりませんでした");
   }
 
   // NOTE: 上のエラーでundefinedが含まれていないことが保証されているため、型アサーションを使用
@@ -348,23 +345,34 @@ const deleteRecurringEvents = (
   return ok(deleteEvents);
 };
 
-const getRecurrenceEndEventId = (
+const getRecurrenceEndEventIds = (
   events: GoogleAppsScript.Calendar.Schema.Event[],
-  dayOfWeek: DayOfWeek,
-): string | undefined => {
-  const targetDayOfWeek = convertDayOfWeekJapaneseToNumber(dayOfWeek);
+  dayOfWeeks: DayOfWeek[],
+): string[] | undefined => {
+  const recurrenceEndEventIds = dayOfWeeks.map((dayOfWeek) => {
+    const targetDayOfWeek = convertDayOfWeekJapaneseToNumber(dayOfWeek);
 
-  //NOTE: 予定の最後から検索するため、逆順にソート
-  const sortedEvents = events.sort((a, b) => {
-    const dateA = a.start?.dateTime ?? "";
-    const dateB = b.start?.dateTime ?? "";
-    return dateB.localeCompare(dateA);
+    //NOTE: 予定の最後から検索するため、逆順にソート
+    const sortedEvents = events.sort((a, b) => {
+      const dateA = a.start?.dateTime ?? "";
+      const dateB = b.start?.dateTime ?? "";
+      return dateB.localeCompare(dateA);
+    });
+    const event = sortedEvents.find((event) => {
+      const eventDayOfWeek = event.start?.dateTime ? new Date(event.start.dateTime).getDay() : undefined;
+      return eventDayOfWeek !== undefined && targetDayOfWeek === eventDayOfWeek && event.recurringEventId !== undefined;
+    });
+    return event?.recurringEventId;
   });
-  const event = sortedEvents.find((event) => {
-    const eventDayOfWeek = event.start?.dateTime ? new Date(event.start.dateTime).getDay() : undefined;
-    return eventDayOfWeek !== undefined && targetDayOfWeek === eventDayOfWeek && event.recurringEventId !== undefined;
-  });
-  return event?.recurringEventId;
+  //NOTE: 一つでもundefinedがある場合はundefinedを返す
+  if (
+    recurrenceEndEventIds.length === 0 ||
+    recurrenceEndEventIds.some((recurrenceEndEventId) => recurrenceEndEventId === undefined)
+  ) {
+    return undefined;
+  }
+
+  return recurrenceEndEventIds.filter(isNotUndefined);
 };
 
 const getCalendar = () => {

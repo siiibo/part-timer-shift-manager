@@ -312,7 +312,7 @@ const deleteRecurringEvents = (
   // NOTE: 上のエラーでundefinedが含まれていないことが保証されているため、型アサーションを使用
   const detailedEvents = recurrenceEndEventIds.map((recurringEventId) => {
     const eventDetail = advancedCalendar.get(calendarId, recurringEventId);
-    return { eventDetail, recurringEventId: recurringEventId };
+    return { eventDetail, recurringEventId };
   });
 
   const deleteEvents = detailedEvents

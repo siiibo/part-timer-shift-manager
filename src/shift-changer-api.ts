@@ -309,7 +309,6 @@ const deleteRecurringEvents = (
     return err("削除対象の予定が見つかりませんでした");
   }
 
-  // NOTE: 上のエラーでundefinedが含まれていないことが保証されているため、型アサーションを使用
   const detailedEvents = recurrenceEndEventIds.map((recurringEventId) => {
     const eventDetail = advancedCalendar.get(calendarId, recurringEventId);
     return { eventDetail, recurringEventId };

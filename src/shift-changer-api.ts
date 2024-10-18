@@ -305,11 +305,11 @@ const deleteRecurringEvents = (
 
   const recurrenceEndEventIds = getRecurrenceEndEventIds(events, dayOfWeeks);
 
-  if (recurrenceEndEventIds === undefined) {
-    return err("削除対象の予定が見つかりませんでした");
+  if (recurrenceEndEventIds.isErr()) {
+    return err(recurrenceEndEventIds.error);
   }
 
-  const detailedEvents = recurrenceEndEventIds.map((recurringEventId) => {
+  const detailedEvents = recurrenceEndEventIds.value.map((recurringEventId) => {
     const eventDetail = advancedCalendar.get(calendarId, recurringEventId);
     return { eventDetail, recurringEventId };
   });
@@ -347,7 +347,7 @@ const deleteRecurringEvents = (
 const getRecurrenceEndEventIds = (
   events: GoogleAppsScript.Calendar.Schema.Event[],
   dayOfWeeks: DayOfWeek[],
-): string[] | undefined => {
+): Result<string[], string> => {
   const recurrenceEndEventIds = dayOfWeeks.map((dayOfWeek) => {
     const targetDayOfWeek = convertDayOfWeekJapaneseToNumber(dayOfWeek);
 
@@ -368,10 +368,10 @@ const getRecurrenceEndEventIds = (
     recurrenceEndEventIds.length === 0 ||
     recurrenceEndEventIds.some((recurrenceEndEventId) => recurrenceEndEventId === undefined)
   ) {
-    return undefined;
+    return err("削除対象の予定が見つかりませんでした");
   }
 
-  return recurrenceEndEventIds.filter(isNotUndefined);
+  return ok(recurrenceEndEventIds.filter(isNotUndefined));
 };
 
 const getCalendar = () => {

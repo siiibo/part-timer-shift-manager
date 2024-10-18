@@ -311,12 +311,14 @@ const deleteRecurringEvents = (
 
   const detailedEvents = recurrenceEndEventIdsResult.value.map((recurringEventId) => {
     const eventDetail = advancedCalendar.get(calendarId, recurringEventId);
+    //TODO: eventDetailの型をzodで定義してパースする
     return { eventDetail, recurringEventId };
   });
 
   const deleteEvents = detailedEvents
     .map(({ eventDetail, recurringEventId }) => {
       if (!(eventDetail.start?.dateTime && eventDetail.end?.dateTime && eventDetail.summary)) {
+        //NOTE: この箇所でundefinedが発生する場合はないはず
         return;
       }
       const untilTimeUTC = getEndOfDayFormattedAsUTCISO(after);

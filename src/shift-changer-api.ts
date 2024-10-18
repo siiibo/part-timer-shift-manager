@@ -303,13 +303,13 @@ const deleteRecurringEvents = (
       q: userEmail,
     }).items ?? [];
 
-  const recurrenceEndEventIds = getRecurrenceEndEventIds(events, dayOfWeeks);
+  const recurrenceEndEventIdsResult = getRecurrenceEndEventIds(events, dayOfWeeks);
 
-  if (recurrenceEndEventIds.isErr()) {
-    return err(recurrenceEndEventIds.error);
+  if (recurrenceEndEventIdsResult.isErr()) {
+    return err(recurrenceEndEventIdsResult.error);
   }
 
-  const detailedEvents = recurrenceEndEventIds.value.map((recurringEventId) => {
+  const detailedEvents = recurrenceEndEventIdsResult.value.map((recurringEventId) => {
     const eventDetail = advancedCalendar.get(calendarId, recurringEventId);
     return { eventDetail, recurringEventId };
   });

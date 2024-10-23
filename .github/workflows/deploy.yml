@@ -57,5 +57,4 @@ jobs:
         run: |
           set -e
           FIRST_LINE=$(echo "${{ github.event.head_commit.message }}" | awk 'NR==1{print $0}' | tr -d "`" | tr -d '"' )
-          export DEPLOYMENT_ID=${{ secrets.DEPLOYMENT_ID }}
-          pnpm clasp deploy -i "$DEPLOYMENT_ID" --description "$FIRST_LINE"
+          pnpm clasp deploy -i "${{ secrets.DEPLOYMENT_ID }}" --description "$FIRST_LINE"

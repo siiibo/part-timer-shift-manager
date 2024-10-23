@@ -365,7 +365,7 @@ const getRecurrenceEndEventIds = (
     });
     return event?.recurringEventId;
   });
-  //NOTE: 一つでもundefinedがある場合はundefinedを返す
+  //NOTE: 一つでもundefinedがある場合はerrを返す
   if (
     recurrenceEndEventIds.length === 0 ||
     recurrenceEndEventIds.some((recurrenceEndEventId) => recurrenceEndEventId === undefined)

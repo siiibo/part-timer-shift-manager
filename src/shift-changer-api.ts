@@ -294,14 +294,7 @@ const deleteRecurringEvents = (
   const calendarId = getConfig().CALENDAR_ID;
   const advancedCalendar = getAdvancedCalendar();
 
-  const events =
-    advancedCalendar.list(calendarId, {
-      timeMin: startOfDay(subWeeks(after, 4)).toISOString(),
-      timeMax: endOfDay(after).toISOString(),
-      singleEvents: true,
-      orderBy: "startTime",
-      q: userEmail,
-    }).items ?? [];
+  const events = getCandidateEventsToDelete(advancedCalendar, calendarId, after, userEmail);
 
   const recurrenceEndEventIdsResult = getRecurrenceEndEventIds(events, dayOfWeeks);
 
@@ -345,6 +338,24 @@ const deleteRecurringEvents = (
     .filter(isNotUndefined);
   return ok(deleteEvents);
 };
+
+function getCandidateEventsToDelete(
+  advancedCalendar: GoogleAppsScript.Calendar.Collection.EventsCollection,
+  calendarId: string,
+  baseDate: Date,
+  userEmail: string,
+) {
+  return (
+    advancedCalendar.list(calendarId, {
+      // NOTE: 1週間だと祝日等が被った際に予定が取得できない場合があるので、余裕を持って4週間分取得している
+      timeMin: startOfDay(subWeeks(baseDate, 4)).toISOString(),
+      timeMax: endOfDay(baseDate).toISOString(),
+      singleEvents: true,
+      orderBy: "startTime",
+      q: userEmail,
+    }).items ?? []
+  );
+}
 
 const getRecurrenceEndEventIds = (
   events: GoogleAppsScript.Calendar.Schema.Event[],

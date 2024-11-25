@@ -364,18 +364,20 @@ const getRecurrenceEndEventIds = (
   const recurrenceEndEventIds = dayOfWeeks.map((dayOfWeek) => {
     const targetDayOfWeek = convertDayOfWeekJapaneseToNumber(dayOfWeek);
 
-    //NOTE: 予定の最後から検索するため、逆順にソート
-    const sortedEvents = events.sort((a, b) => {
+    const sortedEventsByDateDescending = events.sort((a, b) => {
       const dateA = a.start?.dateTime ?? "";
       const dateB = b.start?.dateTime ?? "";
       return dateB.localeCompare(dateA);
     });
-    const event = sortedEvents.find((event) => {
+
+    // NOTE: 日付の降順でsortされたeventsから、指定した曜日の最初のrecurringEventIdを取得
+    const event = sortedEventsByDateDescending.find((event) => {
       const eventDayOfWeek = event.start?.dateTime ? new Date(event.start.dateTime).getDay() : undefined;
       return eventDayOfWeek !== undefined && targetDayOfWeek === eventDayOfWeek && event.recurringEventId !== undefined;
     });
     return event?.recurringEventId;
   });
+
   //NOTE: 一つでもundefinedがある場合はerrを返す
   if (
     recurrenceEndEventIds.length === 0 ||

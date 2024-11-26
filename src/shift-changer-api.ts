@@ -342,14 +342,14 @@ const deleteRecurringEvents = (
 function getCandidateEventsToDelete(
   advancedCalendar: GoogleAppsScript.Calendar.Collection.EventsCollection,
   calendarId: string,
-  baseDate: Date,
+  newShiftStartDate: Date,
   userEmail: string,
 ) {
   return (
     advancedCalendar.list(calendarId, {
       // NOTE: 1週間だと祝日等が被った際に予定が取得できない場合があるので、余裕を持って4週間分取得している
-      timeMin: startOfDay(subWeeks(baseDate, 4)).toISOString(),
-      timeMax: endOfDay(baseDate).toISOString(),
+      timeMin: startOfDay(subWeeks(newShiftStartDate, 4)).toISOString(),
+      timeMax: endOfDay(newShiftStartDate).toISOString(),
       singleEvents: true,
       orderBy: "startTime",
       q: userEmail,

@@ -1,4 +1,4 @@
-import { addWeeks, endOfDay, format, nextDay, previousDay, startOfDay, subHours } from "date-fns";
+import { addWeeks, endOfDay, format, nextDay, startOfDay, subHours, subWeeks } from "date-fns";
 import { type Result, err, ok } from "neverthrow";
 import { z } from "zod";
 
@@ -294,38 +294,27 @@ const deleteRecurringEvents = (
   const calendarId = getConfig().CALENDAR_ID;
   const advancedCalendar = getAdvancedCalendar();
 
-  const eventItems = dayOfWeeks
-    .map((dayOfWeek) => {
-      //NOTE: 仕様的にstartTimeの日付に最初の予定が指定されるため、指定された日付の後で一番近い指定曜日の日付に変更する
-      const recurrenceEndDate = getRecurrenceEndDate(after, dayOfWeek);
-      const events =
-        advancedCalendar.list(calendarId, {
-          timeMin: startOfDay(recurrenceEndDate).toISOString(),
-          timeMax: endOfDay(recurrenceEndDate).toISOString(),
-          singleEvents: true,
-          orderBy: "startTime",
-          maxResults: 1,
-          q: userEmail,
-        }).items ?? [];
-      const recurringEventId = events[0]?.recurringEventId;
-      return recurringEventId ? { recurringEventId, recurrenceEndDate } : undefined;
-    })
-    .filter(isNotUndefined);
-  if (eventItems.length === 0) {
-    return err("消去するイベントの取得に失敗しました");
+  const events = getCandidateEventsToDelete(advancedCalendar, calendarId, after, userEmail);
+
+  const recurrenceEndEventIdsResult = getRecurrenceEndEventIds(events, dayOfWeeks);
+
+  if (recurrenceEndEventIdsResult.isErr()) {
+    return err(recurrenceEndEventIdsResult.error);
   }
 
-  const detailedEventItems = eventItems.map(({ recurringEventId, recurrenceEndDate }) => {
+  const detailedEvents = recurrenceEndEventIdsResult.value.map((recurringEventId) => {
     const eventDetail = advancedCalendar.get(calendarId, recurringEventId);
-    return { eventDetail, recurrenceEndDate, recurringEventId };
+    //TODO: eventDetailの型をzodで定義してパースする
+    return { eventDetail, recurringEventId };
   });
 
-  const deleteEvents = detailedEventItems
-    .map(({ eventDetail, recurrenceEndDate, recurringEventId }) => {
+  const deleteEvents = detailedEvents
+    .map(({ eventDetail, recurringEventId }) => {
       if (!(eventDetail.start?.dateTime && eventDetail.end?.dateTime && eventDetail.summary)) {
+        //NOTE: この箇所でundefinedが発生する場合はないはず
         return;
       }
-      const untilTimeUTC = getEndOfDayFormattedAsUTCISO(recurrenceEndDate);
+      const untilTimeUTC = getEndOfDayFormattedAsUTCISO(after);
       const data = {
         summary: eventDetail.summary,
         attendees: [{ email: userEmail }],
@@ -348,6 +337,56 @@ const deleteRecurringEvents = (
     })
     .filter(isNotUndefined);
   return ok(deleteEvents);
+};
+
+function getCandidateEventsToDelete(
+  advancedCalendar: GoogleAppsScript.Calendar.Collection.EventsCollection,
+  calendarId: string,
+  baseDate: Date,
+  userEmail: string,
+) {
+  return (
+    advancedCalendar.list(calendarId, {
+      // NOTE: 1週間だと祝日等が被った際に予定が取得できない場合があるので、余裕を持って4週間分取得している
+      timeMin: startOfDay(subWeeks(baseDate, 4)).toISOString(),
+      timeMax: endOfDay(baseDate).toISOString(),
+      singleEvents: true,
+      orderBy: "startTime",
+      q: userEmail,
+    }).items ?? []
+  );
+}
+
+const getRecurrenceEndEventIds = (
+  events: GoogleAppsScript.Calendar.Schema.Event[],
+  dayOfWeeks: DayOfWeek[],
+): Result<string[], string> => {
+  const recurrenceEndEventIds = dayOfWeeks.map((dayOfWeek) => {
+    const targetDayOfWeek = convertDayOfWeekJapaneseToNumber(dayOfWeek);
+
+    const sortedEventsByDateDescending = events.sort((a, b) => {
+      const dateA = a.start?.dateTime ?? "";
+      const dateB = b.start?.dateTime ?? "";
+      return dateB.localeCompare(dateA);
+    });
+
+    // NOTE: 日付の降順でsortされたeventsから、指定した曜日の最初のrecurringEventIdを取得
+    const event = sortedEventsByDateDescending.find((event) => {
+      const eventDayOfWeek = event.start?.dateTime ? new Date(event.start.dateTime).getDay() : undefined;
+      return eventDayOfWeek !== undefined && targetDayOfWeek === eventDayOfWeek && event.recurringEventId !== undefined;
+    });
+    return event?.recurringEventId;
+  });
+
+  //NOTE: 一つでもundefinedがある場合はerrを返す
+  if (
+    recurrenceEndEventIds.length === 0 ||
+    recurrenceEndEventIds.some((recurrenceEndEventId) => recurrenceEndEventId === undefined)
+  ) {
+    return err("削除対象の予定が見つかりませんでした");
+  }
+
+  return ok(recurrenceEndEventIds.filter(isNotUndefined));
 };
 
 const getCalendar = () => {
@@ -403,13 +442,6 @@ const getRecurrenceStartDate = (after: Date, dayOfWeek: DayOfWeek): Date => {
   const nextDate = nextDay(after, targetDayOfWeek);
 
   return nextDate;
-};
-
-const getRecurrenceEndDate = (after: Date, dayOfWeek: DayOfWeek): Date => {
-  const targetDayOfWeek = convertDayOfWeekJapaneseToNumber(dayOfWeek);
-  const previousDate = previousDay(after, targetDayOfWeek);
-
-  return previousDate;
 };
 
 const isNotUndefined = <T>(value: T | undefined): value is T => {

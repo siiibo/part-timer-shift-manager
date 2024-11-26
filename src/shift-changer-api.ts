@@ -1,4 +1,4 @@
-import { addWeeks, endOfDay, format, nextDay, startOfDay, subHours, subWeeks } from "date-fns";
+import { addWeeks, endOfDay, format, nextDay, startOfDay, subDays, subHours, subWeeks } from "date-fns";
 import { type Result, err, ok } from "neverthrow";
 import { z } from "zod";
 
@@ -349,7 +349,8 @@ function getCandidateEventsOfOldShiftEnd(
     advancedCalendar.list(calendarId, {
       // NOTE: 1週間だと祝日等が被った際に予定が取得できない場合があるので、余裕を持って4週間分取得している
       timeMin: startOfDay(subWeeks(newShiftStartDate, 4)).toISOString(),
-      timeMax: endOfDay(newShiftStartDate).toISOString(),
+      // NOTE: 旧シフトの最終日候補を取得するため、timeMaxにはnewShiftStartDateを含めない
+      timeMax: endOfDay(subDays(newShiftStartDate, 1)).toISOString(),
       singleEvents: true,
       orderBy: "startTime",
       q: userEmail,

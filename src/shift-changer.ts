@@ -299,7 +299,8 @@ export const callRecurringEvent = () => {
   }
   const spreadsheetUrl = SpreadsheetApp.getActiveSpreadsheet().getUrl();
   const sheet = getSheet("recurringEvent", spreadsheetUrl);
-  const { after, comment, registrationRows, modificationRows, deletionRows } = getRecurringEventSheetValues(sheet);
+  const { newShiftStartDate, comment, registrationRows, modificationRows, deletionRows } =
+    getRecurringEventSheetValues(sheet);
   console.info(
     `recurringRegistration: ${JSON.stringify(registrationRows)},recurringModification: ${JSON.stringify(modificationRows)},recurringDeletion: ${JSON.stringify(deletionRows)}`,
   ); //NOTE: シート内容を確認するためのログ
@@ -347,7 +348,7 @@ export const callRecurringEvent = () => {
     const payload = JSON.stringify({
       ...basePayload,
       operationType: "registerRecurringEvent",
-      recurringInfo: { after, events: registrationInfos },
+      recurringInfo: { newShiftStartDate, events: registrationInfos },
     } satisfies RegisterRecurringEventRequest);
     const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
       method: "post",
@@ -361,7 +362,7 @@ export const callRecurringEvent = () => {
     const payload = JSON.stringify({
       ...basePayload,
       operationType: "modifyRecurringEvent",
-      recurringInfo: { after, events: modificationInfos },
+      recurringInfo: { newShiftStartDate, events: modificationInfos },
     } satisfies ModifyRecurringEventRequest);
     const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
       method: "post",
@@ -381,7 +382,7 @@ export const callRecurringEvent = () => {
     const payload = JSON.stringify({
       ...basePayload,
       operationType: "deleteRecurringEvent",
-      recurringInfo: { after, dayOfWeeks: deleteDayOfWeeks },
+      recurringInfo: { newShiftStartDate, dayOfWeeks: deleteDayOfWeeks },
     } satisfies DeleteRecurringEventRequest);
     const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
       method: "post",
@@ -398,7 +399,7 @@ export const callRecurringEvent = () => {
   }
   const recurringEventMessageToNotify = createMessageForRecurringEvent(
     partTimerProfile,
-    after,
+    newShiftStartDate,
     createMessageForRegisterRecurringEvent(registrationInfos),
     modifyEventStrings,
     deleteEventStrings,
@@ -475,14 +476,14 @@ const createMessageForDeleteRecurringEvent = (deleteEvens: Event[], deletionInfo
 
 const createMessageForRecurringEvent = (
   { job, lastName }: PartTimerProfile,
-  after: Date,
+  newShiftStartDate: Date,
   registerEventStrings: string,
   modifyEventStrings: string,
   deleteEventStrings: string,
   comment: string,
 ): string => {
   const message = [
-    `${job}${lastName}さんが${format(after, "yyyy/MM/dd")}以降の固定シフトを変更しました`,
+    `${job}${lastName}さんが${format(newShiftStartDate, "yyyy/MM/dd")}以降の固定シフトを変更しました`,
     registerEventStrings,
     modifyEventStrings,
     deleteEventStrings,

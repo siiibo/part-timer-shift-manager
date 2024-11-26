@@ -55,7 +55,7 @@ export const RegisterRecurringEventRequest = z.object({
   operationType: z.literal("registerRecurringEvent"),
   userEmail: z.string(),
   recurringInfo: z.object({
-    after: z.coerce.date(),
+    newShiftStartDate: z.coerce.date(),
     events: z
       .object({
         dayOfWeek: DayOfWeek,
@@ -73,7 +73,7 @@ export const ModifyRecurringEventRequest = z.object({
   operationType: z.literal("modifyRecurringEvent"),
   userEmail: z.string(),
   recurringInfo: z.object({
-    after: z.coerce.date(),
+    newShiftStartDate: z.coerce.date(),
     events: z
       .object({
         title: z.string(),
@@ -91,7 +91,7 @@ export const DeleteRecurringEventRequest = z.object({
   operationType: z.literal("deleteRecurringEvent"),
   userEmail: z.string(),
   recurringInfo: z.object({
-    after: z.coerce.date(),
+    newShiftStartDate: z.coerce.date(),
     dayOfWeeks: DayOfWeek.array(),
   }),
 });
@@ -237,13 +237,13 @@ const showEvents = (userEmail: string, startDate: Date): Result<Event[], never> 
 };
 
 const registerRecurringEvents = (
-  { recurringInfo: { after, events } }: RegisterRecurringEventRequest,
+  { recurringInfo: { newShiftStartDate, events } }: RegisterRecurringEventRequest,
   userEmail: string,
 ): Result<string, never> => {
   const calendar = getCalendar();
 
   events.forEach(({ title, startTime, endTime, dayOfWeek }) => {
-    const recurrenceStartDate = getRecurrenceStartDate(after, dayOfWeek);
+    const recurrenceStartDate = getRecurrenceStartDate(newShiftStartDate, dayOfWeek);
     const eventStartTime = mergeTimeToDate(recurrenceStartDate, startTime);
     const eventEndTime = mergeTimeToDate(recurrenceStartDate, endTime);
     const englishDayOfWeek = convertDayOfWeekJapaneseToEnglish(dayOfWeek);
@@ -257,7 +257,7 @@ const registerRecurringEvents = (
 };
 
 const modifyRecurringEvents = (
-  { recurringInfo: { after, events } }: ModifyRecurringEventRequest,
+  { recurringInfo: { newShiftStartDate, events } }: ModifyRecurringEventRequest,
   userEmail: string,
 ): Result<Event[], string> => {
   const dayOfWeeks = events.map(({ dayOfWeek }) => dayOfWeek);
@@ -266,7 +266,7 @@ const modifyRecurringEvents = (
       apiId: "shift-changer",
       operationType: "deleteRecurringEvent",
       userEmail,
-      recurringInfo: { after, dayOfWeeks },
+      recurringInfo: { newShiftStartDate, dayOfWeeks },
     },
     userEmail,
   )
@@ -276,7 +276,7 @@ const modifyRecurringEvents = (
           apiId: "shift-changer",
           operationType: "registerRecurringEvent",
           userEmail,
-          recurringInfo: { after, events },
+          recurringInfo: { newShiftStartDate, events },
         },
         userEmail,
       );
@@ -288,13 +288,13 @@ const modifyRecurringEvents = (
 };
 
 const deleteRecurringEvents = (
-  { recurringInfo: { after, dayOfWeeks } }: DeleteRecurringEventRequest,
+  { recurringInfo: { newShiftStartDate, dayOfWeeks } }: DeleteRecurringEventRequest,
   userEmail: string,
 ): Result<Event[], string> => {
   const calendarId = getConfig().CALENDAR_ID;
   const advancedCalendar = getAdvancedCalendar();
 
-  const events = getCandidateEventsToDelete(advancedCalendar, calendarId, after, userEmail);
+  const events = getCandidateEventsToDelete(advancedCalendar, calendarId, newShiftStartDate, userEmail);
 
   const recurrenceEndEventIdsResult = getRecurrenceEndEventIds(events, dayOfWeeks);
 
@@ -314,7 +314,7 @@ const deleteRecurringEvents = (
         //NOTE: この箇所でundefinedが発生する場合はないはず
         return;
       }
-      const untilTimeUTC = getEndOfDayFormattedAsUTCISO(after);
+      const untilTimeUTC = getEndOfDayFormattedAsUTCISO(newShiftStartDate);
       const data = {
         summary: eventDetail.summary,
         attendees: [{ email: userEmail }],
@@ -434,12 +434,12 @@ const convertDayOfWeekJapaneseToNumber = (dayOfWeek: DayOfWeek) => {
   }
 };
 
-const getRecurrenceStartDate = (after: Date, dayOfWeek: DayOfWeek): Date => {
+const getRecurrenceStartDate = (newShiftStartDate: Date, dayOfWeek: DayOfWeek): Date => {
   const targetDayOfWeek = convertDayOfWeekJapaneseToNumber(dayOfWeek);
-  if (after.getDay() === targetDayOfWeek) {
-    return after;
+  if (newShiftStartDate.getDay() === targetDayOfWeek) {
+    return newShiftStartDate;
   }
-  const nextDate = nextDay(after, targetDayOfWeek);
+  const nextDate = nextDay(newShiftStartDate, targetDayOfWeek);
 
   return nextDate;
 };

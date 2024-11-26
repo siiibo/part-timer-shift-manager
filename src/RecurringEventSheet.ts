@@ -70,7 +70,7 @@ type NoOperationRow = {
 };
 
 type RecurringEventSheetValues = {
-  after: DateAfterNow;
+  newShiftStartDate: DateAfterNow;
   comment: Comment;
   registrationRows: RegisterRecurringEventRow[];
   modificationRows: ModifyRecurringEventRow[];
@@ -132,7 +132,7 @@ export const setValuesRecurringEventSheet = (sheet: GoogleAppsScript.Spreadsheet
 
 export const getRecurringEventSheetValues = (sheet: GoogleAppsScript.Spreadsheet.Sheet): RecurringEventSheetValues => {
   const sheetRows = getRecurringEventSheetRows(sheet);
-  const after = DateAfterNow.parse(sheet.getRange("A5").getValue());
+  const newShiftStartDate = DateAfterNow.parse(sheet.getRange("A5").getValue());
   const comment = Comment.parse(sheet.getRange("A2").getValue());
   const sheetValues = sheetRows.map((row) => {
     if (row.operation === "追加" && row.dayOfWeek && row.startTime && row.endTime) {
@@ -169,7 +169,7 @@ export const getRecurringEventSheetValues = (sheet: GoogleAppsScript.Spreadsheet
   });
 
   return {
-    after: after,
+    newShiftStartDate: newShiftStartDate,
     comment: comment,
     registrationRows: sheetValues.filter(isRegistrationRow),
     modificationRows: sheetValues.filter(isModificationRow),

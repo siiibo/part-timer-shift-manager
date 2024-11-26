@@ -294,7 +294,7 @@ const deleteRecurringEvents = (
   const calendarId = getConfig().CALENDAR_ID;
   const advancedCalendar = getAdvancedCalendar();
 
-  const events = getCandidateEventsToDelete(advancedCalendar, calendarId, newShiftStartDate, userEmail);
+  const events = getCandidateEventsOfOldShiftEnd(advancedCalendar, calendarId, newShiftStartDate, userEmail);
 
   const recurrenceEndEventIdsResult = getRecurrenceEndEventIds(events, dayOfWeeks);
 
@@ -339,7 +339,7 @@ const deleteRecurringEvents = (
   return ok(deleteEvents);
 };
 
-function getCandidateEventsToDelete(
+function getCandidateEventsOfOldShiftEnd(
   advancedCalendar: GoogleAppsScript.Calendar.Collection.EventsCollection,
   calendarId: string,
   newShiftStartDate: Date,

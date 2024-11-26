@@ -1,4 +1,4 @@
-import { addWeeks, endOfDay, format, nextDay, startOfDay, subHours, subWeeks } from "date-fns";
+import { addWeeks, endOfDay, format, nextDay, startOfDay, subDays, subHours, subWeeks } from "date-fns";
 import { type Result, err, ok } from "neverthrow";
 import { z } from "zod";
 
@@ -294,7 +294,7 @@ const deleteRecurringEvents = (
   const calendarId = getConfig().CALENDAR_ID;
   const advancedCalendar = getAdvancedCalendar();
 
-  const events = getCandidateEventsToDelete(advancedCalendar, calendarId, newShiftStartDate, userEmail);
+  const events = getCandidateEventsOfOldShiftEnd(advancedCalendar, calendarId, newShiftStartDate, userEmail);
 
   const recurrenceEndEventIdsResult = getRecurrenceEndEventIds(events, dayOfWeeks);
 
@@ -339,17 +339,18 @@ const deleteRecurringEvents = (
   return ok(deleteEvents);
 };
 
-function getCandidateEventsToDelete(
+function getCandidateEventsOfOldShiftEnd(
   advancedCalendar: GoogleAppsScript.Calendar.Collection.EventsCollection,
   calendarId: string,
-  baseDate: Date,
+  newShiftStartDate: Date,
   userEmail: string,
 ) {
   return (
     advancedCalendar.list(calendarId, {
       // NOTE: 1週間だと祝日等が被った際に予定が取得できない場合があるので、余裕を持って4週間分取得している
-      timeMin: startOfDay(subWeeks(baseDate, 4)).toISOString(),
-      timeMax: endOfDay(baseDate).toISOString(),
+      timeMin: startOfDay(subWeeks(newShiftStartDate, 4)).toISOString(),
+      // NOTE: 旧シフトの最終日候補を取得するため、timeMaxにはnewShiftStartDateを含めない
+      timeMax: endOfDay(subDays(newShiftStartDate, 1)).toISOString(),
       singleEvents: true,
       orderBy: "startTime",
       q: userEmail,
